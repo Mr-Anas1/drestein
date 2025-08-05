@@ -1,26 +1,43 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-background: #0C0B2B;
+  --color-text: #FFFFFF;
+  --color-primary: #FF4D9D;
+  --color-secondary: #9F3CFF;
+  --color-accent: #00D1FF;
+  --color-muted-text: #C5C5C5;
+  --color-border: #7B00FF;
+  --color-background-soft: #1A133B;
+  --color-hover-primary: #FF67AC;
+  --color-hover-accent: #24F3FF;
+  --color-shadow: #4A00A8;
+  --color-glow-overlay: #6127FF88;
+
+  --font-space: "Space Grotesk";
+  --font-audiowide: "Audiowide";
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+
+/* :root {
+  --font-heading: 'Audiowide', cursive;
+  --font-body: 'Space Grotesk', sans-serif;
+} */
+
+/* h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+body,
+p,
+div,
+a,
+span {
+  font-family: var(--font-body);
+} */
