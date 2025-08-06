@@ -11,9 +11,11 @@ const Header = () => {
   };
 
   return (
-    <div className="flex justify-between items-center px-4  md:px-12 h-20 border-b border-gray-600">
+    <div className="flex justify-between items-center px-4 md:px-12 h-20 border-b border-gray-600">
       <div>
-        <h1 className="text-4xl font-audiowide text-white">DRESTEIN</h1>
+        <h1 className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          DRESTEIN
+        </h1>
       </div>
 
       <div className="flex items-center space-x-6">
