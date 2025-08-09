@@ -19,3 +19,7 @@
   --font-space: "Space Grotesk";
   --font-audiowide: "Audiowide";
 }
+
+body {
+  background-color: var(--color-background);
+}
