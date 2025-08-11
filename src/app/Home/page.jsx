@@ -5,7 +5,7 @@ import Hero from "./Hero";
 
 const Home = () => {
   return (
-    <div className="bg-background h-screen ">
+    <div className=" h-screen ">
       <Header />
       <Hero />
     </div>

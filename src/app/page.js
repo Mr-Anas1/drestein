@@ -3,7 +3,7 @@ import Home from "./Home/page";
 
 function page() {
   return (
-    <div className="bg-background w-screen h-screen">
+    <div className="w-screen h-screen">
       <Home />
     </div>
   );

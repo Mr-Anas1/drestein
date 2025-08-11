@@ -46,7 +46,11 @@ const Header = () => {
         {/* menu */}
         <div className="md:hidden flex">
           {menuDisplay ? (
-            <X className="text-white" size={38} onClick={toggleMenu} />
+            <X
+              className="text-white cursor-pointer"
+              size={38}
+              onClick={toggleMenu}
+            />
           ) : (
             <AlignJustify
               className="text-white"
@@ -59,7 +63,7 @@ const Header = () => {
       {/* mobile menu */}
 
       {menuDisplay && (
-        <div className="absolute top-20 left-0 w-full h-screen bg-gray-800 text-white p-4 flex flex-col space-y-12 py-12 overflow-hidden items-center md:hidden">
+        <div className="absolute top-20 left-0 w-full h-screen bg-gray-800 text-white p-4 flex flex-col space-y-12 py-12 overflow-hidden items-center md:hidden z-99">
           <a
             href="#home"
             className="hover:text-primary transition duration-300s"
