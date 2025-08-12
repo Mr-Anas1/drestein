@@ -20,7 +20,38 @@
   --font-audiowide: "Audiowide";
 }
 
+
+
 body {
-  /* background-image: radial-gradient(circle at 28% 93%, rgba(2, 2, 2, 0.04) 0%, rgba(2, 2, 2, 0.04) 50%, rgba(223, 223, 223, 0.04) 50%, rgba(223, 223, 223, 0.04) 100%), radial-gradient(circle at 13% 75%, rgba(185, 185, 185, 0.04) 0%, rgba(185, 185, 185, 0.04) 50%, rgba(25, 25, 25, 0.04) 50%, rgba(25, 25, 25, 0.04) 100%), radial-gradient(circle at 79% 39%, rgba(34, 34, 34, 0.04) 0%, rgba(34, 34, 34, 0.04) 50%, rgba(57, 57, 57, 0.04) 50%, rgba(57, 57, 57, 0.04) 100%), linear-gradient(56deg, rgb(12, 11, 43), rgb(12, 11, 43)); */
+  height: 100%;
+  margin: 0;
+  padding: 0;
   background: linear-gradient(to right, #1A1E4F 0%, #0C0B2B 85%);
+  background-attachment: fixed;
+}
+
+@keyframes floating {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(3px, -3px);
+  }
+
+  50% {
+    transform: translate(-3px, 3px);
+  }
+
+  75% {
+    transform: translate(3px, 3px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.animate-floating {
+  animation: floating 2s ease-in-out infinite;
 }
