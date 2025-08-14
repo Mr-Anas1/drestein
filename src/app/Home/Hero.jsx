@@ -28,7 +28,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <div className="min-h-[calc(100vh-80px)] overflow-hidden">
+    <div className="min-h-[screen]  md:mb-12 overflow-hidden">
       <div className="flex flex-col-reverse lg:flex-row items-center  justify-between w-full min-h-[calc(100vh-80px)] px-4 md:px-12">
         {/* Left Section */}
         <div className="flex-1 max-w-[600px] flex flex-col gap-6  justify-center  items-center lg:items-start py-0  ">
