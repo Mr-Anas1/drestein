@@ -7,7 +7,7 @@ import { Network } from "lucide-react";
 const About = () => {
   return (
     <>
-      <div className="w-screen my-12 flex justify-center items-center flex-col">
+      <div className="w-screen  my-12 flex justify-center items-center flex-col">
         <div className="flex flex-col items-center justify-center gap-4">
           <h1 className="font-audiowide text-center  text-[32px] md:text-[64px] bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             <span className="text-white">ABOUT </span>
