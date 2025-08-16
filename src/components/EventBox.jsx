@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 const EventBox = ({ img, title, description, link }) => {
   const router = useRouter();
   return (
-    <div className="border border-gray-50 mt-12 md:mt-0 rounded-2xl p-4 relative w-[250px] md:w-[300px] h-[420px] flex flex-col items-center">
+    <div className="border border-gray-50 mt-12 md:mt-0 rounded-2xl p-4 relative w-[250px] md:w-[300px] h-[400px] flex flex-col items-center">
       <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[200px] h-[200px]">
         <Image
           src={img}

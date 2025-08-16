@@ -1,7 +1,5 @@
 import EventBox from "@/components/EventBox";
-import { Lightformer } from "@react-three/drei";
 import React from "react";
-import Slider from "react-slick";
 
 const Events = () => {
   const eventsData = [
@@ -26,14 +24,21 @@ const Events = () => {
         "Celebrate symmetry and style at the annual Square Fest, filled with art, games, and food from all corners.",
       link: "/square-fest",
     },
+    {
+      img: "/circle.png",
+      title: "Event Catch",
+      description:
+        "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quis dolorum a, ducimus esse pariatur assumenda cum eveniet unde.",
+      link: "/",
+    },
   ];
 
   return (
-    <div className="h-screen my-24 md:my-38">
+    <div className="mt-24 md:mt-38">
       <h1 className="font-audiowide text-[32px]  text-center md:text-[64px] bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
         Events
       </h1>
-      <div className="flex md:flex-row flex-col mx-12 mt-20 md:mt-30  justify-center items-center gap-24">
+      <div className="flex md:flex-row flex-col mx-12 mt-20 md:mt-30  justify-center items-center gap-12">
         {eventsData.map((event, index) => (
           <EventBox
             key={index}

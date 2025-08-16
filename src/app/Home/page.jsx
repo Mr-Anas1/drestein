@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Hero from "./Hero";
 import About from "./About";
 import Events from "./Events";
+import StatsSection from "./StatsSection";
 
 const Home = () => {
   return (
@@ -12,6 +13,7 @@ const Home = () => {
       <Hero />
       <About />
       <Events />
+      <StatsSection />
     </div>
   );
 };
