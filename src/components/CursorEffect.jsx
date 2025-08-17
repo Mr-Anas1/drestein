@@ -72,7 +72,7 @@ export default function SmoothFollower() {
   return (
     <div className="pointer-events-none fixed inset-0 z-50">
       <div
-        className="absolute rounded-full dark:bg-white bg-black "
+        className="absolute rounded-full bg-primary shadow-lg shadow-primary/50"
         style={{
           width: "8px",
           height: "8px",
@@ -83,7 +83,7 @@ export default function SmoothFollower() {
       />
 
       <div
-        className="absolute rounded-full border dark:border-white border-black "
+        className="absolute rounded-full border-2 border-accent/60 bg-accent/10 backdrop-blur-sm"
         style={{
           width: isHovering ? "44px" : "28px",
           height: isHovering ? "44px" : "28px",
@@ -91,6 +91,7 @@ export default function SmoothFollower() {
           left: `${renderPos.border.x}px`,
           top: `${renderPos.border.y}px`,
           transition: "width 0.3s, height 0.3s",
+          boxShadow: "0 0 20px rgba(0, 209, 255, 0.3)",
         }}
       />
     </div>

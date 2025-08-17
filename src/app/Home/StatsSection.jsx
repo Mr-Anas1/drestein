@@ -21,10 +21,10 @@ const StatsSection = () => {
     },
   ];
   return (
-    <div className="h-[20vh] my-8 w-screen flex justify-center items-center">
+    <div className="h-[20vh] my-32 w-screen flex justify-center items-center">
       <div className="flex justify-center items-center gap-12 md:gap-24 flex-wrap px-4">
         {statData.map((item, index) => (
-          <Stats value={item.value} title={item.title} index={index} />
+          <Stats value={item.value} title={item.title} key={index} />
         ))}
       </div>
     </div>

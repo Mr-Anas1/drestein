@@ -3,6 +3,9 @@ import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import MyModel from "@/components/MyModel";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import FloatingShapes from "@/components/FloatingShapes";
+import CursorEffect from "@/components/CursorEffect";
 
 const Hero = () => {
   const [modelScale, setModelScale] = useState([1.8, 1.8, 1.8]);
@@ -28,44 +31,47 @@ const Hero = () => {
   }, []);
 
   return (
-    <div className="min-h-[screen]  md:mb-12 overflow-hidden">
-      <div className="flex flex-col-reverse lg:flex-row items-center  justify-between w-full min-h-[calc(100vh-80px)] px-4 md:px-12">
+    <div className="min-h-screen md:mb-12 overflow-hidden relative">
+      {/* Background Effects */}
+      <AnimatedBackground />
+      <FloatingShapes />
+      <CursorEffect />
+      
+      <div className="flex flex-col-reverse lg:flex-row items-center justify-between w-full h-[calc(100vh-80px)] px-4 md:px-12 relative z-10">
         {/* Left Section */}
-        <div className="flex-1 max-w-[600px] flex flex-col gap-6 justify-start lg:justify-center  items-center lg:items-start py-0  ">
-          <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-audiowide text-white">
-            <span className="text-primary">DR</span>EA
-            <span className="text-secondary">M</span> D
-            <span className="text-accent">ES</span>IGN COMPE
-            <span className="text-yellow-400">TE</span> W
-            <span className="text-green-400">IN</span> 20
-            <span className="text-yellow-400">25</span>
+        <div className="flex-1 flex flex-col gap-6 justify-center items-center lg:items-start h-full">
+          <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-audiowide text-white animate-slide-in">
+            <span className="text-primary animate-glow">DR</span>EA
+            <span className="text-secondary animate-glow">M</span> D
+            <span className="text-accent animate-glow">ES</span>IGN COMPE
+            <span className="text-yellow-400 animate-glow">TE</span> W
+            <span className="text-green-400 animate-glow">IN</span> 20
+            <span className="text-yellow-400 animate-glow">25</span>
           </h1>
 
-          <p className="text-center lg:text-left text-white font-space text-md md:text-lg">
+          <p className="text-center lg:text-left text-white font-space text-md md:text-lg animate-slide-in opacity-90">
             15th National Level Inter Collegiate Technical and Management Fest
           </p>
 
-          <button className="bg-primary w-[150px] md:w-[250px] text-white rounded-lg hover:bg-hover-primary transition duration-300 py-2 md:py-3 cursor-pointer font-audiowide">
+          <button className="bg-primary w-[150px] md:w-[250px] text-white rounded-lg hover:bg-hover-primary hover:scale-105 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 py-2 md:py-3 cursor-pointer font-audiowide animate-slide-in">
             Register
           </button>
         </div>
 
         {/* Right Section */}
-        <div className="flex-1 w-full min-h-[300px] sm:min-h-[400px] md:min-h-[500px] lg:h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden">
-          <div className="w-full h-full">
-            <Canvas
-              style={{ height: `${width}px` }}
-              className={`h-full cursor-grab`}
-              camera={{ position: [5, 5, 5], fov: 50 }}
-            >
-              <ambientLight />
-              <directionalLight position={[1, 1, 1]} intensity={1} />
-              <Suspense fallback={null}>
-                <MyModel scale={[1.8, 1.8, 1.8]} position={[0, -1, 0]} />
-              </Suspense>
-              <OrbitControls enablePan={false} enableZoom={false} />
-            </Canvas>
-          </div>
+        <div className="flex-1 flex items-center justify-center h-full w-full">
+          <Canvas
+            style={{ width: "100%", height: "100%", minHeight: "400px" }}
+            camera={{ position: [5, 5, 5], fov: 50 }}
+            className="cursor-grab w-full h-full"
+          >
+            <ambientLight />
+            <directionalLight position={[1, 1, 1]} intensity={1} />
+            <Suspense fallback={null}>
+              <MyModel scale={[1.8, 1.8, 1.8]} position={[0, -1, 0]} />
+            </Suspense>
+            <OrbitControls enablePan={false} enableZoom={false} />
+          </Canvas>
         </div>
       </div>
     </div>

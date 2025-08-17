@@ -17,6 +17,7 @@
     "react-dom": "19.1.0",
     "react-slick": "^0.31.0",
     "slick-carousel": "^1.8.1",
+    "swiper": "^11.2.10",
     "three": "^0.179.1"
   },
   "devDependencies": {
