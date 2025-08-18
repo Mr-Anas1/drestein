@@ -7,6 +7,7 @@ import Events from "./Events";
 import StatsSection from "./StatsSection";
 import GuestSection from "./GuestSection";
 import Sponsors from "./Sponsors";
+import Footer from "../../components/Footer";
 
 const Home = () => {
   return (
@@ -18,6 +19,7 @@ const Home = () => {
       <StatsSection />
       <GuestSection />
       <Sponsors />
+      <Footer />
     </div>
   );
 };

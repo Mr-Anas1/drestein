@@ -33,10 +33,8 @@ const Hero = () => {
   return (
     <div className="min-h-screen md:mb-12 overflow-hidden relative">
       {/* Background Effects */}
-      <AnimatedBackground />
-      <FloatingShapes />
-      <CursorEffect />
-      
+
+
       <div className="flex flex-col-reverse lg:flex-row items-center justify-between w-full h-[calc(100vh-80px)] px-4 md:px-12 relative z-10">
         {/* Left Section */}
         <div className="flex-1 flex flex-col gap-6 justify-center items-center lg:items-start h-full">

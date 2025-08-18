@@ -2,9 +2,11 @@
 
 import { AlignJustify, X } from "lucide-react";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [menuDisplay, setMenuDisplay] = useState(false);
+  const router = useRouter();
 
   const toggleMenu = () => {
     setMenuDisplay(!menuDisplay);
@@ -13,7 +15,8 @@ const Header = () => {
   return (
     <div className="flex justify-between items-center px-4 md:px-12 h-20 border-b border-gray-600">
       <div>
-        <h1 className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <h1 className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer"
+          onClick={() => router.push("/")}>
           DRESTEIN
         </h1>
       </div>
@@ -21,21 +24,21 @@ const Header = () => {
       <div className="flex items-center space-x-6">
         <div className="hidden items-center md:flex">
           <a
-            href="#home"
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 "
+            onClick={() => router.push("/")}
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
           >
             Home
           </a>
           <a
-            href="#events"
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-4"
+            onClick={() => router.push("/events")}
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
           >
             Events
           </a>
 
           <a
-            href="#about"
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-4"
+            onClick={() => router.push("/about")}
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
           >
             About
           </a>
