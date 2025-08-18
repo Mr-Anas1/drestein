@@ -1,6 +1,6 @@
 import React from 'react'
 import { Facebook } from 'lucide-react'
-import { XIcon } from 'lucide-react'
+import { Twitter } from 'lucide-react'
 import { Instagram } from 'lucide-react'
 import { Linkedin } from 'lucide-react'
 import { Youtube } from 'lucide-react'
@@ -8,7 +8,7 @@ import { Youtube } from 'lucide-react'
 const Footer = () => {
   const socialLinks = [
     { name: 'Facebook', url: '#', icon: <Facebook /> },
-    { name: 'Twitter', url: '#', icon: <XIcon /> },
+    { name: 'Twitter', url: '#', icon: <Twitter /> },
     { name: 'Instagram', url: '#', icon: <Instagram /> },
     { name: 'LinkedIn', url: '#', icon: <Linkedin /> },
     { name: 'YouTube', url: '#', icon: <Youtube /> }

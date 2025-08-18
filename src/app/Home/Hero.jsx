@@ -3,9 +3,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import MyModel from "@/components/MyModel";
-import AnimatedBackground from "@/components/AnimatedBackground";
-import FloatingShapes from "@/components/FloatingShapes";
-import CursorEffect from "@/components/CursorEffect";
+
 
 const Hero = () => {
   const [modelScale, setModelScale] = useState([1.8, 1.8, 1.8]);
@@ -66,7 +64,7 @@ const Hero = () => {
             <ambientLight />
             <directionalLight position={[1, 1, 1]} intensity={1} />
             <Suspense fallback={null}>
-              <MyModel scale={[1.8, 1.8, 1.8]} position={[0, -1, 0]} />
+              <MyModel scale={[2, 2, 2]} position={[0, -1, 0]} />
             </Suspense>
             <OrbitControls enablePan={false} enableZoom={false} />
           </Canvas>
