@@ -4,150 +4,74 @@ import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { db } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 
 const EventDetailPage = () => {
     const params = useParams()
     const router = useRouter()
     const [event, setEvent] = useState(null)
     const [isRegistered, setIsRegistered] = useState(false)
+    const [loading, setLoading] = useState(true)
 
-    const eventsData = {
-        1: {
-            id: 1,
-            title: "Event Catch",
-            img: "/circle.png",
-            description: "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quis dolorum a, ducimus esse pariatur assumenda cum eveniet unde.",
-            fullDescription: "Event Catch is an exciting competition that challenges participants to demonstrate their quick thinking and problem-solving abilities. This event combines elements of strategy, speed, and creativity to create an unforgettable experience for all participants.",
-            date: "March 15, 2025",
-            time: "10:00 AM - 4:00 PM",
-            venue: "Main Auditorium, Saveetha Engineering College",
-            category: "Technical",
-            prizes: ["₹10,000", "₹7,000", "₹5,000"],
-            rules: [
-                "Participants must register before the deadline",
-                "Teams of 2-4 members are allowed",
-                "All participants must carry valid college ID",
-                "Mobile phones are not allowed during the competition",
-                "Participants must register before the deadline",
-                "Teams of 2-4 members are allowed",
-                "All participants must carry valid college ID",
-                "Mobile phones are not allowed during the competition",
-                "Participants must register before the deadline",
-                "Teams of 2-4 members are allowed",
-                "All participants must carry valid college ID",
-                "Mobile phones are not allowed during the competition"
-            ],
-            contact: {
-                name: "Priya Sharma",
-                phone: "+91 9876543210",
-                email: "priya.sharma@student.saveetha.ac.in"
-            }
-        },
-        2: {
-            id: 2,
-            title: "Cube Quest",
-            img: "/cube.png",
-            description: "Embark on an adventure to solve the mysteries of the Cube Kingdom and conquer its geometric challenges.",
-            fullDescription: "Cube Quest is an innovative puzzle-solving competition that tests your spatial reasoning and logical thinking. Participants will navigate through various cube-based challenges, each more complex than the last.",
-            date: "March 16, 2025",
-            time: "9:00 AM - 5:00 PM",
-            venue: "Computer Lab, Block A",
-            category: "Technical",
-            prizes: ["₹15,000", "₹10,000", "₹7,000"],
-            rules: [
-                "Individual participation only",
-                "Basic knowledge of algorithms required",
-                "Laptops will be provided",
-                "Duration: 6 hours with breaks",
-                "Basic knowledge of algorithms required",
-                "Laptops will be provided",
-                "Duration: 6 hours with breaks",
-                "Basic knowledge of algorithms required",
-                "Laptops will be provided",
-                "Duration: 6 hours with breaks",
-                "Basic knowledge of algorithms required",
-                "Laptops will be provided",
-                "Duration: 6 hours with breaks"
-            ],
-            contact: {
-                name: "Arjun Patel",
-                phone: "+91 9876543211",
-                email: "arjun.patel@student.saveetha.ac.in"
-            }
-        },
-        3: {
-            id: 3,
-            title: "Square Fest",
-            img: "/square.png",
-            description: "Celebrate symmetry and style at the annual Square Fest, filled with art, games, and food from all corners.",
-            fullDescription: "Square Fest is a cultural extravaganza that brings together art, music, dance, and culinary delights. This event celebrates creativity in all its forms and provides a platform for artistic expression.",
-            date: "March 17, 2025",
-            time: "2:00 PM - 8:00 PM",
-            venue: "Open Ground, Campus",
-            category: "Cultural",
-            prizes: ["₹12,000", "₹8,000", "₹5,000"],
-            rules: [
-                "Open to all departments",
-                "Group performances encouraged",
-                "Original content only",
-                "Maximum 10 minutes per performance"
-            ],
-            contact: {
-                name: "Sneha Reddy",
-                phone: "+91 9876543212",
-                email: "sneha.reddy@student.saveetha.ac.in"
-            }
-        },
-        4: {
-            id: 4,
-            title: "Event Catch",
-            img: "/circle.png",
-            description: "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quis dolorum a, ducimus esse pariatur assumenda cum eveniet unde.",
-            fullDescription: "Another exciting Event Catch competition with new challenges and opportunities for participants to showcase their skills and win amazing prizes.",
-            date: "March 18, 2025",
-            time: "11:00 AM - 3:00 PM",
-            venue: "Seminar Hall, Block B",
-            category: "Technical",
-            prizes: ["₹8,000", "₹5,000", "₹3,000"],
-            rules: [
-                "Teams of 3-5 members",
-                "Cross-department teams allowed",
-                "Presentation required",
-                "Time limit: 4 hours",
-                "Teams of 3-5 members",
-                "Cross-department teams allowed",
-                "Presentation required",
-                "Time limit: 4 hours",
-                "Teams of 3-5 members",
-                "Cross-department teams allowed",
-                "Presentation required",
-                "Time limit: 4 hours"
-            ],
-            contact: {
-                name: "Dr. Rajesh Kumar",
-                phone: "+91 9876543213",
-                email: "rajesh.kumar@saveetha.ac.in"
-            }
-        }
-    }
-
+    // Fetch event data from Firestore
     useEffect(() => {
-        const eventId = parseInt(params.id)
-        const eventData = eventsData[eventId]
-        if (eventData) {
-            setEvent(eventData)
+        const fetchEvent = async () => {
+            if (!params.id) return
+
+
+
+            try {
+                setLoading(true)
+                const eventDoc = doc(db, 'events', params.id)
+                const eventSnapshot = await getDoc(eventDoc)
+
+                if (eventSnapshot.exists()) {
+                    const eventData = { id: eventSnapshot.id, ...eventSnapshot.data() }
+                    setEvent(eventData)
+                } else {
+                    console.log('No event found with this ID')
+                    setEvent(null)
+                }
+            } catch (error) {
+                console.error('Error fetching event:', error)
+                setEvent(null)
+            } finally {
+                setLoading(false)
+            }
         }
+
+        fetchEvent()
     }, [params.id])
 
+    // Handle registration
     const handleRegistration = () => {
         setIsRegistered(!isRegistered)
+        // Here you can add logic to save registration to Firestore
+        // For example: save user registration to a 'registrations' collection
     }
+
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background flex flex-col">
+                <Header />
+                <div className="text-center h-[calc(100vh-80px)] flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                    <h1 className="font-audiowide text-2xl text-white">Loading Event...</h1>
+                </div>
+            </div>
+        )
+    }
+
+
+
 
     if (!event) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background flex flex-col">
                 <Header />
-                <div className="text-center">
+                <div className="text-center h-[calc(100vh-80px)] flex flex-col items-center justify-center">
                     <h1 className="font-audiowide text-4xl text-white mb-4">Event Not Found</h1>
                     <button
                         onClick={() => router.push('/events')}
@@ -231,7 +155,7 @@ const EventDetailPage = () => {
                     <div className="grid lg:grid-cols-3 gap-12">
 
                         {/* Rules & Guidelines */}
-                        <div className="bg-background border border-border rounded-2xl p-6 h-fit">
+                        <div className="bg-background border border-border rounded-2xl p-6">
                             <h3 className="font-audiowide text-xl text-white mb-6 flex items-center gap-2">
                                 📋 RULES & GUIDELINES
                             </h3>
