@@ -144,7 +144,7 @@ const AdminDashboard = () => {
                             <Plus size={20} />
                             Add New Event
                         </button>
-                        
+
                         {isSuperAdmin && (
                             <button
                                 onClick={() => router.push('/admin/users')}
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
                                 Manage Users
                             </button>
                         )}
-                        
+
                         <button
                             onClick={handleLogout}
                             className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2"
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
                 <StatsCards events={filteredEvents} />
 
                 {/* Events Table */}
-                <EventsTable 
+                <EventsTable
                     events={filteredEvents}
                     loading={loading}
                     onEdit={handleEditEvent}

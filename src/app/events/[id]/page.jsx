@@ -6,6 +6,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
+import EventRegistrationModal from '@/components/EventRegistrationModal'
 
 const EventDetailPage = () => {
     const params = useParams()
@@ -13,6 +14,7 @@ const EventDetailPage = () => {
     const [event, setEvent] = useState(null)
     const [isRegistered, setIsRegistered] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [showRegistrationModal, setShowRegistrationModal] = useState(false)
 
     // Fetch event data from Firestore
     useEffect(() => {
@@ -45,45 +47,66 @@ const EventDetailPage = () => {
     }, [params.id])
 
     // Handle registration
-    const handleRegistration = async () => {
-        if (isRegistered) {
-            setIsRegistered(false)
-            return
-        }
+    // const handleRegistration = async () => {
+    //     if (isRegistered) {
+    //         setIsRegistered(false)
+    //         return
+    //     }
 
-        try {
-            // For demo purposes, using sample user data
-            // In a real app, you'd get this from authentication
-            const userInfo = {
-                name: "Demo User",
-                email: "demo@example.com",
-                phone: "+1234567890"
-            }
+    //     // Prompt user for registration details
+    //     const name = prompt("Enter your full name:");
+    //     if (!name || name.trim() === "") {
+    //         alert("Name is required for registration");
+    //         return;
+    //     }
 
-            const response = await fetch('/api/registrations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    eventId: params.id,
-                    userInfo
-                })
-            })
+    //     const email = prompt("Enter your email address:");
+    //     if (!email || email.trim() === "") {
+    //         alert("Email is required for registration");
+    //         return;
+    //     }
 
-            if (response.ok) {
-                setIsRegistered(true)
-                // Update local event data to reflect new participation count
-                setEvent(prev => ({
-                    ...prev,
-                    participationCount: (prev.participationCount || 0) + 1
-                }))
-            } else {
-                console.error('Registration failed')
-            }
-        } catch (error) {
-            console.error('Error during registration:', error)
-        }
+    //     // Basic email validation
+    //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    //     if (!emailRegex.test(email)) {
+    //         alert("Please enter a valid email address");
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await fetch('/api/registrations', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify({
+    //                 eventId: params.id,
+    //                 name: name.trim(),
+    //                 email: email.trim()
+    //             })
+    //         })
+
+    //         const data = await response.json();
+
+    //         if (response.ok) {
+    //             setIsRegistered(true)
+    //             // Update local event data to reflect new participation count
+    //             setEvent(prev => ({
+    //                 ...prev,
+    //                 participationCount: (prev.participationCount || 0) + 1
+    //             }))
+    //             alert(data.message || "Registration successful!");
+    //         } else {
+    //             alert(data.error || 'Registration failed');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error during registration:', error)
+    //         alert('Registration failed. Please try again.');
+    //     }
+    // }
+
+    const handleRegistration = () => {
+        setShowRegistrationModal(true)
     }
 
     // Show loading state
@@ -297,6 +320,21 @@ const EventDetailPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Registration Modal */}
+            {showRegistrationModal && (
+                <EventRegistrationModal
+                    event={event}
+                    showCloseButton={true}
+                    allowBackdropClose={true}
+                    onClose={() => setShowRegistrationModal(false)}
+                    onRegistrationSuccess={() => {
+                        setIsRegistered(true);
+                        // Optionally reflect local count increment
+                        setEvent(prev => prev ? { ...prev, participationCount: (prev.participationCount || 0) + 1 } : prev);
+                    }}
+                />
+            )}
 
             <Footer />
         </div>

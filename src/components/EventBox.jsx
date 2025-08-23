@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import EventRegistrationModal from "./EventRegistrationModal";
 
-const EventBox = ({ img, title, description, link, id }) => {
+const EventBox = ({ img, title, description, link, id, event }) => {
   const router = useRouter();
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   return (
     <div className="group relative bg-background-soft border border-border rounded-3xl p-6 w-[280px] md:w-[320px] h-[450px] flex flex-col overflow-hidden hover:border-primary transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
 
@@ -39,21 +41,23 @@ const EventBox = ({ img, title, description, link, id }) => {
           </p>
         </div>
 
-        {/* Register Button */}
-        <div className="mt-6">
+        {/* Action Buttons */}
+        <div className="mt-6 space-y-2">
+
+
           <button
-            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-audiowide text-sm md:text-base py-3 px-6 rounded-xl hover:from-hover-primary hover:to-primary transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-primary/30 relative overflow-hidden group/btn"
+            className="w-full bg-background-soft border border-border text-white font-audiowide text-sm py-2 px-4 rounded-xl hover:bg-background transition-all duration-300"
             onClick={() => router.push(`/events/${id}`)}
           >
-            {/* Button Glow Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 cursor-pointer"></div>
-            <span className="relative z-10 ">Register Now</span>
+            View Details
           </button>
         </div>
       </div>
 
       {/* Bottom Accent Line */}
       <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-center"></div>
+
+
     </div>
   );
 };

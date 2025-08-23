@@ -1,17 +1,26 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDepartmentName } from '@/constants/departments';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Eye, Edit, Trash2, Users } from 'lucide-react';
 import Image from 'next/image';
+import ParticipantListModal from './ParticipantListModal';
 
 export default function EventsTable({ events, loading, onEdit, onDelete, onView }) {
+    const [showParticipantModal, setShowParticipantModal] = useState(false);
+    const [selectedEventForParticipants, setSelectedEventForParticipants] = useState(null);
     const { isSuperAdmin, isDepartmentAdmin, userDepartment } = useAuth();
 
     const canEditEvent = (event) => {
         if (isSuperAdmin) return true;
         if (isDepartmentAdmin && userDepartment === event.department) return true;
         return false;
+    };
+
+    const handleViewParticipants = (event) => {
+        setSelectedEventForParticipants(event);
+        setShowParticipantModal(true);
     };
 
     if (loading) {
@@ -89,6 +98,13 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
                                 <td className="p-4">
                                     <div className="flex items-center gap-2">
                                         <button
+                                            onClick={() => handleViewParticipants(event)}
+                                            className="p-2 text-muted-text hover:text-accent transition-colors duration-300"
+                                            title="View Participants"
+                                        >
+                                            <Users size={16} />
+                                        </button>
+                                        <button
                                             onClick={() => onView(event)}
                                             className="p-2 text-muted-text hover:text-primary transition-colors duration-300"
                                             title="View Details"
@@ -120,6 +136,17 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
                     </tbody>
                 </table>
             </div>
+
+            {/* Participant List Modal */}
+            {showParticipantModal && selectedEventForParticipants && (
+                <ParticipantListModal
+                    event={selectedEventForParticipants}
+                    onClose={() => {
+                        setShowParticipantModal(false);
+                        setSelectedEventForParticipants(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

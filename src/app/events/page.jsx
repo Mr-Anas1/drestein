@@ -66,6 +66,7 @@ const page = () => {
                                     description={event.description}
                                     link={`/events/${event.id}`}
                                     id={event.id}
+                                    event={event}
                                 />
                             ))}
                         </div>
