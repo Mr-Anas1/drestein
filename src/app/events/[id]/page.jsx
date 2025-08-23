@@ -45,10 +45,45 @@ const EventDetailPage = () => {
     }, [params.id])
 
     // Handle registration
-    const handleRegistration = () => {
-        setIsRegistered(!isRegistered)
-        // Here you can add logic to save registration to Firestore
-        // For example: save user registration to a 'registrations' collection
+    const handleRegistration = async () => {
+        if (isRegistered) {
+            setIsRegistered(false)
+            return
+        }
+
+        try {
+            // For demo purposes, using sample user data
+            // In a real app, you'd get this from authentication
+            const userInfo = {
+                name: "Demo User",
+                email: "demo@example.com",
+                phone: "+1234567890"
+            }
+
+            const response = await fetch('/api/registrations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    eventId: params.id,
+                    userInfo
+                })
+            })
+
+            if (response.ok) {
+                setIsRegistered(true)
+                // Update local event data to reflect new participation count
+                setEvent(prev => ({
+                    ...prev,
+                    participationCount: (prev.participationCount || 0) + 1
+                }))
+            } else {
+                console.error('Registration failed')
+            }
+        } catch (error) {
+            console.error('Error during registration:', error)
+        }
     }
 
     // Show loading state
