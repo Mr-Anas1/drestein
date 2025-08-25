@@ -1,5 +1,7 @@
+"use client";
 import Stats from "@/components/Stats";
 import React from "react";
+import Reveal from "@/components/Reveal";
 
 const StatsSection = () => {
   const statData = [
@@ -24,7 +26,9 @@ const StatsSection = () => {
     <div className="h-[20vh] my-32 w-screen flex justify-center items-center">
       <div className="flex justify-center items-center gap-12 md:gap-24 flex-wrap px-4">
         {statData.map((item, index) => (
-          <Stats value={item.value} title={item.title} key={index} />
+          <Reveal effect="zoom" delay={index * 100} key={index}>
+            <Stats value={item.value} title={item.title} />
+          </Reveal>
         ))}
       </div>
     </div>

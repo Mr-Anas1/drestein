@@ -1,6 +1,8 @@
+"use client";
 import EventBox from "@/components/EventBox";
 import React from "react";
 import { useRouter } from "next/navigation";
+import Reveal from "@/components/Reveal";
 
 const Events = () => {
   const eventsData = [
@@ -38,28 +40,33 @@ const Events = () => {
 
   return (
     <div className="mt-24 md:mt-38">
-      <h1 className="font-audiowide text-[32px]  text-center md:text-[64px] bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-        Events
-      </h1>
+      <Reveal effect="fade-up">
+        <h1 className="font-audiowide text-[32px]  text-center md:text-[64px] bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Events
+        </h1>
+      </Reveal>
       <div className="flex md:flex-row flex-col mx-12 mt-10  justify-center items-center gap-12">
         {eventsData.map((event, index) => (
-          <EventBox
-            key={index}
-            img={event.img}
-            title={event.title}
-            description={event.description}
-            link={event.link}
-          />
+          <Reveal effect="fade-up" delay={index * 100} key={index}>
+            <EventBox
+              img={event.img}
+              title={event.title}
+              description={event.description}
+              link={event.link}
+            />
+          </Reveal>
         ))}
       </div>
 
       <div className="flex justify-center items-center my-12">
-        <button
-          className="bg-primary w-[150px] text-white rounded-lg hover:bg-hover-primary transition duration-300 py-2 md:py-3 cursor-pointer font-audiowide"
-          onClick={() => router.push("/events")}
-        >
-          Explore More
-        </button>
+        <Reveal effect="fade-up" delay={100}>
+          <button
+            className="bg-primary w-[150px] text-white rounded-lg hover:bg-hover-primary transition duration-300 py-2 md:py-3 cursor-pointer font-audiowide"
+            onClick={() => router.push("/events")}
+          >
+            Explore More
+          </button>
+        </Reveal>
       </div>
     </div>
   );

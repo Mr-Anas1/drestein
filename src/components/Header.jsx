@@ -30,6 +30,12 @@ const Header = () => {
             Home
           </a>
           <a
+            onClick={() => router.push("/departments")}
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
+          >
+            Departments
+          </a>
+          <a
             onClick={() => router.push("/events")}
             className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
           >
@@ -73,6 +79,13 @@ const Header = () => {
             onClick={toggleMenu}
           >
             Home
+          </a>
+          <a
+            href="#departments"
+            className="hover:text-primary transition duration-300s"
+            onClick={toggleMenu}
+          >
+            Departments
           </a>
           <a
             href="#events"
