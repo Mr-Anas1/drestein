@@ -4,10 +4,10 @@ import { collection, addDoc, doc, updateDoc, increment, getDoc, query, where, ge
 
 export async function POST(request) {
     try {
-        const { eventId, name, email } = await request.json()
+        const { eventId, name, email, transactionId } = await request.json()
         
-        if (!eventId || !name || !email) {
-            return NextResponse.json({error: "Event ID, name, and email are required"}, {status: 400})
+        if (!eventId || !name || !email || !transactionId) {
+            return NextResponse.json({error: "All fields including transaction ID are required"}, {status: 400})
         }
         
         // Check if user is already registered for this event
@@ -30,8 +30,11 @@ export async function POST(request) {
             eventId,
             name: name.trim(),
             email: email.toLowerCase().trim(),
+            transactionId: transactionId.trim(),
             registeredAt: new Date(),
-            status: 'active'
+            status: 'pending_payment',
+            paymentStatus: 'pending',
+            paymentVerified: false
         }
         
         const docRef = await addDoc(registrationsRef, registrationData)
@@ -85,5 +88,67 @@ export async function GET(request) {
     } catch(error) {
         console.error('Error fetching participants:', error)
         return NextResponse.json({error: "Failed to fetch participants"}, {status: 500})
+    }
+}
+
+export async function PATCH(request) {
+    try {
+        const { registrationId, status, adminNotes } = await request.json()
+        
+        if (!registrationId || !status) {
+            return NextResponse.json(
+                { error: "Registration ID and status are required" }, 
+                { status: 400 }
+            )
+        }
+
+        const registrationRef = doc(db, "registrations", registrationId)
+        const registrationSnap = await getDoc(registrationRef)
+
+        if (!registrationSnap.exists()) {
+            return NextResponse.json(
+                { error: "Registration not found" },
+                { status: 404 }
+            )
+        }
+
+        const updateData = {
+            status: status === 'approved' ? 'active' : 'rejected',
+            paymentStatus: status,
+            paymentVerified: status === 'approved',
+            updatedAt: new Date().toISOString()
+        }
+
+        if (adminNotes) {
+            updateData.adminNotes = adminNotes
+        }
+
+        await updateDoc(registrationRef, updateData)
+
+        // If approved, update the event's participation count
+        if (status === 'approved') {
+            const registrationData = registrationSnap.data()
+            const eventRef = doc(db, "events", registrationData.eventId)
+            
+            // Only increment if this registration wasn't previously approved
+            if (registrationData.status !== 'active') {
+                await updateDoc(eventRef, {
+                    participationCount: increment(1)
+                })
+            }
+        }
+
+        return NextResponse.json({
+            message: `Registration ${status} successfully`,
+            registrationId,
+            status: updateData.status
+        })
+
+    } catch (error) {
+        console.error('Error updating registration status:', error)
+        return NextResponse.json(
+            { error: "Failed to update registration status" },
+            { status: 500 }
+        )
     }
 }

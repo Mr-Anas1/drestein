@@ -13,6 +13,8 @@ export default function AddEventModal({ onClose, onEventAdded }) {
         description: '',
         fullDescription: '',
         img: '',
+        upiQrCode: '',
+        isPaid: false,
         date: '',
         time: '',
         venue: '',
@@ -105,6 +107,7 @@ export default function AddEventModal({ onClose, onEventAdded }) {
                                 <option value="Technical">Technical</option>
                                 <option value="Non-Technical">Non-Technical</option>
                                 <option value="Cultural">Cultural</option>
+                                <option value="Workshop">Workshop</option>
                             </select>
                         </div>
                     </div>
@@ -161,6 +164,24 @@ export default function AddEventModal({ onClose, onEventAdded }) {
                                 className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
                             />
                         </div>
+                        
+                        <div className="flex items-end">
+                            <label className="flex items-center cursor-pointer">
+                                <div className="relative">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only" 
+                                        checked={formData.isPaid}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, isPaid: e.target.checked }))}
+                                    />
+                                    <div className={`block w-14 h-8 rounded-full ${formData.isPaid ? 'bg-primary' : 'bg-background-soft border border-border'}`}></div>
+                                    <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${formData.isPaid ? 'translate-x-6' : ''}`}></div>
+                                </div>
+                                <div className="ml-3 text-white font-space text-sm">
+                                    Paid Event
+                                </div>
+                            </label>
+                        </div>
 
                         <div>
                             <label className="block text-sm font-audiowide text-muted-text mb-2">Time</label>
@@ -185,11 +206,31 @@ export default function AddEventModal({ onClose, onEventAdded }) {
                         </div>
                     </div>
 
-                    <ImageUpload
-                        currentImage={formData.img}
-                        onImageUpload={(url) => setFormData(prev => ({ ...prev, img: url }))}
-                        disabled={loading}
-                    />
+                    <div>
+                        {/* <label className="block text-sm font-audiowide text-muted-text mb-2">Event Image</label> */}
+                        <ImageUpload
+                            currentImage={formData.img}
+                            onImageUpload={(url) => setFormData(prev => ({ ...prev, img: url }))}
+                            disabled={loading}
+                        />
+                    </div>
+
+                    {formData.isPaid && (
+                        <div>
+                            <label className="block text-sm font-audiowide text-muted-text mb-2">
+                                UPI QR Code (Required for Paid Events)
+                            </label>
+                            <ImageUpload
+                                currentImage={formData.upiQrCode}
+                                onImageUpload={(url) => setFormData(prev => ({ ...prev, upiQrCode: url }))}
+                                disabled={loading}
+                                required={formData.isPaid}
+                            />
+                            <p className="text-xs text-muted-text mt-1">
+                                Upload a clear image of your UPI QR code for event payments
+                            </p>
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-sm font-audiowide text-muted-text mb-2">Rules</label>

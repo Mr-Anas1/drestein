@@ -34,12 +34,13 @@ export default function ParticipantListModal({ event, onClose }) {
     const exportToCSV = () => {
         if (participants.length === 0) return;
 
-        const headers = ['Name', 'Email', 'Registration Date'];
+        const headers = ['Name', 'Email', 'Transaction ID', 'Registration Date'];
         const csvContent = [
             headers.join(','),
             ...participants.map(p => [
                 `"${p.name}"`,
                 `"${p.email}"`,
+                `"${p.transactionId}"`,
                 `"${new Date(p.registeredAt.seconds * 1000).toLocaleString()}"`
             ].join(','))
         ].join('\n');
@@ -55,12 +56,12 @@ export default function ParticipantListModal({ event, onClose }) {
 
     const formatDate = (timestamp) => {
         if (!timestamp) return 'N/A';
-        
+
         // Handle Firestore timestamp
-        const date = timestamp.seconds 
+        const date = timestamp.seconds
             ? new Date(timestamp.seconds * 1000)
             : new Date(timestamp);
-            
+
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
     };
 
@@ -118,7 +119,7 @@ export default function ParticipantListModal({ event, onClose }) {
                                     </h4>
                                 </div>
                             </div>
-                            
+
                             <div className="overflow-y-auto max-h-96 custom-scrollbar">
                                 <table className="w-full">
                                     <thead className="bg-background sticky top-0">
@@ -145,6 +146,12 @@ export default function ParticipantListModal({ event, onClose }) {
                                                     <div className="flex items-center gap-2">
                                                         <Mail size={16} className="text-secondary" />
                                                         <span className="text-white font-space">{participant.email}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <Mail size={16} className="text-secondary" />
+                                                        <span className="text-white font-space">{participant.transactionId}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">

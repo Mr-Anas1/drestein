@@ -6,7 +6,8 @@ import { X, User, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 export default function EventRegistrationModal({ event, onClose, onRegistrationSuccess, showCloseButton = true, allowBackdropClose = true }) {
     const [formData, setFormData] = useState({
         name: '',
-        email: ''
+        email: '',
+        transactionId: ''
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -37,7 +38,8 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                 body: JSON.stringify({
                     eventId: event.id,
                     name: formData.name.trim(),
-                    email: formData.email.trim().toLowerCase()
+                    email: formData.email.trim().toLowerCase(),
+                    transactionId: formData.transactionId.trim()
                 })
             });
 
@@ -78,7 +80,7 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                     </div>
                     <h3 className="font-audiowide text-xl text-white mb-2">Registration Successful!</h3>
                     <p className="text-muted-text font-space mb-4">
-                        You have successfully registered for "{event.title}". 
+                        You have successfully registered for "{event.title}".
                         We'll contact you with further details.
                     </p>
                     <div className="flex items-center justify-center gap-3">
@@ -99,8 +101,9 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={allowBackdropClose ? onClose : undefined}>
-            <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-6">
+            <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className="flex justify-between items-center mb-6 flex-shrink-0">
                     <h3 className="font-audiowide text-xl text-white">Register for Event</h3>
                     {showCloseButton && (
                         <button
@@ -112,6 +115,9 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                         </button>
                     )}
                 </div>
+                
+                {/* Scrollable Content */}
+                <div className="overflow-y-auto pr-2 -mr-2 flex-grow custom-scrollbar">
 
                 <div className="mb-6">
                     <h4 className="font-audiowide text-primary text-lg mb-2">{event.title}</h4>
@@ -119,6 +125,11 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                         <p>📅 {event.date} at {event.time}</p>
                         <p>📍 {event.venue}</p>
                         <p>🏢 {event.department}</p>
+                        {event.isPaid && (
+                            <p className="text-primary font-medium">
+                                💰 Paid Event - Payment Required
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -153,6 +164,52 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                         />
                     </div>
 
+                    {event.isPaid && (
+                        <>
+                            <div className="mt-4 p-4 bg-background-soft rounded-lg border border-border">
+                                <h5 className="font-audiowide text-white text-sm mb-3">Payment Information</h5>
+                                <p className="text-sm text-muted-text mb-3">
+                                    This is a paid event. Please complete the payment to register.
+                                </p>
+                                {event.upiQrCode && (
+                                    <div className="flex flex-col items-center mb-4">
+                                        <div className="mb-3 p-2 bg-white rounded">
+                                            <img 
+                                                src={event.upiQrCode} 
+                                                alt="UPI QR Code" 
+                                                className="w-40 h-40 object-contain"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-muted-text text-center mb-3">
+                                            Scan the QR code to make payment
+                                        </p>
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="block text-sm font-audiowide text-muted-text mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-2">
+                                            <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+                                            <line x1="12" y1="12" x2="12" y2="12.01"></line>
+                                        </svg>
+                                        UPI Transaction ID
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.transactionId}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, transactionId: e.target.value }))}
+                                        className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                                        placeholder="Enter your UPI transaction reference ID"
+                                    />
+                                    <p className="text-xs text-muted-text mt-1">
+                                        Please enter the UPI transaction reference ID after payment
+                                    </p>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+
                     {error && (
                         <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                             <AlertCircle size={16} />
@@ -180,7 +237,10 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                     </div>
                 </form>
 
-                <div className="mt-4 text-xs text-muted-text text-center">
+                </div>
+                
+                {/* Footer */}
+                <div className="mt-4 text-xs text-muted-text text-center pt-4 border-t border-border/50 flex-shrink-0">
                     By registering, you agree to receive event-related communications.
                 </div>
             </div>

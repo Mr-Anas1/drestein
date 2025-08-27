@@ -37,8 +37,8 @@ const Hero = () => {
         {/* Left Section */}
         <div className="flex-1 flex flex-col gap-6 justify-center items-center lg:items-start h-full">
           <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-audiowide text-white animate-slide-in">
-            <span className="text-primary animate-glow">DR</span>EA
-            <span className="text-secondary animate-glow">M</span> D
+            <span className="text-primary animate-glow">DR</span>EAM
+            <span className="text-secondary animate-glow"></span> D
             <span className="text-accent animate-glow">ES</span>IGN COMPE
             <span className="text-yellow-400 animate-glow">TE</span> W
             <span className="text-green-400 animate-glow">IN</span> 20
