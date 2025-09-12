@@ -15,8 +15,10 @@ const Header = () => {
   return (
     <div className="flex justify-between items-center px-4 md:px-12 h-20 border-b border-gray-600">
       <div>
-        <h1 className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer"
-          onClick={() => router.push("/")}>
+        <h1
+          className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer"
+          onClick={() => router.push("/")}
+        >
           DRESTEIN
         </h1>
       </div>
@@ -74,30 +76,26 @@ const Header = () => {
       {menuDisplay && (
         <div className="absolute top-20 left-0 w-full h-screen bg-gray-800 text-white p-4 flex flex-col space-y-12 py-12 overflow-hidden items-center md:hidden z-99">
           <a
-            href="#home"
             className="hover:text-primary transition duration-300s"
-            onClick={toggleMenu}
+            onClick={() => router.push("/")}
           >
             Home
           </a>
           <a
-            href="#departments"
             className="hover:text-primary transition duration-300s"
-            onClick={toggleMenu}
+            onClick={() => router.push("/departments")}
           >
             Departments
           </a>
           <a
-            href="#events"
             className="hover:text-primary transition duration-300s"
-            onClick={toggleMenu}
+            onClick={() => router.push("/events")}
           >
             Events
           </a>
           <a
-            href="#about"
             className="hover:text-primary transition duration-300s"
-            onClick={toggleMenu}
+            onClick={() => router.push("/about")}
           >
             About
           </a>

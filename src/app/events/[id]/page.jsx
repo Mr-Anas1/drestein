@@ -21,8 +21,6 @@ const EventDetailPage = () => {
         const fetchEvent = async () => {
             if (!params.id) return
 
-
-
             try {
                 setLoading(true)
                 const eventDoc = doc(db, 'events', params.id)
