@@ -3,10 +3,13 @@
 import { AlignJustify, X } from "lucide-react";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [menuDisplay, setMenuDisplay] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const router = useRouter();
+  const { isAuthenticated, studentProfile, loginWithGoogleStudent, logout, user } = useAuth();
 
   const toggleMenu = () => {
     setMenuDisplay(!menuDisplay);
@@ -50,9 +53,53 @@ const Header = () => {
           >
             About
           </a>
-          <button className="bg-primary text-white font-audiowide hover:bg-hover-primary transition duration-300s px-6 py-2 rounded-lg">
-            Register
-          </button>
+          {!isAuthenticated ? (
+            <button
+              onClick={loginWithGoogleStudent}
+              className="bg-primary text-white font-audiowide hover:bg-hover-primary transition duration-300s px-6 py-2 rounded-lg"
+            >
+              Student Login
+            </button>
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => setAccountOpen((v) => !v)}
+                className="flex items-center gap-2 bg-background-soft border border-border text-white font-audiowide hover:bg-background transition duration-300s px-3 py-2 rounded-lg"
+              >
+                {(studentProfile?.photoURL || user?.photoURL) && (
+                  <img
+                    src={studentProfile?.photoURL || user?.photoURL}
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full border border-border object-cover"
+                  />
+                )}
+                <span className="text-white font-space text-sm hidden lg:inline">
+                  {studentProfile?.name || user?.displayName || user?.email}
+                </span>
+              </button>
+              {accountOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-background-soft border border-border rounded-lg shadow-lg p-2 z-[100]">
+                  <div className="px-3 py-2 text-xs text-muted-text">
+                    Signed in as
+                    <div className="text-white truncate">{user?.email}</div>
+                  </div>
+                  <button
+                    onClick={() => { setAccountOpen(false); router.push('/events'); }}
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm"
+                  >
+                    My Registrations
+                  </button>
+                  <div className="h-px bg-border my-1" />
+                  <button
+                    onClick={() => { setAccountOpen(false); logout(); }}
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         {/* menu */}
         <div className="md:hidden flex">
@@ -99,9 +146,33 @@ const Header = () => {
           >
             About
           </a>
-          <button className="bg-primary text-white hover:bg-hover-primary transition duration-300s px-6 py-2 rounded-lg">
-            Register
-          </button>
+          {!isAuthenticated ? (
+            <button
+              onClick={loginWithGoogleStudent}
+              className="bg-primary text-white hover:bg-hover-primary transition duration-300s px-6 py-2 rounded-lg"
+            >
+              Student Login
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+              {(studentProfile?.photoURL || user?.photoURL) && (
+                <img
+                  src={studentProfile?.photoURL || user?.photoURL}
+                  alt="avatar"
+                  className="w-8 h-8 rounded-full border border-border object-cover"
+                />
+              )}
+              <span className="text-white font-space text-sm">
+                {studentProfile?.name || user?.displayName || user?.email}
+              </span>
+              <button
+                onClick={logout}
+                className="bg-background-soft border border-border text-white font-audiowide hover:bg-background transition duration-300s px-4 py-2 rounded-lg"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
