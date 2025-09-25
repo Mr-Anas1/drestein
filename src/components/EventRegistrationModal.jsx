@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { X, User, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { auth } from '@/lib/firebase';
 
 export default function EventRegistrationModal({ event, onClose, onRegistrationSuccess, showCloseButton = true, allowBackdropClose = true }) {
     const [formData, setFormData] = useState({
@@ -40,17 +41,31 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
         setLoading(true);
         setError('');
 
+        // Require authentication for registration
+        if (!isAuthenticated) {
+            setLoading(false);
+            setError('Please sign in with Google to register for events.');
+            return;
+        }
+
         try {
+            // Get Firebase ID token for server verification
+            const token = await auth.currentUser?.getIdToken?.();
+            if (!token) {
+                throw new Error('Unable to retrieve auth token');
+            }
             const response = await fetch('/api/registrations', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     eventId: event.id,
                     name: formData.name.trim(),
                     email: formData.email.trim().toLowerCase(),
-                    transactionId: formData.transactionId.trim()
+                    transactionId: formData.transactionId.trim(),
+                    userUid: isAuthenticated ? (studentProfile?.uid || user?.uid) : null,
                 })
             });
 
@@ -62,6 +77,8 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                     onRegistrationSuccess();
                     onClose();
                 }, 2000);
+            } else if (response.status === 401) {
+                setError('Authentication required. Please sign in with Google to register.');
             } else {
                 setError(data.error || 'Registration failed');
             }
@@ -133,12 +150,12 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                     <div className="mb-6">
                         <h4 className="font-audiowide text-primary text-lg mb-2">{event.title}</h4>
                         <div className="text-muted-text font-space text-sm space-y-1">
-                            <p>📅 {event.date} at {event.time}</p>
-                            <p>📍 {event.venue}</p>
-                            <p>🏢 {event.department}</p>
+                            <p> {event.date} at {event.time}</p>
+                            <p> {event.venue}</p>
+                            <p> {event.department}</p>
                             {event.isPaid && (
                                 <p className="text-primary font-medium">
-                                    💰 Paid Event - Payment Required
+                                    Paid Event - Payment Required
                                 </p>
                             )}
                         </div>
@@ -225,18 +242,17 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                                                 <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
                                                 <line x1="12" y1="12" x2="12" y2="12.01"></line>
                                             </svg>
-                                            UPI Transaction ID
+                                            UPI Transaction ID (optional)
                                         </label>
                                         <input
                                             type="text"
-                                            required
                                             value={formData.transactionId}
                                             onChange={(e) => setFormData(prev => ({ ...prev, transactionId: e.target.value }))}
                                             className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                                            placeholder="Enter your UPI transaction reference ID"
+                                            placeholder="Enter your UPI transaction reference ID (if available)"
                                         />
                                         <p className="text-xs text-muted-text mt-1">
-                                            Please enter the UPI transaction reference ID after payment
+                                            If you've paid, you can enter your UPI transaction reference ID for faster verification. This is optional.
                                         </p>
                                     </div>
                                 </div>

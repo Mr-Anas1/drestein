@@ -84,7 +84,7 @@ const Header = () => {
                     <div className="text-white truncate">{user?.email}</div>
                   </div>
                   <button
-                    onClick={() => { setAccountOpen(false); router.push('/events'); }}
+                    onClick={() => { setAccountOpen(false); router.push('/my-registrations'); }}
                     className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm"
                   >
                     My Registrations
