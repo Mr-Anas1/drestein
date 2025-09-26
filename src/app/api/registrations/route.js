@@ -1,40 +1,64 @@
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 // Initialize Firebase Admin SDK once per runtime
 function getAdminDB() {
   if (!getApps().length) {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
+    const projectId =
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+      process.env.FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
+    console.log("Firebase Admin SDK initialization:");
+    console.log("Project ID:", projectId ? "✓ Set" : "✗ Missing");
+    console.log("Client Email:", clientEmail ? "✓ Set" : "✗ Missing");
+    console.log("Private Key:", privateKey ? "✓ Set" : "✗ Missing");
+
     // Validate presence
     if (!projectId || !clientEmail || !privateKey) {
+      const missing = [];
+      if (!projectId) missing.push("FIREBASE_PROJECT_ID");
+      if (!clientEmail) missing.push("FIREBASE_CLIENT_EMAIL");
+      if (!privateKey) missing.push("FIREBASE_PRIVATE_KEY");
+
       throw new Error(
-        'Missing Firebase Admin credentials. Please set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY in .env.local (PRIVATE KEY must be quoted and include \\n for newlines).'
+        `Missing Firebase Admin credentials: ${missing.join(
+          ", "
+        )}. Please set these in .env.local (PRIVATE KEY must be quoted and include \\n for newlines).`
       );
     }
 
     // Convert escaped newlines to real newlines
-    if (privateKey.includes('\\n')) {
-      privateKey = privateKey.replace(/\\n/g, '\n');
+    if (privateKey.includes("\\n")) {
+      privateKey = privateKey.replace(/\\n/g, "\n");
     }
 
     // Ensure key looks like a PEM
-    if (!privateKey.includes('BEGIN PRIVATE KEY')) {
-      throw new Error('FIREBASE_PRIVATE_KEY is not a valid PEM string. Ensure it is wrapped in quotes and preserves newlines.');
+    if (!privateKey.includes("BEGIN PRIVATE KEY")) {
+      throw new Error(
+        "FIREBASE_PRIVATE_KEY is not a valid PEM string. Ensure it is wrapped in quotes and preserves newlines."
+      );
     }
 
-    initializeApp({
-      credential: cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
+    try {
+      initializeApp({
+        credential: cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+      console.log("Firebase Admin SDK initialized successfully");
+    } catch (initError) {
+      console.error("Firebase Admin SDK initialization failed:", initError);
+      throw new Error(
+        `Firebase Admin SDK initialization failed: ${initError.message}`
+      );
+    }
   }
   return getFirestore();
 }
@@ -42,15 +66,17 @@ function getAdminDB() {
 async function verifyAuth(request) {
   // Ensure Admin SDK is initialized before verifying tokens
   getAdminDB();
-  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
-  const idToken = authHeader.split(' ')[1];
-  const { getAuth } = await import('firebase-admin/auth');
+  const authHeader =
+    request.headers.get("authorization") ||
+    request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+  const idToken = authHeader.split(" ")[1];
+  const { getAuth } = await import("firebase-admin/auth");
   try {
     const decoded = await getAuth().verifyIdToken(idToken);
     return decoded; // contains uid, email, etc.
   } catch (e) {
-    console.error('ID token verification failed:', e);
+    console.error("ID token verification failed:", e);
     return null;
   }
 }
@@ -59,33 +85,82 @@ export async function POST(request) {
   try {
     const decoded = await verifyAuth(request);
     if (!decoded) {
-      return NextResponse.json({ error: 'Authentication required. Please sign in with Google to register.' }, { status: 401 });
+      return NextResponse.json(
+        {
+          error:
+            "Authentication required. Please sign in with Google to register.",
+        },
+        { status: 401 }
+      );
     }
 
-    const { eventId, name, email, transactionId, userUid } = await request.json();
+    const { eventId, name, email, transactionId, userUid } =
+      await request.json();
 
     // Make transactionId optional
     if (!eventId || !name || !email || !userUid) {
-      return NextResponse.json({ error: 'Event ID, name, email, and authentication are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Event ID, name, email, and authentication are required" },
+        { status: 400 }
+      );
     }
 
     if (decoded.uid !== userUid) {
-      return NextResponse.json({ error: 'Unauthorized: UID mismatch' }, { status: 403 });
+      return NextResponse.json(
+        { error: "Unauthorized: UID mismatch" },
+        { status: 403 }
+      );
     }
 
     const db = getAdminDB();
 
-    // Duplicate check by uid per event
-    const dupSnap = await db
-      .collection('registrations')
-      .where('eventId', '==', eventId)
-      .where('userUid', '==', userUid)
-      .get();
+    // Duplicate check by uid per event - with better error handling
+    let dupSnap;
+    try {
+      console.log("Attempting to query registrations collection...");
+      console.log("Query parameters:", { eventId, userUid });
+
+      dupSnap = await db
+        .collection("registrations")
+        .where("eventId", "==", eventId)
+        .where("userUid", "==", userUid)
+        .get();
+
+      console.log(
+        "Query successful, found",
+        dupSnap.size,
+        "existing registrations"
+      );
+    } catch (firestoreError) {
+      console.error("Firestore query error details:");
+      console.error("Error code:", firestoreError.code);
+      console.error("Error message:", firestoreError.message);
+      console.error("Error details:", firestoreError.details);
+      console.error("Full error:", firestoreError);
+
+      return NextResponse.json(
+        {
+          error: "Database access error. Please check Firebase configuration.",
+          details: firestoreError.message,
+          code: firestoreError.code,
+          debug: {
+            eventId,
+            userUid,
+            errorType: firestoreError.constructor.name,
+          },
+        },
+        { status: 500 }
+      );
+    }
 
     if (!dupSnap.empty) {
-      return NextResponse.json({
-        error: 'You are already registered for this event. Check your email for confirmation details.',
-      }, { status: 409 });
+      return NextResponse.json(
+        {
+          error:
+            "You are already registered for this event. Check your email for confirmation details.",
+        },
+        { status: 409 }
+      );
     }
 
     const registrationData = {
@@ -93,66 +168,105 @@ export async function POST(request) {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       // Only store transactionId if provided and non-empty
-      ...(transactionId && String(transactionId).trim() ? { transactionId: String(transactionId).trim() } : {}),
+      ...(transactionId && String(transactionId).trim()
+        ? { transactionId: String(transactionId).trim() }
+        : {}),
       userUid,
-      registeredAt: new Date(),
-      status: 'pending_payment',
-      paymentStatus: 'pending',
+      registeredAt: FieldValue.serverTimestamp(),
+      status: "pending_payment",
+      paymentStatus: "pending",
       paymentVerified: false,
     };
 
-    const regRef = await db.collection('registrations').add(registrationData);
+    let regRef;
+    try {
+      regRef = await db.collection("registrations").add(registrationData);
+      console.log("Registration created successfully:", regRef.id);
+    } catch (createError) {
+      console.error("Failed to create registration:", createError);
+      return NextResponse.json(
+        {
+          error: "Failed to create registration. Please try again.",
+          details: createError.message,
+        },
+        { status: 500 }
+      );
+    }
 
     // Update event participation count (increment)
-    const eventRef = db.collection('events').doc(eventId);
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(eventRef);
-      if (!snap.exists) return;
-      const current = snap.data()?.participationCount || 0;
-      tx.update(eventRef, { participationCount: current + 1 });
-    });
+    try {
+      const eventRef = db.collection("events").doc(eventId);
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(eventRef);
+        if (!snap.exists) return;
+        const current = snap.data()?.participationCount || 0;
+        tx.update(eventRef, { participationCount: current + 1 });
+      });
+      console.log("Event participation count updated successfully");
+    } catch (updateError) {
+      console.error("Failed to update event participation count:", updateError);
+      // Don't fail the registration if count update fails
+    }
 
-    return NextResponse.json({
-      id: regRef.id,
-      message: 'Registration successful! You will receive confirmation details via email.',
-      ...registrationData,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        id: regRef.id,
+        message:
+          "Registration successful! You will receive confirmation details via email.",
+        ...registrationData,
+      },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error('Registration error:', error);
-    return NextResponse.json({ error: error?.message || 'Registration failed. Please try again.' }, { status: 500 });
+    console.error("Registration error:", error);
+    return NextResponse.json(
+      { error: error?.message || "Registration failed. Please try again." },
+      { status: 500 }
+    );
   }
 }
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const eventId = searchParams.get('eventId');
-    const userUid = searchParams.get('userUid');
+    const eventId = searchParams.get("eventId");
+    const userUid = searchParams.get("userUid");
 
     const db = getAdminDB();
 
     let qRef;
     if (userUid) {
-      qRef = db.collection('registrations').where('userUid', '==', userUid);
+      qRef = db.collection("registrations").where("userUid", "==", userUid);
     } else if (eventId) {
-      qRef = db.collection('registrations').where('eventId', '==', eventId);
+      qRef = db.collection("registrations").where("eventId", "==", eventId);
     } else {
-      return NextResponse.json({ error: 'userUid or eventId is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "userUid or eventId is required" },
+        { status: 400 }
+      );
     }
 
     const registrationsSnap = await qRef.get();
-    const participants = registrationsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const participants = registrationsSnap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    }));
 
     // Sort by registration date (newest first)
-    participants.sort((a, b) => new Date(a.registeredAt) < new Date(b.registeredAt) ? 1 : -1);
+    participants.sort((a, b) =>
+      new Date(a.registeredAt) < new Date(b.registeredAt) ? 1 : -1
+    );
 
     return NextResponse.json({
       participants,
       totalCount: participants.length,
     });
   } catch (error) {
-    console.error('Error fetching participants:', error);
-    return NextResponse.json({ error: error?.message || 'Failed to fetch participants' }, { status: 500 });
+    console.error("Error fetching participants:", error);
+    return NextResponse.json(
+      { error: error?.message || "Failed to fetch participants" },
+      { status: 500 }
+    );
   }
 }
 
@@ -162,28 +276,28 @@ export async function PATCH(request) {
 
     if (!registrationId || !status) {
       return NextResponse.json(
-        { error: 'Registration ID and status are required' },
-        { status: 400 },
+        { error: "Registration ID and status are required" },
+        { status: 400 }
       );
     }
 
     const db = getAdminDB();
 
-    const registrationRef = db.collection('registrations').doc(registrationId);
+    const registrationRef = db.collection("registrations").doc(registrationId);
     const registrationSnap = await registrationRef.get();
 
     if (!registrationSnap.exists) {
       return NextResponse.json(
-        { error: 'Registration not found' },
-        { status: 404 },
+        { error: "Registration not found" },
+        { status: 404 }
       );
     }
 
     const updateData = {
-      status: status === 'approved' ? 'active' : 'rejected',
+      status: status === "approved" ? "active" : "rejected",
       paymentStatus: status,
-      paymentVerified: status === 'approved',
-      updatedAt: new Date().toISOString(),
+      paymentVerified: status === "approved",
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     if (adminNotes) {
@@ -193,14 +307,14 @@ export async function PATCH(request) {
     await registrationRef.update(updateData);
 
     // If approved, update event's participation count (idempotent-ish check)
-    if (status === 'approved') {
+    if (status === "approved") {
       const registrationData = registrationSnap.data();
-      const eventRef = db.collection('events').doc(registrationData.eventId);
+      const eventRef = db.collection("events").doc(registrationData.eventId);
       await db.runTransaction(async (tx) => {
         const eventSnap = await tx.get(eventRef);
         if (!eventSnap.exists) return;
         // Only increment if previously not active
-        if (registrationData.status !== 'active') {
+        if (registrationData.status !== "active") {
           const current = eventSnap.data()?.participationCount || 0;
           tx.update(eventRef, { participationCount: current + 1 });
         }
@@ -213,10 +327,10 @@ export async function PATCH(request) {
       status: updateData.status,
     });
   } catch (error) {
-    console.error('Error updating registration status:', error);
+    console.error("Error updating registration status:", error);
     return NextResponse.json(
-      { error: error?.message || 'Failed to update registration status' },
-      { status: 500 },
+      { error: error?.message || "Failed to update registration status" },
+      { status: 500 }
     );
   }
 }

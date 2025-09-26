@@ -65,7 +65,7 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                     name: formData.name.trim(),
                     email: formData.email.trim().toLowerCase(),
                     transactionId: formData.transactionId.trim(),
-                    userUid: isAuthenticated ? (studentProfile?.uid || user?.uid) : null,
+                    userUid: auth.currentUser?.uid,
                 })
             });
 
@@ -175,7 +175,6 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                             </div>
                         </div>
                     )}
-                    +
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-audiowide text-muted-text mb-2">
