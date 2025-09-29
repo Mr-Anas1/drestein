@@ -62,7 +62,8 @@ export async function POST(request) {
 
     const AMOUNT = '250.00'; // Event Pass price in INR
 
-    const orderId = `PASS-${Date.now()}-${Math.floor(Math.random()*10000)}`;
+    // Some gateways are picky about allowed chars. Use numeric-only order id.
+    const orderId = `${Date.now()}${Math.floor(Math.random()*10000)}`; // digits only
 
     // Create a pending pass record linked to this orderId
     const db = getAdminDB();
@@ -88,8 +89,10 @@ export async function POST(request) {
     params.append('cancel_url', CANCEL_URL);
     params.append('language', 'EN');
 
-    // Optional: add customer info if available (improves success rate)
-    // params.append('billing_email', decoded.email || '');
+    // Optional but recommended billing info
+    if (decoded?.email) params.append('billing_email', decoded.email);
+    // params.append('billing_name', '');
+    // params.append('billing_tel', '');
 
     const encRequest = encryptCCAvenue(params.toString(), WORKING_KEY);
     const actionUrl = `${BASE_URL}/transaction/transaction.do?command=initiateTransaction`;
