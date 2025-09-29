@@ -52,6 +52,24 @@ export async function POST(request) {
     const CANCEL_URL = process.env.CCAVENUE_CANCEL_URL;     // can be same as redirect
     const BASE_URL = process.env.CCAVENUE_BASE_URL || 'https://test.ccavenue.com';
 
+    // Mask helper (keeps last 4 chars)
+    const mask = (val) => (typeof val === 'string' && val.length > 4 ? `${'*'.repeat(Math.max(0, val.length - 4))}${val.slice(-4)}` : val);
+
+    // Runtime diagnostics (masked)
+    console.log('[CCA INIT] Env presence:', {
+      merchantIdSet: !!MERCHANT_ID,
+      accessCodeSet: !!ACCESS_CODE,
+      workingKeySet: !!WORKING_KEY,
+      redirectSet: !!REDIRECT_URL,
+      cancelSet: !!CANCEL_URL,
+      baseUrl: BASE_URL,
+    });
+    console.log('[CCA INIT] Env tails:', {
+      merchantIdTail: MERCHANT_ID ? MERCHANT_ID.slice(-4) : null,
+      accessCodeTail: ACCESS_CODE ? ACCESS_CODE.slice(-4) : null,
+      // Never log working key
+    });
+
     const missing = [];
     if (!MERCHANT_ID) missing.push('CCAVENUE_MERCHANT_ID');
     if (!ACCESS_CODE) missing.push('CCAVENUE_ACCESS_CODE');
@@ -64,6 +82,7 @@ export async function POST(request) {
 
     // Some gateways are picky about allowed chars. Use numeric-only order id.
     const orderId = `${Date.now()}${Math.floor(Math.random()*10000)}`; // digits only
+    console.log('[CCA INIT] Creating order', { orderId });
 
     // Create a pending pass record linked to this orderId
     const db = getAdminDB();
@@ -95,10 +114,17 @@ export async function POST(request) {
     // params.append('billing_tel', '');
 
     const encRequest = encryptCCAvenue(params.toString(), WORKING_KEY);
+    console.log('[CCA INIT] Payload built', {
+      actionBase: BASE_URL,
+      payloadLength: params.toString().length,
+      hasEncRequest: !!encRequest,
+    });
     const actionUrl = `${BASE_URL}/transaction/transaction.do?command=initiateTransaction`;
+    console.log('[CCA INIT] Redirecting to gateway', { actionUrl });
 
     return NextResponse.json({ actionUrl, encRequest, accessCode: ACCESS_CODE, orderId });
   } catch (e) {
+    console.error('[CCA INIT] Error', { message: e?.message });
     return NextResponse.json({ error: e?.message || 'Failed to initiate payment' }, { status: 500 });
   }
 }
