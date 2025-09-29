@@ -122,7 +122,7 @@ export async function POST(request) {
     const actionUrl = `${BASE_URL}/transaction/transaction.do?command=initiateTransaction`;
     console.log('[CCA INIT] Redirecting to gateway', { actionUrl });
 
-    return NextResponse.json({ actionUrl, encRequest, accessCode: ACCESS_CODE, orderId });
+    return NextResponse.json({ actionUrl, encRequest, accessCode: ACCESS_CODE, orderId, merchantId: MERCHANT_ID });
   } catch (e) {
     console.error('[CCA INIT] Error', { message: e?.message });
     return NextResponse.json({ error: e?.message || 'Failed to initiate payment' }, { status: 500 });

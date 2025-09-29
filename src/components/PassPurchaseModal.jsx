@@ -11,7 +11,7 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [transactionId, setTransactionId] = useState('');
-  const [gatewayData, setGatewayData] = useState(null); // { actionUrl, encRequest, accessCode }
+  const [gatewayData, setGatewayData] = useState(null); // { actionUrl, encRequest, accessCode, merchantId }
 
   const uid = studentProfile?.uid || user?.uid;
 
@@ -38,7 +38,7 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Failed to initiate payment');
-      setGatewayData({ actionUrl: data.actionUrl, encRequest: data.encRequest, accessCode: data.accessCode });
+      setGatewayData({ actionUrl: data.actionUrl, encRequest: data.encRequest, accessCode: data.accessCode, merchantId: data.merchantId });
     } catch (e) {
       setError(e?.message || 'Failed to create pass');
     } finally {
@@ -88,6 +88,8 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
           {/* Hidden form to CCAvenue gateway */}
           {gatewayData && (
             <form id="ccavenuePaymentForm" method="post" action={gatewayData.actionUrl} className="hidden">
+              {/* Some CCAvenue setups expect merchant_id along with encRequest and access_code */}
+              {gatewayData.merchantId && <input type="hidden" name="merchant_id" value={gatewayData.merchantId} />}
               <input type="hidden" name="encRequest" value={gatewayData.encRequest} />
               <input type="hidden" name="access_code" value={gatewayData.accessCode} />
             </form>
