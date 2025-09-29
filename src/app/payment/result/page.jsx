@@ -1,11 +1,11 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-export default function PaymentResultPage() {
+function PaymentResultInner() {
   const params = useSearchParams();
   const router = useRouter();
   const status = (params.get('status') || '').toLowerCase();
@@ -22,16 +22,24 @@ export default function PaymentResultPage() {
   }, [status]);
 
   return (
+    <div className="max-w-xl mx-auto px-4 py-16 text-center">
+      <h1 className="text-3xl font-audiowide mb-4">Payment Result</h1>
+      <div className={`p-4 rounded-lg border ${status==='success' ? 'border-green-500/40 bg-green-500/10' : status==='failure' ? 'border-red-500/40 bg-red-500/10' : 'border-border bg-background-soft'}`}>
+        <div className="font-space mb-2">{message}</div>
+        {orderId && <div className="text-xs text-muted-text">Order ID: {orderId}</div>}
+      </div>
+      <button onClick={() => router.push('/events')} className="mt-6 bg-primary hover:bg-hover-primary text-white font-audiowide px-6 py-2 rounded-lg">Back to Events</button>
+    </div>
+  );
+}
+
+export default function PaymentResultPage() {
+  return (
     <div className="min-h-screen bg-background text-white">
       <Header />
-      <div className="max-w-xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-audiowide mb-4">Payment Result</h1>
-        <div className={`p-4 rounded-lg border ${status==='success' ? 'border-green-500/40 bg-green-500/10' : status==='failure' ? 'border-red-500/40 bg-red-500/10' : 'border-border bg-background-soft'}`}>
-          <div className="font-space mb-2">{message}</div>
-          {orderId && <div className="text-xs text-muted-text">Order ID: {orderId}</div>}
-        </div>
-        <button onClick={() => router.push('/events')} className="mt-6 bg-primary hover:bg-hover-primary text-white font-audiowide px-6 py-2 rounded-lg">Back to Events</button>
-      </div>
+      <Suspense fallback={<div className="max-w-xl mx-auto px-4 py-16 text-center">Loading...</div>}>
+        <PaymentResultInner />
+      </Suspense>
       <Footer />
     </div>
   );
