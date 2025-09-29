@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { X, User, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { auth } from '@/lib/firebase';
+import PassPurchaseModal from '@/components/PassPurchaseModal';
 
 export default function EventRegistrationModal({ event, onClose, onRegistrationSuccess, showCloseButton = true, allowBackdropClose = true }) {
     const [formData, setFormData] = useState({
@@ -15,6 +16,9 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const { isAuthenticated, studentProfile, loginWithGoogleStudent, user } = useAuth();
+    const [checkingPass, setCheckingPass] = useState(false);
+    const [hasVerifiedPass, setHasVerifiedPass] = useState(false);
+    const [showPassModal, setShowPassModal] = useState(false);
 
     // Close on Escape key
     useEffect(() => {
@@ -36,6 +40,32 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
         }
     }, [isAuthenticated, studentProfile, user]);
 
+    // If event is not a Workshop, check if user has an approved Event Pass
+    useEffect(() => {
+        const run = async () => {
+            const isWorkshop = String(event?.category || '').toLowerCase() === 'workshop';
+            if (!isAuthenticated || !user?.uid || isWorkshop) {
+                setHasVerifiedPass(false);
+                return;
+            }
+            setCheckingPass(true);
+            setError('');
+            try {
+                const res = await fetch(`/api/passes?userUid=${encodeURIComponent(user.uid)}`);
+                if (!res.ok) throw new Error('Failed to check pass');
+                const data = await res.json();
+                const pass = data?.pass || null;
+                setHasVerifiedPass(!!pass && pass.paymentVerified === true);
+            } catch (e) {
+                // Don't hard fail the modal, just show CTA
+                setHasVerifiedPass(false);
+            } finally {
+                setCheckingPass(false);
+            }
+        };
+        run();
+    }, [isAuthenticated, user, event, showPassModal]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -45,6 +75,14 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
         if (!isAuthenticated) {
             setLoading(false);
             setError('Please sign in with Google to register for events.');
+            return;
+        }
+
+        // If not a Workshop, require verified pass before submitting
+        const isWorkshop = String(event?.category || '').toLowerCase() === 'workshop';
+        if (!isWorkshop && !hasVerifiedPass) {
+            setLoading(false);
+            setError('An active Event Pass is required to register for events.');
             return;
         }
 
@@ -153,10 +191,12 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                             <p> {event.date} at {event.time}</p>
                             <p> {event.venue}</p>
                             <p> {event.department}</p>
-                            {event.isPaid && (
-                                <p className="text-primary font-medium">
-                                    Paid Event - Payment Required
-                                </p>
+                            {String(event?.category || '').toLowerCase() === 'workshop' ? (
+                                event.isPaid && (
+                                    <p className="text-primary font-medium">Paid Workshop - Payment Required</p>
+                                )
+                            ) : (
+                                <p className="text-primary font-medium">Event Pass Required</p>
                             )}
                         </div>
                     </div>
@@ -214,7 +254,7 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                             )}
                         </div>
 
-                        {event.isPaid && (
+                        {String(event?.category || '').toLowerCase() === 'workshop' && event.isPaid && (
                             <>
                                 <div className="mt-4 p-4 bg-background-soft rounded-lg border border-border">
                                     <h5 className="font-audiowide text-white text-sm mb-3">Payment Information</h5>
@@ -258,6 +298,20 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                             </>
                         )}
 
+                        {/* Event Pass CTA for non-Workshop */}
+                        {String(event?.category || '').toLowerCase() !== 'workshop' && (
+                            <div className="mt-4 p-4 bg-background-soft rounded-lg border border-border">
+                                {!checkingPass && !hasVerifiedPass ? (
+                                    <div className="space-y-3">
+                                        <div className="text-sm text-yellow-300">Event Pass required to register. Purchase once and register any events.</div>
+                                        <button type="button" onClick={() => setShowPassModal(true)} className="w-full bg-primary text-white px-4 py-2 rounded-lg font-audiowide hover:bg-hover-primary">Buy Event Pass</button>
+                                    </div>
+                                ) : (
+                                    <div className="text-sm text-muted-text">{checkingPass ? 'Checking pass status...' : 'Active Pass detected ✓'}</div>
+                                )}
+                            </div>
+                        )}
+
 
                         {error && (
                             <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">
@@ -269,7 +323,7 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                         <div className="flex gap-4 pt-4">
                             <button
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || (String(event?.category || '').toLowerCase() !== 'workshop' && !hasVerifiedPass)}
                                 className="flex-1 bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 disabled:opacity-50"
                             >
                                 {loading ? 'Registering...' : 'Register Now'}
@@ -293,6 +347,15 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                     By registering, you agree to receive event-related communications.
                 </div>
             </div>
+            {showPassModal && (
+                <PassPurchaseModal
+                    onClose={() => setShowPassModal(false)}
+                    onPurchased={() => setShowPassModal(false)}
+                    showCloseButton={true}
+                    allowBackdropClose={true}
+                    upiQrImage={undefined}
+                />
+            )}
         </div>
     );
 }

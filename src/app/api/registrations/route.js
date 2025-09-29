@@ -114,6 +114,56 @@ export async function POST(request) {
 
     const db = getAdminDB();
 
+    // Fetch the event to determine category (event vs workshop)
+    let eventSnap;
+    try {
+      eventSnap = await db.collection("events").doc(eventId).get();
+      if (!eventSnap.exists) {
+        return NextResponse.json(
+          { error: "Event not found" },
+          { status: 404 }
+        );
+      }
+    } catch (e) {
+      console.error("Failed to fetch event for registration:", e);
+      return NextResponse.json(
+        { error: "Failed to fetch event" },
+        { status: 500 }
+      );
+    }
+
+    const eventData = eventSnap.data() || {};
+    const isWorkshop = String(eventData.category || "").toLowerCase() === "workshop";
+
+    // If not a workshop, require a verified Event Pass
+    if (!isWorkshop) {
+      try {
+        const passSnap = await db
+          .collection("passes")
+          .where("userUid", "==", userUid)
+          .where("paymentVerified", "==", true)
+          .limit(1)
+          .get();
+
+        if (passSnap.empty) {
+          return NextResponse.json(
+            {
+              error:
+                "An active Event Pass is required to register for events. Please purchase a pass first.",
+              code: "PASS_REQUIRED",
+            },
+            { status: 403 }
+          );
+        }
+      } catch (e) {
+        console.error("Error checking event pass:", e);
+        return NextResponse.json(
+          { error: "Failed to verify Event Pass status" },
+          { status: 500 }
+        );
+      }
+    }
+
     // Duplicate check by uid per event - with better error handling
     let dupSnap;
     try {
