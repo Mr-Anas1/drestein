@@ -18,8 +18,9 @@ function getAdminDB() {
 }
 
 function decryptCCAvenue(encResp, workingKey) {
-  const key = crypto.createHash('md5').update(workingKey).digest();
-  const iv = Buffer.alloc(16, 0);
+  // CCAvenue standard: AES-128-CBC with MD5(workingKey) and zero IV
+  const key = crypto.createHash('md5').update(workingKey, 'utf8').digest();
+  const iv = Buffer.alloc(16, 0); // 16 zero bytes IV
   const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
   let decrypted = decipher.update(encResp, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
