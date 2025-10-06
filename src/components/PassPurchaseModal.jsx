@@ -38,7 +38,14 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Failed to initiate payment');
-      setGatewayData({ actionUrl: data.actionUrl, encRequest: data.encRequest, accessCode: data.accessCode, merchantId: data.merchantId });
+      
+      // Use direct URL redirect (GET method) as per CCAvenue team's example
+      if (data.directUrl) {
+        window.location.href = data.directUrl;
+      } else {
+        // Fallback to POST form method
+        setGatewayData({ actionUrl: data.actionUrl, encRequest: data.encRequest, accessCode: data.accessCode, merchantId: data.merchantId });
+      }
     } catch (e) {
       setError(e?.message || 'Failed to create pass');
     } finally {

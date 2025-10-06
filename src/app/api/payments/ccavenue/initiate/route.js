@@ -122,10 +122,23 @@ export async function POST(request) {
       encRequestLength: encRequest.length,
       encRequestPreview: encRequest.substring(0, 50) + '...',
     });
+    
+    // CCAvenue endpoint - note: single /transaction.do not /transaction/transaction.do
     const actionUrl = `${BASE_URL}/transaction.do?command=initiateTransaction`;
-    console.log('[CCA INIT] Redirecting to gateway', { actionUrl });
+    
+    // Also construct direct URL (can be used for GET redirect)
+    const directUrl = `${actionUrl}&access_code=${ACCESS_CODE}&encRequest=${encRequest}`;
+    
+    console.log('[CCA INIT] Redirecting to gateway', { actionUrl, directUrlLength: directUrl.length });
 
-    return NextResponse.json({ actionUrl, encRequest, accessCode: ACCESS_CODE, orderId, merchantId: MERCHANT_ID });
+    return NextResponse.json({ 
+      actionUrl, 
+      encRequest, 
+      accessCode: ACCESS_CODE, 
+      orderId, 
+      merchantId: MERCHANT_ID,
+      directUrl // Include direct URL for testing/alternative redirect
+    });
   } catch (e) {
     console.error('[CCA INIT] Error', { message: e?.message });
     return NextResponse.json({ error: e?.message || 'Failed to initiate payment' }, { status: 500 });
