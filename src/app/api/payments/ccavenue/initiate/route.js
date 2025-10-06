@@ -113,13 +113,16 @@ export async function POST(request) {
     // params.append('billing_name', '');
     // params.append('billing_tel', '');
 
-    const encRequest = encryptCCAvenue(params.toString(), WORKING_KEY);
+    const plainText = params.toString();
+    const encRequest = encryptCCAvenue(plainText, WORKING_KEY);
     console.log('[CCA INIT] Payload built', {
       actionBase: BASE_URL,
-      payloadLength: params.toString().length,
-      hasEncRequest: !!encRequest,
+      plainTextLength: plainText.length,
+      plainText: plainText, // Log for debugging
+      encRequestLength: encRequest.length,
+      encRequestPreview: encRequest.substring(0, 50) + '...',
     });
-    const actionUrl = `${BASE_URL}/transaction/transaction.do?command=initiateTransaction`;
+    const actionUrl = `${BASE_URL}/transaction.do?command=initiateTransaction`;
     console.log('[CCA INIT] Redirecting to gateway', { actionUrl });
 
     return NextResponse.json({ actionUrl, encRequest, accessCode: ACCESS_CODE, orderId, merchantId: MERCHANT_ID });
