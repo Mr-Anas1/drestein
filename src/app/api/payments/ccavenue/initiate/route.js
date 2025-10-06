@@ -5,6 +5,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import crypto from "crypto";
 
+// Initialize Firebase Admin
 function getAdminDB() {
   if (!getApps().length) {
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
@@ -17,34 +18,34 @@ function getAdminDB() {
   return getFirestore();
 }
 
+// Verify Firebase Auth
 async function verifyAuth(request) {
   getAdminDB();
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
   const idToken = authHeader.split(" ")[1];
   const { getAuth } = await import("firebase-admin/auth");
-  try { return await getAuth().verifyIdToken(idToken); } catch { return null; }
+  try {
+    return await getAuth().verifyIdToken(idToken);
+  } catch {
+    return null;
+  }
 }
 
+// AES-128-CBC encryption with PKCS#7 padding
 function encryptCCAvenue(plainText, workingKey) {
-  // CCAvenue standard: AES-128-CBC with zero IV
-  // Working key is hex format (32 hex chars = 16 bytes)
-  const key = Buffer.from(workingKey, "hex"); // 16-byte key
+  const key = Buffer.from(workingKey, "hex");
   const iv = Buffer.alloc(16, 0); // zero IV
+
+  // PKCS#7 padding
+  const blockSize = 16;
+  const padLength = blockSize - (plainText.length % blockSize);
+  const paddedText = plainText + String.fromCharCode(padLength).repeat(padLength);
+
   const cipher = crypto.createCipheriv("aes-128-cbc", key, iv);
-  let encrypted = cipher.update(plainText, "utf8", "hex");
+  let encrypted = cipher.update(paddedText, "utf8", "hex");
   encrypted += cipher.final("hex");
   return encrypted;
-}
-
-function decryptCCAvenue(encText, workingKey) {
-  // For local testing/verification
-  const key = Buffer.from(workingKey, "hex");
-  const iv = Buffer.alloc(16, 0);
-  const decipher = crypto.createDecipheriv("aes-128-cbc", key, iv);
-  let decrypted = decipher.update(encText, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
 }
 
 export async function POST(request) {
@@ -56,109 +57,66 @@ export async function POST(request) {
     if (!userUid) return NextResponse.json({ error: "userUid required" }, { status: 400 });
     if (decoded.uid !== userUid) return NextResponse.json({ error: "UID mismatch" }, { status: 403 });
 
+    // CCAvenue environment variables
     const MERCHANT_ID = process.env.CCAVENUE_MERCHANT_ID;
     const ACCESS_CODE = process.env.CCAVENUE_ACCESS_CODE;
     const WORKING_KEY = process.env.CCAVENUE_WORKING_KEY;
-    const REDIRECT_URL = process.env.CCAVENUE_REDIRECT_URL; // should point to our callback route
-    const CANCEL_URL = process.env.CCAVENUE_CANCEL_URL;     // can be same as redirect
-    const BASE_URL = process.env.CCAVENUE_BASE_URL || 'https://test.ccavenue.com';
-
-    // Mask helper (keeps last 4 chars)
-    const mask = (val) => (typeof val === 'string' && val.length > 4 ? `${'*'.repeat(Math.max(0, val.length - 4))}${val.slice(-4)}` : val);
-
-    // Runtime diagnostics (masked)
-    console.log('[CCA INIT] Env presence:', {
-      merchantIdSet: !!MERCHANT_ID,
-      accessCodeSet: !!ACCESS_CODE,
-      workingKeySet: !!WORKING_KEY,
-      redirectSet: !!REDIRECT_URL,
-      cancelSet: !!CANCEL_URL,
-      baseUrl: BASE_URL,
-    });
-    console.log('[CCA INIT] Env tails:', {
-      merchantIdTail: MERCHANT_ID ? MERCHANT_ID.slice(-4) : null,
-      accessCodeTail: ACCESS_CODE ? ACCESS_CODE.slice(-4) : null,
-      // Never log working key
-    });
+    const REDIRECT_URL = process.env.CCAVENUE_REDIRECT_URL;
+    const CANCEL_URL = process.env.CCAVENUE_CANCEL_URL;
+    const BASE_URL = process.env.CCAVENUE_BASE_URL || "https://test.ccavenue.com";
 
     const missing = [];
-    if (!MERCHANT_ID) missing.push('CCAVENUE_MERCHANT_ID');
-    if (!ACCESS_CODE) missing.push('CCAVENUE_ACCESS_CODE');
-    if (!WORKING_KEY) missing.push('CCAVENUE_WORKING_KEY');
-    if (!REDIRECT_URL) missing.push('CCAVENUE_REDIRECT_URL');
-    if (!CANCEL_URL) missing.push('CCAVENUE_CANCEL_URL');
-    if (missing.length) return NextResponse.json({ error: `Missing env: ${missing.join(', ')}` }, { status: 500 });
+    if (!MERCHANT_ID) missing.push("CCAVENUE_MERCHANT_ID");
+    if (!ACCESS_CODE) missing.push("CCAVENUE_ACCESS_CODE");
+    if (!WORKING_KEY) missing.push("CCAVENUE_WORKING_KEY");
+    if (!REDIRECT_URL) missing.push("CCAVENUE_REDIRECT_URL");
+    if (!CANCEL_URL) missing.push("CCAVENUE_CANCEL_URL");
+    if (missing.length) return NextResponse.json({ error: `Missing env: ${missing.join(", ")}` }, { status: 500 });
 
-    const AMOUNT = '250.00'; // Event Pass price in INR
+    const AMOUNT = "1.00"; // test amount
+    const orderId = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
-    // Some gateways are picky about allowed chars. Use numeric-only order id.
-    const orderId = `${Date.now()}${Math.floor(Math.random()*10000)}`; // digits only
-    console.log('[CCA INIT] Creating order', { orderId });
-
-    // Create a pending pass record linked to this orderId
+    // Save pending order in Firestore
     const db = getAdminDB();
-    await db.collection('passes').add({
+    await db.collection("passes").add({
       userUid,
-      gateway: 'ccavenue',
+      gateway: "ccavenue",
       orderId,
       amount: AMOUNT,
-      currency: 'INR',
-      status: 'pending_payment',
-      paymentStatus: 'pending',
+      currency: "INR",
+      status: "pending_payment",
+      paymentStatus: "pending",
       paymentVerified: false,
       purchasedAt: FieldValue.serverTimestamp(),
     });
 
-    // Build CCAvenue request params
-    const params = new URLSearchParams();
-    params.append('merchant_id', MERCHANT_ID);
-    params.append('order_id', orderId);
-    params.append('currency', 'INR');
-    params.append('amount', AMOUNT);
-    params.append('redirect_url', REDIRECT_URL);
-    params.append('cancel_url', CANCEL_URL);
-    params.append('language', 'EN');
+    // Build plaintext exactly as CCAvenue requires
+    let plainText =
+      `merchant_id=${MERCHANT_ID}` +
+      `&order_id=${orderId}` +
+      `&currency=INR` +
+      `&amount=${AMOUNT}` +
+      `&redirect_url=${REDIRECT_URL}` +
+      `&cancel_url=${CANCEL_URL}` +
+      `&language=EN`;
 
-    // Optional but recommended billing info
-    if (decoded?.email) params.append('billing_email', decoded.email);
-    // params.append('billing_name', '');
-    // params.append('billing_tel', '');
+    if (decoded?.email) plainText += `&billing_email=${decoded.email}`;
 
-    const plainText = params.toString();
     const encRequest = encryptCCAvenue(plainText, WORKING_KEY);
-    
-    // Verify encryption works by decrypting locally
-    const decryptedTest = decryptCCAvenue(encRequest, WORKING_KEY);
-    const encryptionValid = decryptedTest === plainText;
-    
-    console.log('[CCA INIT] Payload built', {
-      actionBase: BASE_URL,
-      plainTextLength: plainText.length,
-      plainText: plainText, // Log for debugging
-      encRequestLength: encRequest.length,
-      encRequestPreview: encRequest.substring(0, 50) + '...',
-      encryptionValid: encryptionValid,
-      decryptedMatches: encryptionValid ? 'YES' : 'NO - CHECK WORKING KEY!'
-    });
-    
-    // CCAvenue endpoint - note: single /transaction.do not /transaction/transaction.do
-    const actionUrl = `${BASE_URL}/transaction.do?command=initiateTransaction`;
-    
-    // Also construct direct URL (can be used for GET redirect)
-    const directUrl = `${actionUrl}&access_code=${ACCESS_CODE}&encRequest=${encRequest}`;
-    
-    console.log('[CCA INIT] Redirecting to gateway', { actionUrl, directUrlLength: directUrl.length });
 
-    return NextResponse.json({ 
-      actionUrl, 
-      encRequest, 
-      accessCode: ACCESS_CODE, 
-      orderId, 
+    const actionUrl = `${BASE_URL}/transaction.do?command=initiateTransaction`;
+    const directUrl = `${actionUrl}&access_code=${ACCESS_CODE}&encRequest=${encRequest}`;
+
+    return NextResponse.json({
+      actionUrl,
+      encRequest,
+      accessCode: ACCESS_CODE,
+      orderId,
       merchantId: MERCHANT_ID,
-      directUrl // Include direct URL for testing/alternative redirect
+      directUrl,
     });
   } catch (e) {
-    console.error('[CCA INIT] Error', { message: e?.message });
-    return NextResponse.json({ error: e?.message || 'Failed to initiate payment' }, { status: 500 });
+    console.error("[CCA INIT] Error", e);
+    return NextResponse.json({ error: e?.message || "Failed to initiate payment" }, { status: 500 });
   }
 }
