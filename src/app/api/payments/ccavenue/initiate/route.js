@@ -28,30 +28,23 @@ async function verifyAuth(request) {
 
 function encryptCCAvenue(plainText, workingKey) {
   // CCAvenue standard: AES-128-CBC with zero IV
-  // Working key should be used directly, NOT MD5 hashed
-  
-  // Auto-detect if working key is hex or plain text
-  let key;
-  if (/^[0-9A-Fa-f]{32}$/.test(workingKey)) {
-    // Working key is 32 hex chars (16 bytes) - use as hex
-    key = Buffer.from(workingKey, 'hex');
-  } else {
-    // Working key is plain text - use directly
-    key = Buffer.from(workingKey, 'utf8');
-    // Ensure it's exactly 16 bytes for AES-128
-    if (key.length !== 16) {
-      // Pad or truncate to 16 bytes if needed
-      const paddedKey = Buffer.alloc(16);
-      key.copy(paddedKey, 0, 0, Math.min(key.length, 16));
-      key = paddedKey;
-    }
-  }
-  
-  const iv = Buffer.alloc(16, 0); // 16 zero bytes IV
-  const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
-  let encrypted = cipher.update(plainText, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
+  // Working key is hex format (32 hex chars = 16 bytes)
+  const key = Buffer.from(workingKey, "hex"); // 16-byte key
+  const iv = Buffer.alloc(16, 0); // zero IV
+  const cipher = crypto.createCipheriv("aes-128-cbc", key, iv);
+  let encrypted = cipher.update(plainText, "utf8", "hex");
+  encrypted += cipher.final("hex");
   return encrypted;
+}
+
+function decryptCCAvenue(encText, workingKey) {
+  // For local testing/verification
+  const key = Buffer.from(workingKey, "hex");
+  const iv = Buffer.alloc(16, 0);
+  const decipher = crypto.createDecipheriv("aes-128-cbc", key, iv);
+  let decrypted = decipher.update(encText, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
 }
 
 export async function POST(request) {
@@ -133,12 +126,19 @@ export async function POST(request) {
 
     const plainText = params.toString();
     const encRequest = encryptCCAvenue(plainText, WORKING_KEY);
+    
+    // Verify encryption works by decrypting locally
+    const decryptedTest = decryptCCAvenue(encRequest, WORKING_KEY);
+    const encryptionValid = decryptedTest === plainText;
+    
     console.log('[CCA INIT] Payload built', {
       actionBase: BASE_URL,
       plainTextLength: plainText.length,
       plainText: plainText, // Log for debugging
       encRequestLength: encRequest.length,
       encRequestPreview: encRequest.substring(0, 50) + '...',
+      encryptionValid: encryptionValid,
+      decryptedMatches: encryptionValid ? 'YES' : 'NO - CHECK WORKING KEY!'
     });
     
     // CCAvenue endpoint - note: single /transaction.do not /transaction/transaction.do
