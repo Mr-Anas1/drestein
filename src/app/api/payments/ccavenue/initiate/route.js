@@ -27,8 +27,26 @@ async function verifyAuth(request) {
 }
 
 function encryptCCAvenue(plainText, workingKey) {
-  // CCAvenue standard: AES-128-CBC with MD5(workingKey) and zero IV
-  const key = crypto.createHash('md5').update(workingKey, 'utf8').digest();
+  // CCAvenue standard: AES-128-CBC with zero IV
+  // Working key should be used directly, NOT MD5 hashed
+  
+  // Auto-detect if working key is hex or plain text
+  let key;
+  if (/^[0-9A-Fa-f]{32}$/.test(workingKey)) {
+    // Working key is 32 hex chars (16 bytes) - use as hex
+    key = Buffer.from(workingKey, 'hex');
+  } else {
+    // Working key is plain text - use directly
+    key = Buffer.from(workingKey, 'utf8');
+    // Ensure it's exactly 16 bytes for AES-128
+    if (key.length !== 16) {
+      // Pad or truncate to 16 bytes if needed
+      const paddedKey = Buffer.alloc(16);
+      key.copy(paddedKey, 0, 0, Math.min(key.length, 16));
+      key = paddedKey;
+    }
+  }
+  
   const iv = Buffer.alloc(16, 0); // 16 zero bytes IV
   const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
   let encrypted = cipher.update(plainText, 'utf8', 'hex');
