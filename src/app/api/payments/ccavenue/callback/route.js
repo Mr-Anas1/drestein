@@ -62,6 +62,7 @@ export async function POST(req) {
       if (!snap.empty) {
         const passRef = snap.docs[0].ref;
         const passId = snap.docs[0].id;
+        const passData = snap.docs[0].data();
         const success = orderStatus?.toLowerCase() === "success";
 
         await passRef.update({
@@ -74,6 +75,24 @@ export async function POST(req) {
         });
 
         console.log(`[CCA CALLBACK] Pass ${passId} updated:`, success ? "ACTIVE" : "FAILED");
+
+        // Update student's hasEventPass flag if payment successful
+        if (success && passData.userUid) {
+          try {
+            const studentRef = db.collection("students").doc(passData.userUid);
+            await studentRef.set(
+              {
+                hasEventPass: true,
+                eventPassId: passId,
+                eventPassPurchasedAt: FieldValue.serverTimestamp(),
+              },
+              { merge: true }
+            );
+            console.log(`[CCA CALLBACK] Student ${passData.userUid} hasEventPass set to true`);
+          } catch (studentErr) {
+            console.error("[CCA CALLBACK] Failed to update student:", studentErr);
+          }
+        }
       } else {
         console.warn("[CCA CALLBACK] No pass found for orderId:", orderId);
       }

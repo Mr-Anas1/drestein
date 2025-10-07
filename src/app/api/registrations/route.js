@@ -138,22 +138,36 @@ export async function POST(request) {
     // If not a workshop, require a verified Event Pass
     if (!isWorkshop) {
       try {
-        const passSnap = await db
-          .collection("passes")
-          .where("userUid", "==", userUid)
-          .where("paymentVerified", "==", true)
-          .limit(1)
-          .get();
+        // Check student's hasEventPass flag first (faster)
+        const studentDoc = await db.collection("students").doc(userUid).get();
+        const studentData = studentDoc.data();
+        
+        if (!studentData?.hasEventPass) {
+          // Double-check in passes collection as fallback
+          const passSnap = await db
+            .collection("passes")
+            .where("userUid", "==", userUid)
+            .where("paymentVerified", "==", true)
+            .where("status", "==", "active")
+            .limit(1)
+            .get();
 
-        if (passSnap.empty) {
-          return NextResponse.json(
-            {
-              error:
-                "An active Event Pass is required to register for events. Please purchase a pass first.",
-              code: "PASS_REQUIRED",
-            },
-            { status: 403 }
-          );
+          if (passSnap.empty) {
+            return NextResponse.json(
+              {
+                error:
+                  "An active Event Pass is required to register for events. Please purchase a pass first.",
+                code: "PASS_REQUIRED",
+              },
+              { status: 403 }
+            );
+          } else {
+            // Update student flag if pass exists but flag is missing
+            await db.collection("students").doc(userUid).set(
+              { hasEventPass: true, eventPassId: passSnap.docs[0].id },
+              { merge: true }
+            );
+          }
         }
       } catch (e) {
         console.error("Error checking event pass:", e);

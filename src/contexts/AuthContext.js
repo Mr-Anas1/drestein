@@ -45,14 +45,38 @@ export const AuthProvider = ({ children }) => {
                         }
                     } else {
                         // If not an admin, check if student profile exists
+                        console.log('[AUTH] User not in users collection, checking students...');
                         const studentDocRef = doc(db, 'students', user.uid);
                         const studentDoc = await getDoc(studentDocRef);
                         if (studentDoc.exists()) {
-                            setStudentProfile(studentDoc.data());
-                            setUserRole({ role: 'student' });
+                            console.log('[AUTH] Found in students collection');
+                            const studentData = studentDoc.data();
+                            setStudentProfile(studentData);
+                            setUserRole({ role: 'student', hasEventPass: studentData?.hasEventPass || false });
                         } else {
-                            // Default role for new users
-                            setUserRole({ role: 'pending', department: null });
+                            // Create student document for new users
+                            console.log('[AUTH] New user detected, creating student document...');
+                            try {
+                                await setDoc(
+                                    studentDocRef,
+                                    {
+                                        uid: user.uid,
+                                        email: (user.email || '').toLowerCase(),
+                                        name: user.displayName || '',
+                                        photoURL: user.photoURL || '',
+                                        provider: 'google',
+                                        role: 'student',
+                                        hasEventPass: false,
+                                        createdAt: serverTimestamp(),
+                                        updatedAt: serverTimestamp(),
+                                    },
+                                    { merge: true }
+                                );
+                                console.log('[AUTH] ✅ Student document created in onAuthStateChanged');
+                            } catch (err) {
+                                console.error('[AUTH] ❌ Failed to create student document:', err);
+                            }
+                            setUserRole({ role: 'student', hasEventPass: false });
                             setStudentProfile(null);
                         }
                     }
@@ -93,39 +117,39 @@ export const AuthProvider = ({ children }) => {
             const result = await signInWithPopup(auth, provider);
             const u = result.user;
 
-            // Create or update student profile
+            // Create or update student profile with hasEventPass tracking
             const studentRef = doc(db, 'students', u.uid);
             const existing = await getDoc(studentRef);
+            
             const profile = {
                 uid: u.uid,
                 name: u.displayName || '',
                 email: (u.email || '').toLowerCase(),
                 photoURL: u.photoURL || '',
                 provider: 'google',
+                role: 'student',
+                hasEventPass: existing.exists() ? existing.data()?.hasEventPass || false : false,
                 updatedAt: serverTimestamp(),
-                // createdAt only on first write
             };
+            
             if (!existing.exists()) {
-                await setDoc(studentRef, { ...profile, createdAt: serverTimestamp() }, { merge: true });
-            } else {
-                await setDoc(studentRef, profile, { merge: true });
+                profile.createdAt = serverTimestamp();
             }
-
-            // Also ensure a record exists in users/{uid} for unified management
-            const usersRef = doc(db, 'users', u.uid);
-            await setDoc(
-                usersRef,
-                {
-                    uid: u.uid,
-                    email: (u.email || '').toLowerCase(),
-                    name: u.displayName || '',
-                    role: 'student',
-                    department: null,
-                    updatedAt: serverTimestamp(),
-                    createdAt: serverTimestamp(), // merge will keep first-created timestamp if present
-                },
-                { merge: true }
-            );
+            
+            console.log('[AUTH] Creating/updating student profile for:', u.email);
+            console.log('[AUTH] Student data:', profile);
+            
+            try {
+                await setDoc(studentRef, profile, { merge: true });
+                console.log('[AUTH] ✅ Student profile created/updated with hasEventPass');
+            } catch (studentErr) {
+                console.error('[AUTH] ❌ Failed to write student profile:', studentErr);
+                console.error('[AUTH] Error details:', {
+                    code: studentErr.code,
+                    message: studentErr.message,
+                    uid: u.uid
+                });
+            }
 
             // State will be updated by onAuthStateChanged
             return { ok: true };
