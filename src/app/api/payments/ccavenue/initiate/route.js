@@ -77,7 +77,7 @@ export async function POST(request) {
     if (!CANCEL_URL) missing.push("CCAVENUE_CANCEL_URL");
     if (missing.length) return NextResponse.json({ error: `Missing env: ${missing.join(", ")}` }, { status: 500 });
 
-    const AMOUNT = "250.00"; // For testing
+    const AMOUNT = "1.00"; // For testing
     const orderId = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
     // Save pending order in Firestore
