@@ -5,7 +5,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import crypto from "crypto";
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin if not already initialized
 function getAdminDB() {
   if (!getApps().length) {
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
@@ -18,7 +18,7 @@ function getAdminDB() {
   return getFirestore();
 }
 
-// Verify Firebase Auth
+// Verify Firebase Authentication
 async function verifyAuth(request) {
   getAdminDB();
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
@@ -32,18 +32,23 @@ async function verifyAuth(request) {
   }
 }
 
-// AES-128-CBC encryption with PKCS#7 padding
+// ✅ Correct AES-128-CBC encryption for CCAvenue
 function encryptCCAvenue(plainText, workingKey) {
-  const key = Buffer.from(workingKey, "hex");
-  const iv = Buffer.alloc(16, 0); // zero IV
+  // Step 1: Derive AES key = MD5(workingKey)
+  const md5Key = crypto.createHash("md5").update(workingKey).digest();
+  const key = Buffer.from(md5Key);
 
-  // PKCS#7 padding
-  const blockSize = 16;
-  const padLength = blockSize - (plainText.length % blockSize);
-  const paddedText = plainText + String.fromCharCode(padLength).repeat(padLength);
+  // Step 2: Fixed IV bytes (00 to 0F)
+  const iv = Buffer.from([
+    0x00, 0x01, 0x02, 0x03,
+    0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0a, 0x0b,
+    0x0c, 0x0d, 0x0e, 0x0f
+  ]);
 
+  // Step 3: Encrypt plaintext
   const cipher = crypto.createCipheriv("aes-128-cbc", key, iv);
-  let encrypted = cipher.update(paddedText, "utf8", "hex");
+  let encrypted = cipher.update(plainText, "utf8", "hex");
   encrypted += cipher.final("hex");
   return encrypted;
 }
@@ -57,7 +62,6 @@ export async function POST(request) {
     if (!userUid) return NextResponse.json({ error: "userUid required" }, { status: 400 });
     if (decoded.uid !== userUid) return NextResponse.json({ error: "UID mismatch" }, { status: 403 });
 
-    // CCAvenue environment variables
     const MERCHANT_ID = process.env.CCAVENUE_MERCHANT_ID;
     const ACCESS_CODE = process.env.CCAVENUE_ACCESS_CODE;
     const WORKING_KEY = process.env.CCAVENUE_WORKING_KEY;
@@ -73,7 +77,7 @@ export async function POST(request) {
     if (!CANCEL_URL) missing.push("CCAVENUE_CANCEL_URL");
     if (missing.length) return NextResponse.json({ error: `Missing env: ${missing.join(", ")}` }, { status: 500 });
 
-    const AMOUNT = "1.00"; // test amount
+    const AMOUNT = "250.00"; // For testing
     const orderId = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
     // Save pending order in Firestore
@@ -90,7 +94,7 @@ export async function POST(request) {
       purchasedAt: FieldValue.serverTimestamp(),
     });
 
-    // Build plaintext exactly as CCAvenue requires
+    // Build plaintext (MUST match CCAvenue format)
     let plainText =
       `merchant_id=${MERCHANT_ID}` +
       `&order_id=${orderId}` +
@@ -100,11 +104,11 @@ export async function POST(request) {
       `&cancel_url=${CANCEL_URL}` +
       `&language=EN`;
 
-    if (decoded?.email) plainText += `&billing_email=${decoded.email}`;
-
+    // Encrypt using corrected method
     const encRequest = encryptCCAvenue(plainText, WORKING_KEY);
 
-    const actionUrl = `${BASE_URL}/transaction.do?command=initiateTransaction`;
+    // Construct transaction URL
+    const actionUrl = `${BASE_URL}/transaction/transaction.do?command=initiateTransaction`;
     const directUrl = `${actionUrl}&access_code=${ACCESS_CODE}&encRequest=${encRequest}`;
 
     return NextResponse.json({
