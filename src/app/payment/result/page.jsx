@@ -56,11 +56,11 @@ function PaymentResultInner() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={() => router.push('/my-ticket')}
+              onClick={() => router.push('/view-ticket')}
               className="flex-1 bg-primary hover:bg-hover-primary text-white font-audiowide px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
             >
-              <Download className="w-5 h-5" />
-              Download Ticket
+              <Ticket className="w-5 h-5" />
+              View Ticket
             </button>
             <button
               onClick={() => router.push('/events')}

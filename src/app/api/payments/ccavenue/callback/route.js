@@ -79,7 +79,13 @@ export async function POST(req) {
         // Update student's hasEventPass flag if payment successful
         if (success && passData.userUid) {
           try {
+            console.log(`[CCA CALLBACK] Attempting to update student ${passData.userUid}...`);
             const studentRef = db.collection("students").doc(passData.userUid);
+            
+            // Check if student document exists
+            const studentDoc = await studentRef.get();
+            console.log(`[CCA CALLBACK] Student document exists:`, studentDoc.exists);
+            
             await studentRef.set(
               {
                 hasEventPass: true,
@@ -88,10 +94,14 @@ export async function POST(req) {
               },
               { merge: true }
             );
-            console.log(`[CCA CALLBACK] Student ${passData.userUid} hasEventPass set to true`);
+            console.log(`[CCA CALLBACK] ✅ Student ${passData.userUid} hasEventPass set to true`);
           } catch (studentErr) {
-            console.error("[CCA CALLBACK] Failed to update student:", studentErr);
+            console.error("[CCA CALLBACK] ❌ Failed to update student:", studentErr);
+            console.error("[CCA CALLBACK] Error code:", studentErr.code);
+            console.error("[CCA CALLBACK] Error message:", studentErr.message);
           }
+        } else {
+          console.log(`[CCA CALLBACK] Skipping student update - success: ${success}, userUid: ${passData.userUid}`);
         }
       } else {
         console.warn("[CCA CALLBACK] No pass found for orderId:", orderId);
