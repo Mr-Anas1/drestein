@@ -180,6 +180,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Function to refresh student profile (useful after pass purchase)
+    const refreshStudentProfile = async () => {
+        if (!user?.uid) return;
+        try {
+            console.log('[AUTH] Refreshing student profile...');
+            const studentDocRef = doc(db, 'students', user.uid);
+            const studentDoc = await getDoc(studentDocRef);
+            if (studentDoc.exists()) {
+                const studentData = studentDoc.data();
+                setStudentProfile(studentData);
+                setUserRole({ role: 'student', hasEventPass: studentData?.hasEventPass || false });
+                console.log('[AUTH] ✅ Student profile refreshed, hasEventPass:', studentData?.hasEventPass);
+            }
+        } catch (error) {
+            console.error('[AUTH] Error refreshing student profile:', error);
+        }
+    };
+
     const value = {
         user,
         userRole,
@@ -193,6 +211,7 @@ export const AuthProvider = ({ children }) => {
         isStudent: userRole?.role === 'student',
         studentProfile,
         loginWithGoogleStudent,
+        refreshStudentProfile,
     };
 
     return (

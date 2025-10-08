@@ -57,6 +57,7 @@ export async function POST(req) {
     // Update pass in Firestore
     const db = getAdminDB();
     if (orderId) {
+      console.log(`[CCA CALLBACK] Searching for pass with orderId: ${orderId}`);
       const snap = await db.collection("passes").where("orderId", "==", orderId).limit(1).get();
       
       if (!snap.empty) {
@@ -64,6 +65,8 @@ export async function POST(req) {
         const passId = snap.docs[0].id;
         const passData = snap.docs[0].data();
         const success = orderStatus?.toLowerCase() === "success";
+        
+        console.log(`[CCA CALLBACK] Found pass ${passId} with userUid: ${passData.userUid || 'MISSING'}`);
 
         await passRef.update({
           status: success ? "active" : orderStatus || "failed",
@@ -75,16 +78,21 @@ export async function POST(req) {
         });
 
         console.log(`[CCA CALLBACK] Pass ${passId} updated:`, success ? "ACTIVE" : "FAILED");
+        console.log(`[CCA CALLBACK] Pass data:`, JSON.stringify(passData, null, 2));
 
         // Update student's hasEventPass flag if payment successful
         if (success && passData.userUid) {
           try {
-            console.log(`[CCA CALLBACK] Attempting to update student ${passData.userUid}...`);
+            console.log(`[CCA CALLBACK] ✅ Payment successful, updating student ${passData.userUid}...`);
             const studentRef = db.collection("students").doc(passData.userUid);
             
             // Check if student document exists
             const studentDoc = await studentRef.get();
             console.log(`[CCA CALLBACK] Student document exists:`, studentDoc.exists);
+            
+            if (!studentDoc.exists) {
+              console.warn(`[CCA CALLBACK] ⚠️ Student document does not exist for ${passData.userUid}, creating it...`);
+            }
             
             await studentRef.set(
               {
@@ -95,13 +103,25 @@ export async function POST(req) {
               { merge: true }
             );
             console.log(`[CCA CALLBACK] ✅ Student ${passData.userUid} hasEventPass set to true`);
+            
+            // Verify the update
+            const updatedDoc = await studentRef.get();
+            const updatedData = updatedDoc.data();
+            console.log(`[CCA CALLBACK] ✅ Verified - hasEventPass is now:`, updatedData?.hasEventPass);
           } catch (studentErr) {
             console.error("[CCA CALLBACK] ❌ Failed to update student:", studentErr);
             console.error("[CCA CALLBACK] Error code:", studentErr.code);
             console.error("[CCA CALLBACK] Error message:", studentErr.message);
+            console.error("[CCA CALLBACK] Stack trace:", studentErr.stack);
           }
         } else {
-          console.log(`[CCA CALLBACK] Skipping student update - success: ${success}, userUid: ${passData.userUid}`);
+          console.log(`[CCA CALLBACK] ⚠️ Skipping student update - success: ${success}, userUid: ${passData.userUid || 'MISSING'}`);
+          if (!success) {
+            console.log(`[CCA CALLBACK] Payment was not successful, status: ${orderStatus}`);
+          }
+          if (!passData.userUid) {
+            console.error(`[CCA CALLBACK] ❌ CRITICAL: userUid is missing from pass document!`);
+          }
         }
       } else {
         console.warn("[CCA CALLBACK] No pass found for orderId:", orderId);

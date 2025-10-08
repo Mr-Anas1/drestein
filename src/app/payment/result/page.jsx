@@ -5,10 +5,12 @@ import { useEffect, useState, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { CheckCircle, XCircle, Ticket, Download } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 function PaymentResultInner() {
   const params = useSearchParams();
   const router = useRouter();
+  const { refreshStudentProfile } = useAuth();
   const status = (params.get('status') || '').toLowerCase();
   const orderId = params.get('orderId') || '';
 
@@ -17,11 +19,19 @@ function PaymentResultInner() {
 
   useEffect(() => {
     if (!status) return;
-    if (status === 'success') setMessage('Payment successful! Your Event Pass is now active.');
+    if (status === 'success') {
+      setMessage('Payment successful! Your Event Pass is now active.');
+      // Refresh student profile to update hasEventPass flag
+      if (refreshStudentProfile) {
+        setTimeout(() => {
+          refreshStudentProfile();
+        }, 2000); // Wait 2 seconds to ensure backend has updated
+      }
+    }
     else if (status === 'failure') setMessage('Payment failed. Please try again.');
     else if (status === 'aborted') setMessage('Payment cancelled.');
     else setMessage(`Payment status: ${status}`);
-  }, [status]);
+  }, [status, refreshStudentProfile]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-16">

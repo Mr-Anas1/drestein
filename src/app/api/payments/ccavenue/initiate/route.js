@@ -82,7 +82,8 @@ export async function POST(request) {
 
     // Save pending order in Firestore
     const db = getAdminDB();
-    await db.collection("passes").add({
+    console.log(`[CCA INIT] Creating pass for userUid: ${userUid}, orderId: ${orderId}`);
+    const passRef = await db.collection("passes").add({
       userUid,
       gateway: "ccavenue",
       orderId,
@@ -93,6 +94,7 @@ export async function POST(request) {
       paymentVerified: false,
       purchasedAt: FieldValue.serverTimestamp(),
     });
+    console.log(`[CCA INIT] ✅ Pass created with ID: ${passRef.id}, userUid: ${userUid}`);
 
     // Build plaintext (MUST match CCAvenue format)
     let plainText =

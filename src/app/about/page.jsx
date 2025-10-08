@@ -17,18 +17,18 @@ const About = () => {
             department: "Information Technology",
             email: "priya.sharma@student.saveetha.ac.in"
         },
-        {
-            name: "Arjun Patel",
-            role: "Technical Coordinator",
-            department: "Electronics & Communication",
-            email: "arjun.patel@student.saveetha.ac.in"
-        },
-        {
-            name: "Sneha Reddy",
-            role: "Cultural Coordinator",
-            department: "Computer Science & Engineering",
-            email: "sneha.reddy@student.saveetha.ac.in"
-        }
+        // {
+        //     name: "Arjun Patel",
+        //     role: "Technical Coordinator",
+        //     department: "Electronics & Communication",
+        //     email: "arjun.patel@student.saveetha.ac.in"
+        // },
+        // {
+        //     name: "Sneha Reddy",
+        //     role: "Cultural Coordinator",
+        //     department: "Computer Science & Engineering",
+        //     email: "sneha.reddy@student.saveetha.ac.in"
+        // }
     ]
 
     return (
@@ -154,7 +154,7 @@ const About = () => {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6 justify-center">
                         {coordinators.map((coordinator, index) => (
                             <div key={index} className="bg-background-soft border border-border rounded-xl p-6 text-center hover:border-primary transition-all duration-300 hover:transform hover:scale-105">
                                 <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center">

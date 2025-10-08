@@ -88,19 +88,35 @@ export async function GET(request) {
 
     const db = getAdminDB();
 
-    const snap = await db
+    // First try to get active/verified pass
+    let snap = await db
       .collection("passes")
       .where("userUid", "==", userUid)
-      .orderBy("purchasedAt", "desc")
+      .where("paymentVerified", "==", true)
       .limit(1)
       .get();
+
+    // If no verified pass, get any pass
+    if (snap.empty) {
+      snap = await db
+        .collection("passes")
+        .where("userUid", "==", userUid)
+        .limit(1)
+        .get();
+    }
 
     if (snap.empty) return NextResponse.json({ pass: null });
 
     const d = snap.docs[0];
     return NextResponse.json({ pass: { id: d.id, ...d.data() } });
   } catch (e) {
-    return NextResponse.json({ error: e?.message || "Failed to fetch pass" }, { status: 500 });
+    console.error("[PASSES GET] Error:", e);
+    console.error("[PASSES GET] Error code:", e.code);
+    console.error("[PASSES GET] Error message:", e.message);
+    return NextResponse.json({ 
+      error: e?.message || "Failed to fetch pass",
+      code: e?.code 
+    }, { status: 500 });
   }
 }
 
