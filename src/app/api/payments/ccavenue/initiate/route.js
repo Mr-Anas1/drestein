@@ -18,8 +18,22 @@ function getAdminDB() {
   return getFirestore();
 }
 
-// ✅ AES-128-CBC Decryption (MD5(workingKey) + fixed IV)
-function decryptCCAvenue(encText, workingKey) {
+// Verify Firebase Authentication
+async function verifyAuth(request) {
+  getAdminDB();
+  const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+  const idToken = authHeader.split(" ")[1];
+  const { getAuth } = await import("firebase-admin/auth");
+  try {
+    return await getAuth().verifyIdToken(idToken);
+  } catch {
+    return null;
+  }
+}
+
+// ✅ AES-128-CBC Encryption for CCAvenue
+function encryptCCAvenue(plainText, workingKey) {
   const md5Key = crypto.createHash("md5").update(workingKey).digest();
   const key = Buffer.from(md5Key);
   const iv = Buffer.from([
@@ -28,89 +42,84 @@ function decryptCCAvenue(encText, workingKey) {
     0x08, 0x09, 0x0a, 0x0b,
     0x0c, 0x0d, 0x0e, 0x0f
   ]);
-  const decipher = crypto.createDecipheriv("aes-128-cbc", key, iv);
-  let decrypted = decipher.update(encText, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
-}
-
-// ✅ Helper: Convert CCAvenue response string to object
-function parseCCAResponse(str) {
-  const pairs = str.split("&");
-  const params = {};
-  for (const pair of pairs) {
-    const [key, value] = pair.split("=");
-    if (key) params[key.trim()] = value ? decodeURIComponent(value.trim()) : "";
-  }
-  return params;
+  const cipher = crypto.createCipheriv("aes-128-cbc", key, iv);
+  let encrypted = cipher.update(plainText, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return encrypted;
 }
 
 export async function POST(request) {
-  const db = getAdminDB();
   try {
-    const body = await request.text();
-    const searchParams = new URLSearchParams(body);
-    const encResp = searchParams.get("encResp");
-    if (!encResp) return NextResponse.json({ error: "Missing encResp" }, { status: 400 });
+    const decoded = await verifyAuth(request);
+    if (!decoded) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
+    const { userUid } = await request.json();
+    if (!userUid) return NextResponse.json({ error: "userUid required" }, { status: 400 });
+    if (decoded.uid !== userUid) return NextResponse.json({ error: "UID mismatch" }, { status: 403 });
+
+    const MERCHANT_ID = process.env.CCAVENUE_MERCHANT_ID;
+    const ACCESS_CODE = process.env.CCAVENUE_ACCESS_CODE;
     const WORKING_KEY = process.env.CCAVENUE_WORKING_KEY;
-    if (!WORKING_KEY) throw new Error("Missing CCAVENUE_WORKING_KEY");
+    const REDIRECT_URL = process.env.CCAVENUE_REDIRECT_URL;
+    const CANCEL_URL = process.env.CCAVENUE_CANCEL_URL;
+    const BASE_URL = process.env.CCAVENUE_BASE_URL || "https://test.ccavenue.com";
 
-    // ✅ Step 1: Decrypt response
-    const decryptedData = decryptCCAvenue(encResp, WORKING_KEY);
-    console.log("[CCA CALLBACK] Decrypted response:", decryptedData);
+    const missing = [];
+    if (!MERCHANT_ID) missing.push("CCAVENUE_MERCHANT_ID");
+    if (!ACCESS_CODE) missing.push("CCAVENUE_ACCESS_CODE");
+    if (!WORKING_KEY) missing.push("CCAVENUE_WORKING_KEY");
+    if (!REDIRECT_URL) missing.push("CCAVENUE_REDIRECT_URL");
+    if (!CANCEL_URL) missing.push("CCAVENUE_CANCEL_URL");
+    if (missing.length) return NextResponse.json({ error: `Missing env: ${missing.join(", ")}` }, { status: 500 });
 
-    // ✅ Step 2: Parse response string
-    const params = parseCCAResponse(decryptedData);
-    console.log("[CCA CALLBACK] All params:", params);
+    const AMOUNT = "1.00"; // For testing
+    const orderId = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
-    // ✅ Step 3: Extract identifiers safely
-    const orderId = params.order_id || params.merchant_param1;
-    const trackingId = params.tracking_id;
-    const orderStatus = params.order_status;
+    // Save pending order in Firestore
+    const db = getAdminDB();
+    const { FieldValue } = await import("firebase-admin/firestore");
+    console.log(`[CCA INIT] Creating pass for userUid: ${userUid}, orderId: ${orderId}`);
+    const passRef = await db.collection("passes").add({
+      userUid,
+      gateway: "ccavenue",
+      orderId,
+      amount: AMOUNT,
+      currency: "INR",
+      status: "pending_payment",
+      paymentStatus: "pending",
+      paymentVerified: false,
+      purchasedAt: FieldValue.serverTimestamp(),
+    });
+    console.log(`[CCA INIT] ✅ Pass created with ID: ${passRef.id}, userUid: ${userUid}`);
 
-    if (!orderId) {
-      console.error("[CCA CALLBACK] ❌ CRITICAL: orderId is null/undefined!");
-      return NextResponse.json({ error: "orderId missing" }, { status: 400 });
-    }
+    // Build plaintext (MUST match CCAvenue format)
+    let plainText =
+      `merchant_id=${MERCHANT_ID}` +
+      `&order_id=${orderId}` +
+      `&currency=INR` +
+      `&amount=${AMOUNT}` +
+      `&redirect_url=${REDIRECT_URL}` +
+      `&cancel_url=${CANCEL_URL}` +
+      `&language=EN`;
 
-    // ✅ Step 4: Find and update matching pass in Firestore
-    const snapshot = await db.collection("passes").where("orderId", "==", orderId).limit(1).get();
+    // Encrypt using corrected method
+    const encRequest = encryptCCAvenue(plainText, WORKING_KEY);
 
-    if (snapshot.empty) {
-      console.error(`[CCA CALLBACK] ❌ No pass found for orderId ${orderId}`);
-      return NextResponse.json({ error: "No matching order found" }, { status: 404 });
-    }
+    // Construct transaction URL
+    const actionUrl = `${BASE_URL}/transaction/transaction.do?command=initiateTransaction`;
+    const directUrl = `${actionUrl}&access_code=${ACCESS_CODE}&encRequest=${encRequest}`;
 
-    const passRef = snapshot.docs[0].ref;
-
-    if (orderStatus === "Success") {
-      await passRef.update({
-        paymentStatus: "paid",
-        paymentVerified: true,
-        status: "completed",
-        trackingId: trackingId,
-        paymentMode: params.payment_mode,
-        transDate: params.trans_date,
-        updatedAt: new Date(),
-      });
-      console.log(`[CCA CALLBACK] ✅ Order ${orderId} marked as paid.`);
-    } else {
-      await passRef.update({
-        paymentStatus: "failed",
-        paymentVerified: false,
-        status: "failed",
-        failureMessage: params.failure_message || "Unknown error",
-        updatedAt: new Date(),
-      });
-      console.warn(`[CCA CALLBACK] ⚠️ Order ${orderId} failed.`);
-    }
-
-    // ✅ Step 5: Respond to CCAvenue
-    return NextResponse.json({ success: true, orderId, orderStatus });
-  } catch (err) {
-    console.error("[CCA CALLBACK] ❌ Error:", err);
-    return NextResponse.json({ error: err.message || "Callback processing failed" }, { status: 500 });
+    return NextResponse.json({
+      actionUrl,
+      encRequest,
+      accessCode: ACCESS_CODE,
+      orderId,
+      merchantId: MERCHANT_ID,
+      directUrl,
+    });
+  } catch (e) {
+    console.error("[CCA INIT] Error", e);
+    return NextResponse.json({ error: e?.message || "Failed to initiate payment" }, { status: 500 });
   }
 }
 
