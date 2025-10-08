@@ -38,13 +38,8 @@ function encryptCCAvenue(plainText, workingKey) {
   const md5Key = crypto.createHash("md5").update(workingKey).digest();
   const key = Buffer.from(md5Key);
 
-  // Step 2: Fixed IV bytes (00 to 0F)
-  const iv = Buffer.from([
-    0x00, 0x01, 0x02, 0x03,
-    0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b,
-    0x0c, 0x0d, 0x0e, 0x0f
-  ]);
+  // Step 2: IV must be all zeros (matching decrypt function)
+  const iv = Buffer.alloc(16, "\0");
 
   // Step 3: Encrypt plaintext
   const cipher = crypto.createCipheriv("aes-128-cbc", key, iv);
