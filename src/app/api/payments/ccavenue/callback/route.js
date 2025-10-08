@@ -43,17 +43,20 @@ async function updatePassAndStudent(db, passRef, passId, passData, success, orde
   console.log(`[CCA CALLBACK] Pass data:`, JSON.stringify(passData, null, 2));
 
   // Update student's hasEventPass flag if payment successful
-  if (success && passData.userUid) {
+  // ✅ Use userUid from pass data or fallback to merchant_param2
+  const userUid = passData.userUid || passData.merchant_param2;
+  
+  if (success && userUid) {
     try {
-      console.log(`[CCA CALLBACK] ✅ Payment successful, updating student ${passData.userUid}...`);
-      const studentRef = db.collection("students").doc(passData.userUid);
+      console.log(`[CCA CALLBACK] ✅ Payment successful, updating student ${userUid}...`);
+      const studentRef = db.collection("students").doc(userUid);
       
       // Check if student document exists
       const studentDoc = await studentRef.get();
       console.log(`[CCA CALLBACK] Student document exists:`, studentDoc.exists);
       
       if (!studentDoc.exists) {
-        console.warn(`[CCA CALLBACK] ⚠️ Student document does not exist for ${passData.userUid}, creating it...`);
+        console.warn(`[CCA CALLBACK] ⚠️ Student document does not exist for ${userUid}, creating it...`);
       }
       
       await studentRef.set(
@@ -64,7 +67,7 @@ async function updatePassAndStudent(db, passRef, passId, passData, success, orde
         },
         { merge: true }
       );
-      console.log(`[CCA CALLBACK] ✅ Student ${passData.userUid} hasEventPass set to true`);
+      console.log(`[CCA CALLBACK] ✅ Student ${userUid} hasEventPass set to true`);
       
       // Verify the update
       const updatedDoc = await studentRef.get();
@@ -77,12 +80,12 @@ async function updatePassAndStudent(db, passRef, passId, passData, success, orde
       console.error("[CCA CALLBACK] Stack trace:", studentErr.stack);
     }
   } else {
-    console.log(`[CCA CALLBACK] ⚠️ Skipping student update - success: ${success}, userUid: ${passData.userUid || 'MISSING'}`);
+    console.log(`[CCA CALLBACK] ⚠️ Skipping student update - success: ${success}, userUid: ${userUid || 'MISSING'}`);
     if (!success) {
       console.log(`[CCA CALLBACK] Payment was not successful, status: ${orderStatus}`);
     }
-    if (!passData.userUid) {
-      console.error(`[CCA CALLBACK] ❌ CRITICAL: userUid is missing from pass document!`);
+    if (!userUid) {
+      console.error(`[CCA CALLBACK] ❌ CRITICAL: userUid is missing from pass document and merchant_param2!`);
     }
   }
 }
@@ -108,11 +111,32 @@ export async function POST(req) {
     // Extract details
     const params = new URLSearchParams(decrypted);
     const orderStatus = params.get("order_status");
-    const orderId = params.get("order_id");
     const trackingId = params.get("tracking_id");
     const amount = params.get("amount");
+    
+    // ✅ Extract orderId with multiple fallbacks for CCAvenue sandbox bug
+    let orderId = params.get("order_id");
+    let orderIdSource = "order_id";
+    
+    if (!orderId) {
+      orderId = params.get("merchant_param1");
+      orderIdSource = "merchant_param1";
+    }
+    
+    // ✅ Fallback: Find any value that looks like an order ID (13+ digits)
+    if (!orderId) {
+      const allParams = Object.fromEntries(params);
+      orderId = Object.values(allParams).find(v => /^\d{13,}$/.test(v));
+      if (orderId) {
+        orderIdSource = "regex_pattern_match";
+        console.log(`[CCA CALLBACK] ⚠️ Found orderId via regex pattern match: ${orderId}`);
+      }
+    }
+    
+    // ✅ Also extract userUid from merchant_param2 if available
+    const userUidFromParams = params.get("merchant_param2");
 
-    console.log("[CCA CALLBACK] Order:", orderId, "Status:", orderStatus);
+    console.log(`[CCA CALLBACK] Order: ${orderId} (source: ${orderIdSource}), Status: ${orderStatus}`);
     console.log("[CCA CALLBACK] All params:", Object.fromEntries(params));
 
     // Update pass in Firestore

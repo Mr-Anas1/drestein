@@ -93,6 +93,7 @@ export async function POST(request) {
     console.log(`[CCA INIT] ✅ Pass created with ID: ${passRef.id}, userUid: ${userUid}`);
 
     // Build plaintext (MUST match CCAvenue format)
+    // ✅ Include merchant_param1 as fallback for sandbox obfuscation bug
     let plainText =
       `merchant_id=${MERCHANT_ID}` +
       `&order_id=${orderId}` +
@@ -100,7 +101,9 @@ export async function POST(request) {
       `&amount=${AMOUNT}` +
       `&redirect_url=${REDIRECT_URL}` +
       `&cancel_url=${CANCEL_URL}` +
-      `&language=EN`;
+      `&language=EN` +
+      `&merchant_param1=${orderId}` +   // Fallback for callback when order_id is obfuscated
+      `&merchant_param2=${userUid}`;    // Track user in callback
 
     // Encrypt using corrected method
     const encRequest = encryptCCAvenue(plainText, WORKING_KEY);
