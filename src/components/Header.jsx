@@ -26,8 +26,8 @@ const Header = () => {
         </h1>
       </div>
 
-      <div className="flex items-center space-x-6">
-        <div className="hidden items-center md:flex">
+      <div className="flex items-center ">
+        <div className="hidden items-center gap-4 md:flex">
           <a
             onClick={() => router.push("/")}
             className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
@@ -53,7 +53,7 @@ const Header = () => {
           >
             About
           </a>
-          
+
           {/* Buy Pass Button */}
           <button
             onClick={() => router.push("/buy-pass")}
@@ -62,7 +62,7 @@ const Header = () => {
             <Ticket size={18} />
             Buy Pass
           </button>
-          
+
           {!isAuthenticated ? (
             <button
               onClick={loginWithGoogleStudent}
@@ -83,9 +83,9 @@ const Header = () => {
                     className="w-8 h-8 rounded-full border border-border object-cover"
                   />
                 )}
-                <span className="text-white font-space text-sm hidden lg:inline">
+                {/* <span className="text-white font-space text-sm hidden lg:inline">
                   {studentProfile?.name || user?.displayName || user?.email}
-                </span>
+                </span> */}
               </button>
               {accountOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-background-soft border border-border rounded-lg shadow-lg p-2 z-[100]">
@@ -138,63 +138,65 @@ const Header = () => {
       {/* mobile menu */}
 
       {menuDisplay && (
-        <div className="absolute top-20 left-0 w-full h-screen bg-gray-800 text-white p-4 flex flex-col space-y-12 py-12 overflow-hidden items-center md:hidden z-99">
-          <a
-            className="hover:text-primary transition duration-300s"
-            onClick={() => router.push("/")}
-          >
-            Home
-          </a>
-          <a
-            className="hover:text-primary transition duration-300s"
-            onClick={() => router.push("/departments")}
-          >
-            Departments
-          </a>
-          <a
-            className="hover:text-primary transition duration-300s"
-            onClick={() => router.push("/events")}
-          >
-            Events
-          </a>
-          <a
-            className="hover:text-primary transition duration-300s"
-            onClick={() => router.push("/about")}
-          >
-            About
-          </a>
-          
-          {/* Buy Pass Button - Mobile */}
-          <button
-            onClick={() => { setMenuDisplay(false); router.push("/buy-pass"); }}
-            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide hover:from-hover-primary hover:to-primary transition duration-300s px-6 py-2 rounded-lg flex items-center gap-2 justify-center"
-          >
-            <Ticket size={18} />
-            Buy Pass
-          </button>
-          
+        <div className="absolute top-20 left-0 w-full h-screen bg-gray-900 text-white flex flex-col items-center justify-start space-y-6 pt-10 md:hidden z-[99]">
+          {/* Navigation Links */}
+          {[
+            { label: "Home", path: "/" },
+            { label: "Departments", path: "/departments" },
+            { label: "Events", path: "/events" },
+            { label: "About", path: "/about" },
+          ].map((item) => (
+            <button
+              key={item.path}
+              onClick={() => router.push(item.path)}
+              className="text-lg font-medium hover:text-primary transition-colors duration-300"
+            >
+              {item.label}
+            </button>
+          ))}
+
+          {/* Auth Section */}
           {!isAuthenticated ? (
             <button
               onClick={loginWithGoogleStudent}
-              className="bg-primary text-white hover:bg-hover-primary transition duration-300s px-6 py-2 rounded-lg"
+              className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-hover-primary transition-colors duration-300"
             >
               Student Login
             </button>
           ) : (
-            <div className="flex items-center gap-3">
-              {(studentProfile?.photoURL || user?.photoURL) && (
-                <img
-                  src={studentProfile?.photoURL || user?.photoURL}
-                  alt="avatar"
-                  className="w-8 h-8 rounded-full border border-border object-cover"
-                />
-              )}
-              <span className="text-white font-space text-sm">
-                {studentProfile?.name || user?.displayName || user?.email}
-              </span>
+            <div className="flex flex-col items-center w-full space-y-3">
+              <button
+                onClick={() => {
+                  setAccountOpen(false);
+                  router.push("/my-registrations");
+                }}
+                className="w-3/4 text-center py-2 rounded-md hover:bg-gray-800 text-lg font-medium transition-colors duration-300"
+              >
+                My Registrations
+              </button>
+              <button
+                onClick={() => {
+                  setAccountOpen(false);
+                  router.push("/my-passes");
+                }}
+                className="w-3/4 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-gray-800 text-lg font-medium transition-colors duration-300"
+              >
+                <Ticket size={16} />
+                My Passes
+              </button>
+              <button
+                onClick={() => {
+                  setMenuDisplay(false);
+                  router.push("/buy-pass");
+                }}
+                className="w-3/4 flex items-center justify-center gap-2 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary hover:from-hover-primary hover:to-primary text-white font-semibold transition-colors duration-300"
+              >
+                <Ticket size={18} />
+                Buy Pass
+              </button>
               <button
                 onClick={logout}
-                className="bg-background-soft border border-border text-white font-audiowide hover:bg-background transition duration-300s px-4 py-2 rounded-lg"
+                className="w-3/4 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 text-sm font-medium transition-colors duration-300"
               >
                 Logout
               </button>
@@ -202,6 +204,7 @@ const Header = () => {
           )}
         </div>
       )}
+
     </div>
   );
 };

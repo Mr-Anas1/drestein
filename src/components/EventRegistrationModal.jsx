@@ -254,48 +254,13 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                             )}
                         </div>
 
-                        {String(event?.category || '').toLowerCase() === 'workshop' && event.isPaid && (
-                            <>
-                                <div className="mt-4 p-4 bg-background-soft rounded-lg border border-border">
-                                    <h5 className="font-audiowide text-white text-sm mb-3">Payment Information</h5>
-                                    <p className="text-sm text-muted-text mb-3">
-                                        This is a paid event. Please complete the payment to register.
-                                    </p>
-                                    {event.upiQrCode && (
-                                        <div className="flex flex-col items-center mb-4">
-                                            <div className="mb-3 p-2 bg-white rounded">
-                                                <img
-                                                    src={event.upiQrCode}
-                                                    alt="UPI QR Code"
-                                                    className="w-40 h-40 object-contain"
-                                                />
-                                            </div>
-                                            <p className="text-xs text-muted-text text-center mb-3">
-                                                Scan the QR code to make payment
-                                            </p>
-                                        </div>
-                                    )}
-                                    <div>
-                                        <label className="block text-sm font-audiowide text-muted-text mb-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-2">
-                                                <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
-                                                <line x1="12" y1="12" x2="12" y2="12.01"></line>
-                                            </svg>
-                                            UPI Transaction ID (optional)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.transactionId}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, transactionId: e.target.value }))}
-                                            className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                                            placeholder="Enter your UPI transaction reference ID (if available)"
-                                        />
-                                        <p className="text-xs text-muted-text mt-1">
-                                            If you've paid, you can enter your UPI transaction reference ID for faster verification. This is optional.
-                                        </p>
-                                    </div>
-                                </div>
-                            </>
+                        {/* Workshops are free - no payment required */}
+                        {String(event?.category || '').toLowerCase() === 'workshop' && (
+                            <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                <p className="text-sm text-green-400 font-space">
+                                    <strong className="font-audiowide">Free Workshop:</strong> This workshop is free to attend. No event pass or payment required!
+                                </p>
+                            </div>
                         )}
 
                         {/* Event Pass CTA for non-Workshop */}

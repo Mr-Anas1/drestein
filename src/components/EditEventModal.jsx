@@ -13,9 +13,7 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
         description: event.description || '',
         fullDescription: event.fullDescription || '',
         img: event.img || '',
-        upiQrCode: event.upiQrCode || '',
-        isPaid: event.isPaid || false,
-        entryFee: event.entryFee || '',
+        requiresPass: event.requiresPass !== undefined ? event.requiresPass : true,
         date: event.date || '',
         time: event.time || '',
         venue: event.venue || '',
@@ -172,41 +170,20 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                                     <input 
                                         type="checkbox" 
                                         className="sr-only" 
-                                        checked={formData.isPaid}
+                                        checked={formData.requiresPass}
                                         onChange={(e) => setFormData(prev => ({ 
                                             ...prev, 
-                                            isPaid: e.target.checked,
-                                            entryFee: e.target.checked ? prev.entryFee : ''
+                                            requiresPass: e.target.checked
                                         }))}
                                     />
-                                    <div className={`block w-14 h-8 rounded-full ${formData.isPaid ? 'bg-primary' : 'bg-background-soft border border-border'}`}></div>
-                                    <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${formData.isPaid ? 'translate-x-6' : ''}`}></div>
+                                    <div className={`block w-14 h-8 rounded-full ${formData.requiresPass ? 'bg-primary' : 'bg-background-soft border border-border'}`}></div>
+                                    <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${formData.requiresPass ? 'translate-x-6' : ''}`}></div>
                                 </div>
                                 <div className="ml-3 text-white font-space text-sm">
-                                    Paid Event
+                                    Requires Event Pass
                                 </div>
                             </label>
                         </div>
-                        
-                        {formData.isPaid && (
-                            <div>
-                                <label className="block text-sm font-audiowide text-muted-text mb-2">
-                                    Entry Fee (₹)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={formData.entryFee}
-                                    onChange={(e) => setFormData(prev => ({ 
-                                        ...prev, 
-                                        entryFee: e.target.value 
-                                    }))}
-                                    className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                                    placeholder="Enter amount"
-                                    required={formData.isPaid}
-                                />
-                            </div>
-                        )}
 
                         <div>
                             <label className="block text-sm font-audiowide text-muted-text mb-2">Time</label>
@@ -240,19 +217,11 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                         />
                     </div>
 
-                    {formData.isPaid && (
-                        <div>
-                            <label className="block text-sm font-audiowide text-muted-text mb-2">
-                                UPI QR Code (Required for Paid Events)
-                            </label>
-                            <ImageUpload
-                                currentImage={formData.upiQrCode}
-                                onImageUpload={(url) => setFormData(prev => ({ ...prev, upiQrCode: url }))}
-                                disabled={loading}
-                                required={formData.isPaid}
-                            />
-                            <p className="text-xs text-muted-text mt-1">
-                                Upload a clear image of your UPI QR code for event payments
+                    {/* Pass Requirement Info */}
+                    {formData.requiresPass && (
+                        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                            <p className="text-sm text-white font-space">
+                                <strong className="font-audiowide">Event Pass Required:</strong> Students will need to purchase an event pass to register for this event. Workshops are free and don't require a pass.
                             </p>
                         </div>
                     )}
