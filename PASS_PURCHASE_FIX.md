@@ -5,18 +5,14 @@ After purchasing an event pass successfully, the `hasEventPass` field in the stu
 
 ## Root Causes Identified
 
-### 1. **CRITICAL: Encryption/Decryption IV Mismatch** ✅ FIXED
-The encryption and decryption functions were using different Initialization Vectors (IVs):
-- **Encrypt** (initiate): Used sequential bytes `[0x00, 0x01, 0x02, ..., 0x0F]`
-- **Decrypt** (callback): Used all zeros `Buffer.alloc(16, "\0")`
-
-This caused the `order_id` to be corrupted in the response:
+### 1. **CRITICAL: Missing orderId in Callback**
+CCAvenue is not returning the `order_id` parameter in the callback response, causing the pass lookup to fail. The logs show:
 ```
-[CCA INIT] orderId: 17598953053495996     ✅ Sent correctly
-[CCA CALLBACK] osffvZoc58: >557:3053495996  ❌ Received corrupted
+[CCA INIT] orderId: 17598947838522988  ✅ Created
+[CCA CALLBACK] Order: null              ❌ Missing!
 ```
 
-**Fix:** Updated the encrypt function to use all-zero IV, matching the decrypt function.
+This prevents the system from finding the pass document and updating the student.
 
 ### 2. **Backend Update Logic**
 The callback route (`/api/payments/ccavenue/callback/route.js`) was correctly attempting to update the student document, but lacked comprehensive logging to debug failures.
@@ -115,21 +111,29 @@ useEffect(() => {
 5. **Profile refresh triggered** → `refreshStudentProfile()` fetches latest data
 6. **UI updates** → User can now register for events without being asked for a pass
 
-## ✅ FIXED: Encryption IV Mismatch
+## URGENT: Next Steps to Fix orderId Issue
 
-**Problem:** The encrypt and decrypt functions used different IVs, corrupting the order_id.
+The callback is receiving `orderId: null`. To diagnose:
 
-**Solution:** Updated `initiate/route.js` line 42 to use:
-```javascript
-const iv = Buffer.alloc(16, "\0");  // All zeros, matching decrypt
-```
+1. **Check the decrypted response** - Look for the log:
+   ```
+   [CCA CALLBACK] Decrypted response: ...
+   [CCA CALLBACK] All params: {...}
+   ```
+   This will show what CCAvenue is actually sending.
 
-Instead of:
-```javascript
-const iv = Buffer.from([0x00, 0x01, 0x02, ..., 0x0F]);  // Sequential bytes ❌
-```
+2. **Possible causes:**
+   - CCAvenue uses a different parameter name (e.g., `merchant_order_id`, `reference_no`)
+   - Encryption/decryption mismatch
+   - CCAvenue test environment behaves differently
 
-Now the `order_id` will be properly encrypted and decrypted, allowing the callback to find the pass document and update `hasEventPass`.
+3. **Temporary workaround implemented:**
+   - If `orderId` is null, the system tries to find the pass by `trackingId`
+   - This is a fallback mechanism until we identify the correct parameter
+
+4. **Permanent fix needed:**
+   - Once you see the actual parameters in the logs, update line 52 to use the correct field name
+   - Example: `const orderId = params.get("merchant_order_id") || params.get("order_id");`
 
 ## Testing Checklist
 
