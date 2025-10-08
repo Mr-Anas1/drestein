@@ -28,6 +28,65 @@ function decryptCCAvenue(encResp, workingKey) {
   return decrypted;
 }
 
+// Helper function to update pass and student documents
+async function updatePassAndStudent(db, passRef, passId, passData, success, orderStatus, trackingId, params) {
+  await passRef.update({
+    status: success ? "active" : orderStatus || "failed",
+    paymentStatus: success ? "approved" : "rejected",
+    paymentVerified: success,
+    trackingId: trackingId || null,
+    gatewayResponse: Object.fromEntries(params),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  console.log(`[CCA CALLBACK] Pass ${passId} updated:`, success ? "ACTIVE" : "FAILED");
+  console.log(`[CCA CALLBACK] Pass data:`, JSON.stringify(passData, null, 2));
+
+  // Update student's hasEventPass flag if payment successful
+  if (success && passData.userUid) {
+    try {
+      console.log(`[CCA CALLBACK] ✅ Payment successful, updating student ${passData.userUid}...`);
+      const studentRef = db.collection("students").doc(passData.userUid);
+      
+      // Check if student document exists
+      const studentDoc = await studentRef.get();
+      console.log(`[CCA CALLBACK] Student document exists:`, studentDoc.exists);
+      
+      if (!studentDoc.exists) {
+        console.warn(`[CCA CALLBACK] ⚠️ Student document does not exist for ${passData.userUid}, creating it...`);
+      }
+      
+      await studentRef.set(
+        {
+          hasEventPass: true,
+          eventPassId: passId,
+          eventPassPurchasedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+      console.log(`[CCA CALLBACK] ✅ Student ${passData.userUid} hasEventPass set to true`);
+      
+      // Verify the update
+      const updatedDoc = await studentRef.get();
+      const updatedData = updatedDoc.data();
+      console.log(`[CCA CALLBACK] ✅ Verified - hasEventPass is now:`, updatedData?.hasEventPass);
+    } catch (studentErr) {
+      console.error("[CCA CALLBACK] ❌ Failed to update student:", studentErr);
+      console.error("[CCA CALLBACK] Error code:", studentErr.code);
+      console.error("[CCA CALLBACK] Error message:", studentErr.message);
+      console.error("[CCA CALLBACK] Stack trace:", studentErr.stack);
+    }
+  } else {
+    console.log(`[CCA CALLBACK] ⚠️ Skipping student update - success: ${success}, userUid: ${passData.userUid || 'MISSING'}`);
+    if (!success) {
+      console.log(`[CCA CALLBACK] Payment was not successful, status: ${orderStatus}`);
+    }
+    if (!passData.userUid) {
+      console.error(`[CCA CALLBACK] ❌ CRITICAL: userUid is missing from pass document!`);
+    }
+  }
+}
+
 export async function POST(req) {
   try {
     const formData = await req.formData();
@@ -44,6 +103,7 @@ export async function POST(req) {
 
     // Decrypt the response
     const decrypted = decryptCCAvenue(encResp, workingKey);
+    console.log("[CCA CALLBACK] Decrypted response:", decrypted);
 
     // Extract details
     const params = new URLSearchParams(decrypted);
@@ -53,9 +113,41 @@ export async function POST(req) {
     const amount = params.get("amount");
 
     console.log("[CCA CALLBACK] Order:", orderId, "Status:", orderStatus);
+    console.log("[CCA CALLBACK] All params:", Object.fromEntries(params));
 
     // Update pass in Firestore
     const db = getAdminDB();
+    if (!orderId) {
+      console.error("[CCA CALLBACK] ❌ CRITICAL: orderId is null/undefined!");
+      console.error("[CCA CALLBACK] This means CCAvenue didn't return order_id in the response");
+      console.error("[CCA CALLBACK] Check if the parameter name is different or if encryption is wrong");
+      
+      // Try to find pass by tracking_id as fallback
+      if (trackingId) {
+        console.log(`[CCA CALLBACK] Attempting fallback: searching by trackingId: ${trackingId}`);
+        const snapByTracking = await db.collection("passes").where("trackingId", "==", trackingId).limit(1).get();
+        if (!snapByTracking.empty) {
+          console.log(`[CCA CALLBACK] ✅ Found pass by trackingId`);
+          // Continue with this pass
+          const passRef = snapByTracking.docs[0].ref;
+          const passId = snapByTracking.docs[0].id;
+          const passData = snapByTracking.docs[0].data();
+          const success = orderStatus?.toLowerCase() === "success";
+          
+          await updatePassAndStudent(db, passRef, passId, passData, success, orderStatus, trackingId, params);
+        } else {
+          console.error(`[CCA CALLBACK] ❌ No pass found by trackingId either`);
+        }
+      }
+      
+      // Redirect anyway to show status to user
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://drestein.vercel.app";
+      return NextResponse.redirect(
+        `${baseUrl}/payment/result?orderId=${encodeURIComponent(trackingId || "unknown")}&status=${encodeURIComponent(orderStatus || "")}`,
+        302
+      );
+    }
+    
     if (orderId) {
       console.log(`[CCA CALLBACK] Searching for pass with orderId: ${orderId}`);
       const snap = await db.collection("passes").where("orderId", "==", orderId).limit(1).get();
@@ -67,62 +159,7 @@ export async function POST(req) {
         const success = orderStatus?.toLowerCase() === "success";
         
         console.log(`[CCA CALLBACK] Found pass ${passId} with userUid: ${passData.userUid || 'MISSING'}`);
-
-        await passRef.update({
-          status: success ? "active" : orderStatus || "failed",
-          paymentStatus: success ? "approved" : "rejected",
-          paymentVerified: success,
-          trackingId: trackingId || null,
-          gatewayResponse: Object.fromEntries(params),
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-
-        console.log(`[CCA CALLBACK] Pass ${passId} updated:`, success ? "ACTIVE" : "FAILED");
-        console.log(`[CCA CALLBACK] Pass data:`, JSON.stringify(passData, null, 2));
-
-        // Update student's hasEventPass flag if payment successful
-        if (success && passData.userUid) {
-          try {
-            console.log(`[CCA CALLBACK] ✅ Payment successful, updating student ${passData.userUid}...`);
-            const studentRef = db.collection("students").doc(passData.userUid);
-            
-            // Check if student document exists
-            const studentDoc = await studentRef.get();
-            console.log(`[CCA CALLBACK] Student document exists:`, studentDoc.exists);
-            
-            if (!studentDoc.exists) {
-              console.warn(`[CCA CALLBACK] ⚠️ Student document does not exist for ${passData.userUid}, creating it...`);
-            }
-            
-            await studentRef.set(
-              {
-                hasEventPass: true,
-                eventPassId: passId,
-                eventPassPurchasedAt: FieldValue.serverTimestamp(),
-              },
-              { merge: true }
-            );
-            console.log(`[CCA CALLBACK] ✅ Student ${passData.userUid} hasEventPass set to true`);
-            
-            // Verify the update
-            const updatedDoc = await studentRef.get();
-            const updatedData = updatedDoc.data();
-            console.log(`[CCA CALLBACK] ✅ Verified - hasEventPass is now:`, updatedData?.hasEventPass);
-          } catch (studentErr) {
-            console.error("[CCA CALLBACK] ❌ Failed to update student:", studentErr);
-            console.error("[CCA CALLBACK] Error code:", studentErr.code);
-            console.error("[CCA CALLBACK] Error message:", studentErr.message);
-            console.error("[CCA CALLBACK] Stack trace:", studentErr.stack);
-          }
-        } else {
-          console.log(`[CCA CALLBACK] ⚠️ Skipping student update - success: ${success}, userUid: ${passData.userUid || 'MISSING'}`);
-          if (!success) {
-            console.log(`[CCA CALLBACK] Payment was not successful, status: ${orderStatus}`);
-          }
-          if (!passData.userUid) {
-            console.error(`[CCA CALLBACK] ❌ CRITICAL: userUid is missing from pass document!`);
-          }
-        }
+        await updatePassAndStudent(db, passRef, passId, passData, success, orderStatus, trackingId, params);
       } else {
         console.warn("[CCA CALLBACK] No pass found for orderId:", orderId);
       }

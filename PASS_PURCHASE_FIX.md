@@ -5,10 +5,19 @@ After purchasing an event pass successfully, the `hasEventPass` field in the stu
 
 ## Root Causes Identified
 
-### 1. **Backend Update Logic**
+### 1. **CRITICAL: Missing orderId in Callback**
+CCAvenue is not returning the `order_id` parameter in the callback response, causing the pass lookup to fail. The logs show:
+```
+[CCA INIT] orderId: 17598947838522988  ✅ Created
+[CCA CALLBACK] Order: null              ❌ Missing!
+```
+
+This prevents the system from finding the pass document and updating the student.
+
+### 2. **Backend Update Logic**
 The callback route (`/api/payments/ccavenue/callback/route.js`) was correctly attempting to update the student document, but lacked comprehensive logging to debug failures.
 
-### 2. **Frontend State Management**
+### 3. **Frontend State Management**
 The `AuthContext` was only loading the student profile on initial authentication. After a successful payment, the context was not refreshing, so the UI still showed `hasEventPass: false` even if the backend had updated it.
 
 ## Changes Made
@@ -101,6 +110,30 @@ useEffect(() => {
 4. **User redirected to result page** → Frontend waits 2 seconds
 5. **Profile refresh triggered** → `refreshStudentProfile()` fetches latest data
 6. **UI updates** → User can now register for events without being asked for a pass
+
+## URGENT: Next Steps to Fix orderId Issue
+
+The callback is receiving `orderId: null`. To diagnose:
+
+1. **Check the decrypted response** - Look for the log:
+   ```
+   [CCA CALLBACK] Decrypted response: ...
+   [CCA CALLBACK] All params: {...}
+   ```
+   This will show what CCAvenue is actually sending.
+
+2. **Possible causes:**
+   - CCAvenue uses a different parameter name (e.g., `merchant_order_id`, `reference_no`)
+   - Encryption/decryption mismatch
+   - CCAvenue test environment behaves differently
+
+3. **Temporary workaround implemented:**
+   - If `orderId` is null, the system tries to find the pass by `trackingId`
+   - This is a fallback mechanism until we identify the correct parameter
+
+4. **Permanent fix needed:**
+   - Once you see the actual parameters in the logs, update line 52 to use the correct field name
+   - Example: `const orderId = params.get("merchant_order_id") || params.get("order_id");`
 
 ## Testing Checklist
 
