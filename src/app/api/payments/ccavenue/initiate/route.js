@@ -53,7 +53,7 @@ export async function POST(request) {
     const decoded = await verifyAuth(request);
     if (!decoded) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
-    const { userUid } = await request.json();
+    const { userUid, passType = 'general' } = await request.json();
     if (!userUid) return NextResponse.json({ error: "userUid required" }, { status: 400 });
     if (decoded.uid !== userUid) return NextResponse.json({ error: "UID mismatch" }, { status: 403 });
 
@@ -78,9 +78,10 @@ export async function POST(request) {
     // Save pending order in Firestore
     const db = getAdminDB();
     const { FieldValue } = await import("firebase-admin/firestore");
-    console.log(`[CCA INIT] Creating pass for userUid: ${userUid}, orderId: ${orderId}`);
+    console.log(`[CCA INIT] Creating pass for userUid: ${userUid}, orderId: ${orderId}, passType: ${passType}`);
     const passRef = await db.collection("passes").add({
       userUid,
+      passType,
       gateway: "ccavenue",
       orderId,
       amount: AMOUNT,
@@ -90,7 +91,7 @@ export async function POST(request) {
       paymentVerified: false,
       purchasedAt: FieldValue.serverTimestamp(),
     });
-    console.log(`[CCA INIT] ✅ Pass created with ID: ${passRef.id}, userUid: ${userUid}`);
+    console.log(`[CCA INIT] ✅ Pass created with ID: ${passRef.id}, userUid: ${userUid}, passType: ${passType}`);
 
     // Build plaintext (MUST match CCAvenue format)
     // ✅ Include merchant_param1 as fallback for sandbox obfuscation bug

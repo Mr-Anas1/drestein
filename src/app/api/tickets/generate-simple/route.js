@@ -104,6 +104,23 @@ export async function POST(request) {
           year: 'numeric'
         });
 
+    // Get pass type information
+    const passType = passData.passType || 'general';
+    const passTypeInfo = {
+      general: {
+        name: 'General Pass',
+        validDates: 'November 7-8, 2025',
+        access: 'All technical, non-technical, and cultural events'
+      },
+      workshop: {
+        name: 'Workshop Pass',
+        validDates: 'November 7-8, 2025',
+        access: 'All workshop sessions'
+      }
+    };
+    
+    const typeInfo = passTypeInfo[passType] || passTypeInfo.general;
+
     // Return ticket data as JSON
     return NextResponse.json({
       success: true,
@@ -115,7 +132,10 @@ export async function POST(request) {
         purchaseDate: purchaseDate,
         amount: passData.amount || "1.00",
         qrCode: qrCodeDataURL,
-        status: "active"
+        status: "active",
+        passType: typeInfo.name,
+        validDates: typeInfo.validDates,
+        access: typeInfo.access
       }
     });
 

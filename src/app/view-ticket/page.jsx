@@ -179,6 +179,27 @@ export default function ViewTicketPage() {
                 <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">Status</p>
                 <p className="text-xl font-bold text-green-600">✓ Verified</p>
               </div>
+
+              {ticket.passType && (
+                <div className="border-l-4 border-purple-600 pl-6">
+                  <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">Pass Type</p>
+                  <p className="text-xl text-gray-900">{ticket.passType}</p>
+                </div>
+              )}
+
+              {ticket.validDates && (
+                <div className="border-l-4 border-purple-600 pl-6">
+                  <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">Valid Dates</p>
+                  <p className="text-xl text-gray-900">{ticket.validDates}</p>
+                </div>
+              )}
+
+              {ticket.access && (
+                <div className="border-l-4 border-purple-600 pl-6 md:col-span-2">
+                  <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">Access To</p>
+                  <p className="text-lg text-gray-900">{ticket.access}</p>
+                </div>
+              )}
             </div>
 
             {/* QR Code Section */}

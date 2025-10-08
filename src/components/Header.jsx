@@ -1,6 +1,6 @@
 "use client";
 
-import { AlignJustify, X } from "lucide-react";
+import { AlignJustify, X, Ticket } from "lucide-react";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +53,16 @@ const Header = () => {
           >
             About
           </a>
+          
+          {/* Buy Pass Button */}
+          <button
+            onClick={() => router.push("/buy-pass")}
+            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide hover:from-hover-primary hover:to-primary transition duration-300s px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <Ticket size={18} />
+            Buy Pass
+          </button>
+          
           {!isAuthenticated ? (
             <button
               onClick={loginWithGoogleStudent}
@@ -88,6 +98,13 @@ const Header = () => {
                     className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm"
                   >
                     My Registrations
+                  </button>
+                  <button
+                    onClick={() => { setAccountOpen(false); router.push('/my-passes'); }}
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm flex items-center gap-2"
+                  >
+                    <Ticket size={16} />
+                    My Passes
                   </button>
                   <div className="h-px bg-border my-1" />
                   <button
@@ -146,6 +163,16 @@ const Header = () => {
           >
             About
           </a>
+          
+          {/* Buy Pass Button - Mobile */}
+          <button
+            onClick={() => { setMenuDisplay(false); router.push("/buy-pass"); }}
+            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide hover:from-hover-primary hover:to-primary transition duration-300s px-6 py-2 rounded-lg flex items-center gap-2 justify-center"
+          >
+            <Ticket size={18} />
+            Buy Pass
+          </button>
+          
           {!isAuthenticated ? (
             <button
               onClick={loginWithGoogleStudent}
