@@ -12,6 +12,7 @@ export default function MyRegistrationsPage() {
     const [error, setError] = useState('');
     const [registrations, setRegistrations] = useState([]);
     const [eventsMap, setEventsMap] = useState({});
+    const [specialEventsMap, setSpecialEventsMap] = useState({});
 
     const uid = useMemo(() => studentProfile?.uid || user?.uid || null, [studentProfile, user]);
 
@@ -39,6 +40,15 @@ export default function MyRegistrationsPage() {
                     const map = {};
                     for (const ev of events) map[ev.id] = ev;
                     setEventsMap(map);
+                }
+
+                // Fetch all special events
+                const specialEvRes = await fetch('/api/special-events');
+                if (specialEvRes.ok) {
+                    const specialEvents = await specialEvRes.json();
+                    const specialMap = {};
+                    for (const ev of specialEvents) specialMap[ev.id] = ev;
+                    setSpecialEventsMap(specialMap);
                 }
             } catch (e) {
                 console.error(e);
@@ -122,26 +132,64 @@ export default function MyRegistrationsPage() {
                 ) : (
                     <div className="space-y-4">
                         {registrations.map((r) => {
-                            const event = eventsMap[r.eventId];
+                            const isSpecialEvent = r.isSpecialEvent || r.eventType === 'special';
+                            const event = isSpecialEvent ? specialEventsMap[r.eventId] : eventsMap[r.eventId];
+                            
                             return (
-                                <div key={r.id} className="bg-background-soft border border-border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                    <div>
-                                        <div className="font-audiowide text-white">
-                                            {event?.title || 'Event'}
+                                <div key={r.id} className={`bg-background-soft border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${
+                                    isSpecialEvent ? 'border-secondary' : 'border-border'
+                                }`}>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <div className="font-audiowide text-white">
+                                                {event?.title || r.eventTitle || 'Event'}
+                                            </div>
+                                            {isSpecialEvent && (
+                                                <span className="bg-secondary/20 text-secondary px-2 py-0.5 rounded text-xs font-audiowide">
+                                                    SPECIAL
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="text-xs text-muted-text mt-1">
                                             {event ? (
                                                 <>
-                                                    <span>Dept: {event.department}</span>
-                                                    <span className="mx-2">•</span>
-                                                    <span>{event.date} {event.time}</span>
-                                                    <span className="mx-2">•</span>
-                                                    <span>{event.venue}</span>
+                                                    {isSpecialEvent ? (
+                                                        <>
+                                                            <span className="capitalize">{event.category}</span>
+                                                            <span className="mx-2">•</span>
+                                                            <span>₹{event.price}</span>
+                                                            {event.date && (
+                                                                <>
+                                                                    <span className="mx-2">•</span>
+                                                                    <span>{event.date}</span>
+                                                                </>
+                                                            )}
+                                                            {event.venue && (
+                                                                <>
+                                                                    <span className="mx-2">•</span>
+                                                                    <span>{event.venue}</span>
+                                                                </>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>Dept: {event.department}</span>
+                                                            <span className="mx-2">•</span>
+                                                            <span>{event.date} {event.time}</span>
+                                                            <span className="mx-2">•</span>
+                                                            <span>{event.venue}</span>
+                                                        </>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <span>Event ID: {r.eventId}</span>
                                             )}
                                         </div>
+                                        {r.teamMembers && r.teamMembers.length > 0 && (
+                                            <div className="text-xs text-muted-text mt-2">
+                                                <span className="font-audiowide text-white">Team:</span> {r.teamMembers.join(', ')}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="text-right">
                                         <div className="text-xs text-muted-text">Registered on</div>
@@ -149,8 +197,18 @@ export default function MyRegistrationsPage() {
                                             {new Date(r.registeredAt).toLocaleString()}
                                         </div>
                                         <div className="mt-1 text-xs">
-                                            Status: <span className={r.paymentVerified ? 'text-green-400' : r.paymentStatus === 'rejected' ? 'text-red-400' : 'text-yellow-300'}>
-                                                {r.paymentVerified ? 'Approved' : r.paymentStatus === 'rejected' ? 'Rejected' : 'Pending'}
+                                            Status: <span className={
+                                                r.status === 'confirmed' || r.paymentVerified || r.paymentStatus === 'paid' 
+                                                    ? 'text-green-400' 
+                                                    : r.paymentStatus === 'rejected' 
+                                                    ? 'text-red-400' 
+                                                    : 'text-yellow-300'
+                                            }>
+                                                {r.status === 'confirmed' || r.paymentVerified || r.paymentStatus === 'paid' 
+                                                    ? 'Confirmed' 
+                                                    : r.paymentStatus === 'rejected' 
+                                                    ? 'Rejected' 
+                                                    : 'Pending'}
                                             </span>
                                         </div>
                                     </div>

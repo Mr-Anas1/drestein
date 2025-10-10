@@ -14,6 +14,7 @@ export default function MyPassesPage() {
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [specialEventsMap, setSpecialEventsMap] = useState({});
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -48,6 +49,15 @@ export default function MyPassesPage() {
         setPasses([data.pass]);
       } else {
         setPasses([]);
+      }
+
+      // Fetch special events for custom pass details
+      const specialEvRes = await fetch('/api/special-events');
+      if (specialEvRes.ok) {
+        const specialEvents = await specialEvRes.json();
+        const specialMap = {};
+        for (const ev of specialEvents) specialMap[ev.id] = ev;
+        setSpecialEventsMap(specialMap);
       }
     } catch (err) {
       console.error('Error fetching passes:', err);
@@ -102,6 +112,15 @@ export default function MyPassesPage() {
         dates: 'November 7-8, 2025',
         events: 'All workshop sessions',
         color: 'from-purple-500 to-pink-500',
+      },
+      custom: {
+        name: pass.passName || 'Custom Pass',
+        description: `Access to ${pass.customEvents?.length || 0} selected special events`,
+        dates: 'November 7-8, 2025',
+        events: pass.customEvents?.length > 0 
+          ? `${pass.customEvents.length} premium events` 
+          : 'Custom selected events',
+        color: 'from-secondary to-primary',
       },
     };
 
@@ -226,12 +245,35 @@ export default function MyPassesPage() {
                       </div>
                     </div>
 
+                    {/* Custom Events List */}
+                    {pass.passType === 'custom' && pass.customEvents && pass.customEvents.length > 0 && (
+                      <div className="bg-background border border-border rounded-lg p-4 mb-6">
+                        <div className="text-sm text-muted-text font-space mb-3">Included Special Events:</div>
+                        <div className="space-y-2">
+                          {pass.customEvents.map((eventId, index) => {
+                            const event = specialEventsMap[eventId];
+                            return (
+                              <div key={eventId} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-secondary font-audiowide">{index + 1}.</span>
+                                  <span className="text-white font-space">{event?.title || 'Event'}</span>
+                                </div>
+                                {event && (
+                                  <span className="text-primary font-audiowide text-xs">₹{event.price}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Purchase Info */}
                     <div className="bg-background border border-border rounded-lg p-4 mb-6">
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <div className="text-muted-text font-space mb-1">Amount Paid</div>
-                          <div className="text-white font-audiowide">₹{pass.amount || '250'}</div>
+                          <div className="text-white font-audiowide">₹{pass.passPrice || pass.amount || '250'}</div>
                         </div>
                         <div>
                           <div className="text-muted-text font-space mb-1">Status</div>

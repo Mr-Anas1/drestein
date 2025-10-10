@@ -28,6 +28,80 @@ function decryptCCAvenue(encResp, workingKey) {
   return decrypted;
 }
 
+// Helper function to auto-register user for special events in custom pass
+async function autoRegisterSpecialEvents(db, userUid, customEvents, passId) {
+  if (!customEvents || customEvents.length === 0) {
+    console.log(`[CCA CALLBACK] No custom events to register`);
+    return;
+  }
+
+  console.log(`[CCA CALLBACK] Auto-registering ${customEvents.length} special events for user ${userUid}`);
+
+  try {
+    // Get user's cart items to extract team member info
+    const cartSnapshot = await db
+      .collection("specialEventCart")
+      .where("userUid", "==", userUid)
+      .where("status", "==", "pending")
+      .get();
+
+    const cartMap = {};
+    cartSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      cartMap[data.eventId] = {
+        cartItemId: doc.id,
+        teamMembers: data.teamMembers
+      };
+    });
+
+    // Register each event
+    for (const eventId of customEvents) {
+      try {
+        // Get event details
+        const eventDoc = await db.collection("specialEvents").doc(eventId).get();
+        if (!eventDoc.exists) {
+          console.warn(`[CCA CALLBACK] Special event ${eventId} not found, skipping`);
+          continue;
+        }
+
+        const eventData = eventDoc.data();
+        const cartItem = cartMap[eventId];
+
+        // Create registration
+        await db.collection("registrations").add({
+          userUid,
+          eventId,
+          eventTitle: eventData.title,
+          eventType: "special", // Mark as special event
+          isSpecialEvent: true,
+          passId, // Link to the pass
+          teamMembers: cartItem?.teamMembers || null,
+          registeredAt: FieldValue.serverTimestamp(),
+          status: "confirmed",
+          paymentStatus: "paid",
+        });
+
+        console.log(`[CCA CALLBACK] ✅ Registered user for special event: ${eventData.title}`);
+
+        // Update cart item status to purchased
+        if (cartItem?.cartItemId) {
+          await db.collection("specialEventCart").doc(cartItem.cartItemId).update({
+            status: "purchased",
+            purchasedAt: FieldValue.serverTimestamp(),
+          });
+          console.log(`[CCA CALLBACK] ✅ Updated cart item ${cartItem.cartItemId} to purchased`);
+        }
+      } catch (eventErr) {
+        console.error(`[CCA CALLBACK] ❌ Failed to register event ${eventId}:`, eventErr);
+      }
+    }
+
+    console.log(`[CCA CALLBACK] ✅ Completed auto-registration for all special events`);
+  } catch (err) {
+    console.error("[CCA CALLBACK] ❌ Error in autoRegisterSpecialEvents:", err);
+  }
+}
+
 // Helper function to update pass and student documents
 async function updatePassAndStudent(db, passRef, passId, passData, success, orderStatus, trackingId, params) {
   await passRef.update({
@@ -73,6 +147,12 @@ async function updatePassAndStudent(db, passRef, passId, passData, success, orde
       const updatedDoc = await studentRef.get();
       const updatedData = updatedDoc.data();
       console.log(`[CCA CALLBACK] ✅ Verified - hasEventPass is now:`, updatedData?.hasEventPass);
+
+      // ✅ Auto-register for special events if this is a custom pass
+      if (passData.passType === "custom" && passData.customEvents) {
+        console.log(`[CCA CALLBACK] 🎯 Custom pass detected, auto-registering special events...`);
+        await autoRegisterSpecialEvents(db, userUid, passData.customEvents, passId);
+      }
     } catch (studentErr) {
       console.error("[CCA CALLBACK] ❌ Failed to update student:", studentErr);
       console.error("[CCA CALLBACK] Error code:", studentErr.code);

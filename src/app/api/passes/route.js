@@ -45,7 +45,7 @@ export async function POST(request) {
     const decoded = await verifyAuth(request);
     if (!decoded) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
-    const { userUid, transactionId } = await request.json();
+    const { userUid, transactionId, passType, passPrice, passName, customEvents } = await request.json();
     if (!userUid) return NextResponse.json({ error: "userUid required" }, { status: 400 });
     if (decoded.uid !== userUid) return NextResponse.json({ error: "UID mismatch" }, { status: 403 });
 
@@ -64,14 +64,24 @@ export async function POST(request) {
     }
 
     // Otherwise create pending pass record
-    const docRef = await db.collection("passes").add({
+    const passData = {
       userUid,
       transactionId: transactionId ? String(transactionId).trim() : undefined,
+      passType: passType || "general",
+      passName: passName || "General Pass",
+      passPrice: passPrice || 250,
       status: "pending_payment",
       paymentStatus: "pending",
       paymentVerified: false,
       purchasedAt: FieldValue.serverTimestamp(),
-    });
+    };
+
+    // Add custom events if it's a custom pass
+    if (passType === "custom" && customEvents && customEvents.length > 0) {
+      passData.customEvents = customEvents;
+    }
+
+    const docRef = await db.collection("passes").add(passData);
 
     return NextResponse.json({ id: docRef.id, message: "Pass created" }, { status: 201 });
   } catch (e) {

@@ -48,6 +48,13 @@ const Header = () => {
           </a>
 
           <a
+            onClick={() => router.push("/special-events")}
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
+          >
+            Special Events
+          </a>
+
+          <a
             onClick={() => router.push("/about")}
             className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
           >
@@ -144,6 +151,7 @@ const Header = () => {
             { label: "Home", path: "/" },
             { label: "Departments", path: "/departments" },
             { label: "Events", path: "/events" },
+            { label: "Special Events", path: "/special-events" },
             { label: "About", path: "/about" },
           ].map((item) => (
             <button

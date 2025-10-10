@@ -5,7 +5,7 @@ import { X, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { auth } from '@/lib/firebase';
 
-export default function PassPurchaseModal({ onClose, onPurchased, showCloseButton = true, allowBackdropClose = true, upiQrImage }) {
+export default function PassPurchaseModal({ onClose, onPurchased, showCloseButton = true, allowBackdropClose = true, upiQrImage, passData }) {
   const { isAuthenticated, loginWithGoogleStudent, user, studentProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -14,6 +14,12 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
   const [gatewayData, setGatewayData] = useState(null); // { actionUrl, encRequest, accessCode, merchantId }
 
   const uid = studentProfile?.uid || user?.uid;
+  
+  // Extract pass details
+  const passType = passData?.id || 'general';
+  const passPrice = passData?.price || 250;
+  const passName = passData?.name || 'General Pass';
+  const customEvents = passData?.customEvents || [];
 
   const submit = async () => {
     setLoading(true);
@@ -34,7 +40,13 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ userUid: uid })
+        body: JSON.stringify({ 
+          userUid: uid,
+          passType,
+          passPrice,
+          passName,
+          customEvents: customEvents.length > 0 ? customEvents : undefined
+        })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Failed to initiate payment');
@@ -71,8 +83,24 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
         </div>
 
         <div className="space-y-4">
+          <div className="bg-background-soft border border-border rounded-lg p-4 mb-4">
+            <h4 className="font-audiowide text-white mb-2">{passName}</h4>
+            <p className="text-muted-text font-space text-sm mb-3">{passData?.description}</p>
+            {customEvents.length > 0 && (
+              <div className="space-y-1 mb-3">
+                <p className="text-xs text-muted-text font-audiowide">Included Events:</p>
+                {passData?.features?.map((feature, idx) => (
+                  <p key={idx} className="text-xs text-white font-space">• {feature}</p>
+                ))}
+              </div>
+            )}
+            <div className="text-2xl font-audiowide text-primary">₹{passPrice}</div>
+          </div>
+          
           <div className="text-muted-text font-space text-sm">
-            Purchase a single Event Pass to register for any number of events. Workshops do not require the pass.
+            {passType === 'custom' 
+              ? 'You will get access to all selected events with this custom pass.'
+              : 'Purchase this pass to register for events. Workshops do not require the pass.'}
           </div>
 
           {!isAuthenticated && (
@@ -89,7 +117,7 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
           )}
 
           <button onClick={submit} disabled={loading || !isAuthenticated} className="w-full bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary disabled:opacity-50">
-            {loading ? 'Redirecting...' : 'Pay ₹250 and Buy Pass'}
+            {loading ? 'Redirecting...' : `Pay ₹${passPrice} and Buy Pass`}
           </button>
 
           {/* Hidden form to CCAvenue gateway */}

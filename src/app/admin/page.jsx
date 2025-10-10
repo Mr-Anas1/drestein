@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { DEPARTMENTS, getDepartmentName } from '@/constants/departments'
-import { Plus, LogOut, Users } from 'lucide-react'
+import { Plus, LogOut, Users, Ticket } from 'lucide-react'
 
 // Import extracted components
 import AddEventModal from '@/components/AddEventModal'
@@ -26,12 +26,20 @@ const AdminDashboard = () => {
     const [eventToDelete, setEventToDelete] = useState(null)
     const [selectedDepartment, setSelectedDepartment] = useState('all')
 
-    // Authentication check
+    // Authentication check - only allow super_admin and department_admin
     useEffect(() => {
-        if (!authLoading && !user) {
-            router.push('/admin/login')
+        if (!authLoading) {
+            if (!user) {
+                router.push('/admin/login')
+            } else if (userRole && userRole.role === 'student') {
+                // Redirect students away from admin page
+                router.push('/')
+            } else if (userRole && !isSuperAdmin && !isDepartmentAdmin) {
+                // Redirect any other non-admin roles
+                router.push('/')
+            }
         }
-    }, [user, authLoading, router])
+    }, [user, authLoading, userRole, isSuperAdmin, isDepartmentAdmin, router])
 
     // Fetch events
     useEffect(() => {
@@ -116,7 +124,7 @@ const AdminDashboard = () => {
         )
     }
 
-    if (!user || !userRole) {
+    if (!user || !userRole || (!isSuperAdmin && !isDepartmentAdmin)) {
         return null
     }
 
@@ -136,13 +144,29 @@ const AdminDashboard = () => {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-4 mt-4 md:mt-0">
+                    <div className="flex items-center gap-4 mt-4 md:mt-0 flex-wrap">
                         <button
                             onClick={() => setShowAddModal(true)}
                             className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 flex items-center gap-2"
                         >
                             <Plus size={20} />
                             Add New Event
+                        </button>
+
+                        <button
+                            onClick={() => router.push('/admin/passes')}
+                            className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2"
+                        >
+                            <Ticket size={20} />
+                            View Passes
+                        </button>
+
+                        <button
+                            onClick={() => router.push('/admin/special-events')}
+                            className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2"
+                        >
+                            <Plus size={20} />
+                            Special Events
                         </button>
 
                         {isSuperAdmin && (

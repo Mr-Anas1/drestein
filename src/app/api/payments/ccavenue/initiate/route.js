@@ -53,7 +53,7 @@ export async function POST(request) {
     const decoded = await verifyAuth(request);
     if (!decoded) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
-    const { userUid, passType = 'general' } = await request.json();
+    const { userUid, passType = 'general', passPrice, passName, customEvents } = await request.json();
     if (!userUid) return NextResponse.json({ error: "userUid required" }, { status: 400 });
     if (decoded.uid !== userUid) return NextResponse.json({ error: "UID mismatch" }, { status: 403 });
 
@@ -72,16 +72,20 @@ export async function POST(request) {
     if (!CANCEL_URL) missing.push("CCAVENUE_CANCEL_URL");
     if (missing.length) return NextResponse.json({ error: `Missing env: ${missing.join(", ")}` }, { status: 500 });
 
-    const AMOUNT = "1.00"; // For testing
+    // Use actual price or default to 1.00 for testing
+    const AMOUNT = passPrice ? passPrice.toFixed(2) : "1.00";
     const orderId = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
     // Save pending order in Firestore
     const db = getAdminDB();
     const { FieldValue } = await import("firebase-admin/firestore");
     console.log(`[CCA INIT] Creating pass for userUid: ${userUid}, orderId: ${orderId}, passType: ${passType}`);
-    const passRef = await db.collection("passes").add({
+    
+    const passData = {
       userUid,
       passType,
+      passName: passName || (passType === 'general' ? 'General Pass' : 'Custom Pass'),
+      passPrice: parseFloat(AMOUNT),
       gateway: "ccavenue",
       orderId,
       amount: AMOUNT,
@@ -90,7 +94,14 @@ export async function POST(request) {
       paymentStatus: "pending",
       paymentVerified: false,
       purchasedAt: FieldValue.serverTimestamp(),
-    });
+    };
+
+    // Add custom events if it's a custom pass
+    if (passType === "custom" && customEvents && customEvents.length > 0) {
+      passData.customEvents = customEvents;
+    }
+
+    const passRef = await db.collection("passes").add(passData);
     console.log(`[CCA INIT] ✅ Pass created with ID: ${passRef.id}, userUid: ${userUid}, passType: ${passType}`);
 
     // Build plaintext (MUST match CCAvenue format)
