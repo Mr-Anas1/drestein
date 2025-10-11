@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Users } from 'lucide-react';
 import AddSpecialEventModal from '@/components/AddSpecialEventModal';
 import EditSpecialEventModal from '@/components/EditSpecialEventModal';
+import SpecialEventParticipantsModal from '@/components/SpecialEventParticipantsModal';
 
 const AdminSpecialEventsPage = () => {
   const { user, userRole, loading: authLoading, isSuperAdmin, isDepartmentAdmin } = useAuth();
@@ -16,6 +17,8 @@ const AdminSpecialEventsPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
+  const [participantsEvent, setParticipantsEvent] = useState(null);
 
   // Authentication check
   useEffect(() => {
@@ -169,6 +172,16 @@ const AdminSpecialEventsPage = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => {
+                              setParticipantsEvent(event);
+                              setShowParticipantsModal(true);
+                            }}
+                            className="text-accent hover:text-accent/80 transition-colors"
+                            title="View Participants"
+                          >
+                            <Users className="w-5 h-5" />
+                          </button>
+                          <button
                             onClick={() => router.push(`/special-events/${event.id}`)}
                             className="text-primary hover:text-hover-primary transition-colors"
                             title="View"
@@ -226,6 +239,17 @@ const AdminSpecialEventsPage = () => {
             setShowEditModal(false);
             setSelectedEvent(null);
             fetchSpecialEvents();
+          }}
+        />
+      )}
+
+      {/* Participants Modal */}
+      {showParticipantsModal && participantsEvent && (
+        <SpecialEventParticipantsModal
+          event={participantsEvent}
+          onClose={() => {
+            setShowParticipantsModal(false);
+            setParticipantsEvent(null);
           }}
         />
       )}

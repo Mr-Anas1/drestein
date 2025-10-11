@@ -295,6 +295,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const eventId = searchParams.get("eventId");
     const userUid = searchParams.get("userUid");
+    const isSpecialEvent = searchParams.get("isSpecialEvent");
 
     const db = getAdminDB();
 
@@ -303,6 +304,12 @@ export async function GET(request) {
       qRef = db.collection("registrations").where("userUid", "==", userUid);
     } else if (eventId) {
       qRef = db.collection("registrations").where("eventId", "==", eventId);
+      
+      // Optional: Filter for special events only
+      if (isSpecialEvent === "true") {
+        // Note: Firestore doesn't support chaining where clauses on different fields without an index
+        // So we'll filter in memory after fetching
+      }
     } else {
       return NextResponse.json(
         { error: "userUid or eventId is required" },
@@ -311,10 +318,15 @@ export async function GET(request) {
     }
 
     const registrationsSnap = await qRef.get();
-    const participants = registrationsSnap.docs.map((d) => ({
+    let participants = registrationsSnap.docs.map((d) => ({
       id: d.id,
       ...d.data(),
     }));
+
+    // Filter for special events if requested
+    if (isSpecialEvent === "true") {
+      participants = participants.filter(p => p.isSpecialEvent === true || p.eventType === "special");
+    }
 
     // Sort by registration date (newest first)
     participants.sort((a, b) =>
