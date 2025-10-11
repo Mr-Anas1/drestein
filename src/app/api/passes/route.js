@@ -115,16 +115,23 @@ export async function GET(request) {
     // Otherwise, return all passes for the user
     if (!userUid) return NextResponse.json({ error: "userUid or passId required" }, { status: 400 });
 
-    // Get all passes for this user, ordered by purchase date
+    // Get all passes for this user
     const snap = await db
       .collection("passes")
       .where("userUid", "==", userUid)
-      .orderBy("purchasedAt", "desc")
       .get();
 
     if (snap.empty) return NextResponse.json({ passes: [] });
 
-    const passes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Sort by purchasedAt in memory (to avoid Firestore index requirement)
+    const passes = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        const aTime = a.purchasedAt?.toMillis?.() || 0;
+        const bTime = b.purchasedAt?.toMillis?.() || 0;
+        return bTime - aTime; // Descending order (newest first)
+      });
+    
     return NextResponse.json({ passes });
   } catch (e) {
     console.error("[PASSES GET] Error:", e);
