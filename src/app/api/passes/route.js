@@ -115,10 +115,11 @@ export async function GET(request) {
     // Otherwise, return all passes for the user
     if (!userUid) return NextResponse.json({ error: "userUid or passId required" }, { status: 400 });
 
-    // Get all passes for this user
+    // Get only verified/active passes for this user
     const snap = await db
       .collection("passes")
       .where("userUid", "==", userUid)
+      .where("paymentVerified", "==", true)
       .get();
 
     if (snap.empty) return NextResponse.json({ passes: [] });
