@@ -106,20 +106,38 @@ export async function POST(request) {
 
     // Get pass type information
     const passType = passData.passType || 'general';
-    const passTypeInfo = {
-      general: {
-        name: 'General Pass',
+    let typeInfo = {
+      name: 'General Pass',
+      validDates: 'November 7-8, 2025',
+      access: 'All technical, non-technical, and cultural events'
+    };
+
+    // Handle custom pass with special events
+    if (passType === 'custom' && passData.customEvents && passData.customEvents.length > 0) {
+      // Fetch special event details
+      const eventPromises = passData.customEvents.map(eventId => 
+        db.collection('specialEvents').doc(eventId).get()
+      );
+      const eventDocs = await Promise.all(eventPromises);
+      const eventTitles = eventDocs
+        .filter(doc => doc.exists)
+        .map(doc => doc.data().title);
+
+      typeInfo = {
+        name: passData.passName || 'Custom Pass',
         validDates: 'November 7-8, 2025',
-        access: 'All technical, non-technical, and cultural events'
-      },
-      workshop: {
+        access: eventTitles.length > 0 
+          ? eventTitles.join(', ') 
+          : `${passData.customEvents.length} premium events`,
+        customEvents: eventTitles
+      };
+    } else if (passType === 'workshop') {
+      typeInfo = {
         name: 'Workshop Pass',
         validDates: 'November 7-8, 2025',
         access: 'All workshop sessions'
-      }
-    };
-    
-    const typeInfo = passTypeInfo[passType] || passTypeInfo.general;
+      };
+    }
 
     // Return ticket data as JSON
     return NextResponse.json({
@@ -130,12 +148,13 @@ export async function POST(request) {
         email: decoded.email || passData.email || "N/A",
         orderId: passData.orderId || "N/A",
         purchaseDate: purchaseDate,
-        amount: passData.amount || "1.00",
+        amount: passData.passPrice || passData.amount || "250",
         qrCode: qrCodeDataURL,
         status: "active",
         passType: typeInfo.name,
         validDates: typeInfo.validDates,
-        access: typeInfo.access
+        access: typeInfo.access,
+        customEvents: typeInfo.customEvents || null
       }
     });
 

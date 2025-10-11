@@ -51,19 +51,26 @@ export async function POST(request) {
 
     const db = getAdminDB();
 
-    // Idempotency: if there is already an approved pass, return it
-    const approvedSnap = await db
+    // Check if user already has a pass of the same type that's verified
+    // Allow multiple passes, but prevent duplicate pending passes of same type
+    const existingSnap = await db
       .collection("passes")
       .where("userUid", "==", userUid)
-      .where("paymentVerified", "==", true)
+      .where("passType", "==", passType || "general")
+      .where("status", "in", ["pending_payment", "active"])
       .limit(1)
       .get();
-    if (!approvedSnap.empty) {
-      const d = approvedSnap.docs[0];
-      return NextResponse.json({ id: d.id, ...d.data() }, { status: 200 });
+    
+    if (!existingSnap.empty) {
+      const existing = existingSnap.docs[0];
+      const existingData = existing.data();
+      // If there's already a pending or active pass of this type, return it
+      if (existingData.status === "pending_payment" || existingData.paymentVerified) {
+        return NextResponse.json({ id: existing.id, ...existingData }, { status: 200 });
+      }
     }
 
-    // Otherwise create pending pass record
+    // Create new pass record
     const passData = {
       userUid,
       transactionId: transactionId ? String(transactionId).trim() : undefined,
@@ -89,42 +96,42 @@ export async function POST(request) {
   }
 }
 
-// Get pass by userUid (latest or approved)
+// Get passes by userUid (all passes for the user)
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const userUid = searchParams.get("userUid");
-    if (!userUid) return NextResponse.json({ error: "userUid required" }, { status: 400 });
+    const passId = searchParams.get("passId");
 
     const db = getAdminDB();
 
-    // First try to get active/verified pass
-    let snap = await db
-      .collection("passes")
-      .where("userUid", "==", userUid)
-      .where("paymentVerified", "==", true)
-      .limit(1)
-      .get();
-
-    // If no verified pass, get any pass
-    if (snap.empty) {
-      snap = await db
-        .collection("passes")
-        .where("userUid", "==", userUid)
-        .limit(1)
-        .get();
+    // If passId is provided, return specific pass
+    if (passId) {
+      const doc = await db.collection("passes").doc(passId).get();
+      if (!doc.exists) return NextResponse.json({ error: "Pass not found" }, { status: 404 });
+      return NextResponse.json({ pass: { id: doc.id, ...doc.data() } });
     }
 
-    if (snap.empty) return NextResponse.json({ pass: null });
+    // Otherwise, return all passes for the user
+    if (!userUid) return NextResponse.json({ error: "userUid or passId required" }, { status: 400 });
 
-    const d = snap.docs[0];
-    return NextResponse.json({ pass: { id: d.id, ...d.data() } });
+    // Get all passes for this user, ordered by purchase date
+    const snap = await db
+      .collection("passes")
+      .where("userUid", "==", userUid)
+      .orderBy("purchasedAt", "desc")
+      .get();
+
+    if (snap.empty) return NextResponse.json({ passes: [] });
+
+    const passes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return NextResponse.json({ passes });
   } catch (e) {
     console.error("[PASSES GET] Error:", e);
     console.error("[PASSES GET] Error code:", e.code);
     console.error("[PASSES GET] Error message:", e.message);
     return NextResponse.json({ 
-      error: e?.message || "Failed to fetch pass",
+      error: e?.message || "Failed to fetch passes",
       code: e?.code 
     }, { status: 500 });
   }

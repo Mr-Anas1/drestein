@@ -44,8 +44,10 @@ export default function MyPassesPage() {
 
       const data = await response.json();
       
-      // Convert single pass to array format
-      if (data.pass) {
+      // Handle both single pass (old format) and multiple passes (new format)
+      if (data.passes) {
+        setPasses(data.passes);
+      } else if (data.pass) {
         setPasses([data.pass]);
       } else {
         setPasses([]);
@@ -86,8 +88,8 @@ export default function MyPassesPage() {
 
       const data = await response.json();
       
-      // Open ticket in new tab for download
-      router.push('/view-ticket');
+      // Open ticket in new tab with passId parameter
+      router.push(`/view-ticket?passId=${passId}`);
     } catch (err) {
       console.error('Error downloading ticket:', err);
       alert('Failed to download ticket. Please try again.');

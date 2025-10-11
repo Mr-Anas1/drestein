@@ -28,19 +28,47 @@ export default function ViewTicketPage() {
 
         setUser(currentUser);
 
-        // Fetch user's pass
+        // Get passId from URL if provided
+        const urlParams = new URLSearchParams(window.location.search);
+        const passIdFromUrl = urlParams.get('passId');
+
         const idToken = await currentUser.getIdToken();
-        const passResponse = await fetch(`/api/passes?userUid=${currentUser.uid}`, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-
-        if (!passResponse.ok) {
-          throw new Error("Failed to fetch pass");
-        }
-
-        const passData = await passResponse.json();
         
-        if (!passData.pass) {
+        let passToUse = null;
+
+        if (passIdFromUrl) {
+          // Fetch specific pass by ID
+          const passResponse = await fetch(`/api/passes?passId=${passIdFromUrl}`, {
+            headers: { Authorization: `Bearer ${idToken}` },
+          });
+
+          if (!passResponse.ok) {
+            throw new Error("Failed to fetch pass");
+          }
+
+          const passData = await passResponse.json();
+          passToUse = passData.pass;
+        } else {
+          // Fetch user's passes (fallback to first verified pass)
+          const passResponse = await fetch(`/api/passes?userUid=${currentUser.uid}`, {
+            headers: { Authorization: `Bearer ${idToken}` },
+          });
+
+          if (!passResponse.ok) {
+            throw new Error("Failed to fetch pass");
+          }
+
+          const passData = await passResponse.json();
+          
+          // Get first verified pass or first pass
+          if (passData.passes && passData.passes.length > 0) {
+            passToUse = passData.passes.find(p => p.paymentVerified) || passData.passes[0];
+          } else if (passData.pass) {
+            passToUse = passData.pass;
+          }
+        }
+        
+        if (!passToUse) {
           setError("No event pass found. Please purchase a pass first.");
           setLoading(false);
           return;
@@ -53,7 +81,7 @@ export default function ViewTicketPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ passId: passData.pass.id }),
+          body: JSON.stringify({ passId: passToUse.id }),
         });
 
         if (!ticketResponse.ok) {
@@ -201,6 +229,23 @@ export default function ViewTicketPage() {
                 </div>
               )}
             </div>
+
+            {/* Custom Events List */}
+            {ticket.customEvents && ticket.customEvents.length > 0 && (
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 mb-12">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Included Special Events:</h3>
+                <div className="grid gap-3">
+                  {ticket.customEvents.map((eventTitle, index) => (
+                    <div key={index} className="flex items-center gap-3 bg-white rounded-lg p-3 shadow-sm">
+                      <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <span className="text-gray-900 font-medium">{eventTitle}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* QR Code Section */}
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 text-center">
