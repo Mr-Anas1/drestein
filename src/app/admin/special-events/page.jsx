@@ -99,13 +99,16 @@ const AdminSpecialEventsPage = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 flex items-center gap-2 mt-4 md:mt-0"
-          >
-            <Plus size={20} />
-            Add Special Event
-          </button>
+          {/* Only super admins can add special events */}
+          {isSuperAdmin && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 flex items-center gap-2 mt-4 md:mt-0"
+            >
+              <Plus size={20} />
+              Add Special Event
+            </button>
+          )}
         </div>
 
         {/* Stats */}
@@ -188,23 +191,28 @@ const AdminSpecialEventsPage = () => {
                           >
                             <Eye className="w-5 h-5" />
                           </button>
-                          <button
-                            onClick={() => {
-                              setSelectedEvent(event);
-                              setShowEditModal(true);
-                            }}
-                            className="text-secondary hover:text-secondary/80 transition-colors"
-                            title="Edit"
-                          >
-                            <Edit className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(event)}
-                            className="text-red-500 hover:text-red-400 transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                          {/* Only super admins can edit/delete special events */}
+                          {isSuperAdmin && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setSelectedEvent(event);
+                                  setShowEditModal(true);
+                                }}
+                                className="text-secondary hover:text-secondary/80 transition-colors"
+                                title="Edit"
+                              >
+                                <Edit className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(event)}
+                                className="text-red-500 hover:text-red-400 transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

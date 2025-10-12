@@ -33,9 +33,9 @@ const Hero = () => {
       {/* Background Effects */}
 
 
-      <div className="flex flex-col-reverse lg:flex-row items-center justify-between w-full h-[calc(100vh-80px)] px-4 md:px-12 relative z-10">
+      <div className="flex flex-col-reverse lg:flex-row items-center justify-between w-full h-[calc(100vh-80px)] px-4 md:px-12 relative z-10 gap-0 lg:gap-8">
         {/* Left Section */}
-        <div className="flex-1 flex flex-col gap-6 justify-center items-center lg:items-start h-full">
+        <div className="flex-1 flex flex-col gap-4 md:gap-6 justify-center items-center lg:items-start h-full pb-4 lg:pb-0">
           <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-audiowide text-white animate-slide-in">
             <span className="text-primary animate-glow">DR</span>EAM
             <span className="text-secondary animate-glow"></span> D
@@ -55,9 +55,9 @@ const Hero = () => {
         </div>
 
         {/* Right Section */}
-        <div className="flex-1 flex items-center justify-center h-full w-full">
+        <div className="flex-1 flex items-center justify-center h-full w-full max-h-[40vh] lg:max-h-full">
           <Canvas
-            style={{ width: "100%", height: "100%", minHeight: "400px" }}
+            style={{ width: "100%", height: "100%", minHeight: "300px" }}
             camera={{ position: [5, 5, 5], fov: 50 }}
             className="cursor-grab w-full h-full"
           >

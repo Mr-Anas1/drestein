@@ -145,13 +145,16 @@ const AdminDashboard = () => {
                     </div>
 
                     <div className="flex items-center gap-4 mt-4 md:mt-0 flex-wrap">
-                        <button
-                            onClick={() => setShowAddModal(true)}
-                            className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 flex items-center gap-2"
-                        >
-                            <Plus size={20} />
-                            Add New Event
-                        </button>
+                        {/* Only super admins can add events */}
+                        {isSuperAdmin && (
+                            <button
+                                onClick={() => setShowAddModal(true)}
+                                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 flex items-center gap-2"
+                            >
+                                <Plus size={20} />
+                                Add New Event
+                            </button>
+                        )}
 
                         <button
                             onClick={() => router.push('/admin/passes')}

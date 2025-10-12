@@ -13,8 +13,9 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
     const { isSuperAdmin, isDepartmentAdmin, userDepartment } = useAuth();
 
     const canEditEvent = (event) => {
+        // Only super admins can edit/delete events
+        // Department admins can only view participants
         if (isSuperAdmin) return true;
-        if (isDepartmentAdmin && userDepartment === event.department) return true;
         return false;
     };
 

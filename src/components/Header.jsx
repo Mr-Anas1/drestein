@@ -41,6 +41,18 @@ const Header = () => {
     setMenuDisplay(!menuDisplay);
   };
 
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (menuDisplay) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [menuDisplay]);
+
   return (
     <div className="flex justify-between items-center px-4 md:px-12 h-20 border-b border-gray-600">
       <div>
@@ -187,7 +199,7 @@ const Header = () => {
       {/* mobile menu */}
 
       {menuDisplay && (
-        <div className="absolute top-20 left-0 w-full h-screen bg-gray-900 text-white flex flex-col items-center justify-start space-y-6 pt-10 md:hidden z-[99]">
+        <div className="fixed top-20 left-0 w-full h-[calc(100vh-80px)] bg-gray-900 text-white flex flex-col items-center justify-start space-y-6 pt-10 md:hidden z-[99] overflow-y-auto">
           {/* Navigation Links */}
           {[
             { label: "Home", path: "/" },
@@ -198,7 +210,10 @@ const Header = () => {
           ].map((item) => (
             <button
               key={item.path}
-              onClick={() => router.push(item.path)}
+              onClick={() => {
+                setMenuDisplay(false);
+                router.push(item.path);
+              }}
               className="text-lg font-medium hover:text-primary transition-colors duration-300"
             >
               {item.label}
@@ -208,7 +223,10 @@ const Header = () => {
           {/* Auth Section */}
           {!isAuthenticated ? (
             <button
-              onClick={loginWithGoogleStudent}
+              onClick={() => {
+                setMenuDisplay(false);
+                loginWithGoogleStudent();
+              }}
               className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-hover-primary transition-colors duration-300"
             >
               Student Login
@@ -232,6 +250,7 @@ const Header = () => {
               </button>
               <button
                 onClick={() => {
+                  setMenuDisplay(false);
                   setAccountOpen(false);
                   router.push("/my-registrations");
                 }}
@@ -241,6 +260,7 @@ const Header = () => {
               </button>
               <button
                 onClick={() => {
+                  setMenuDisplay(false);
                   setAccountOpen(false);
                   router.push("/my-passes");
                 }}
@@ -260,7 +280,10 @@ const Header = () => {
                 Buy Pass
               </button>
               <button
-                onClick={logout}
+                onClick={() => {
+                  setMenuDisplay(false);
+                  logout();
+                }}
                 className="w-3/4 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 text-sm font-medium transition-colors duration-300"
               >
                 Logout
