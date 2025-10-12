@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+
 export default function SmoothFollower() {
   const mousePosition = useRef({ x: 0, y: 0 });
   const dotPosition = useRef({ x: 0, y: 0 });
@@ -9,9 +10,25 @@ export default function SmoothFollower() {
     border: { x: 0, y: 0 },
   });
   const [isHovering, setIsHovering] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const DOT_SMOOTHNESS = 0.2;
   const BORDER_DOT_SMOOTHNESS = 0.1;
+
   useEffect(() => {
+    // Check if mobile screen
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) return; // Don't add event listeners on mobile
+
     const handleMouseMove = (e) => {
       mousePosition.current = { x: e.clientX, y: e.clientY };
     };
@@ -67,8 +84,9 @@ export default function SmoothFollower() {
       });
       cancelAnimationFrame(animationId);
     };
-  }, []);
-  if (typeof window === "undefined") return null;
+  }, [isMobile]);
+
+  if (typeof window === "undefined" || isMobile) return null;
   return (
     <div className="pointer-events-none fixed inset-0 z-50">
       <div

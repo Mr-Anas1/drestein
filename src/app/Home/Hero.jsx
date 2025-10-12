@@ -59,7 +59,7 @@ const Hero = () => {
           <Canvas
             style={{ width: "100%", height: "100%", minHeight: "300px" }}
             camera={{ position: [5, 5, 5], fov: 50 }}
-            className="cursor-grab w-full h-full"
+            className={`w-full h-full ${width >= 768 ? 'cursor-grab' : ''}`}
           >
             <ambientLight />
             <directionalLight position={[1, 1, 1]} intensity={1} />
