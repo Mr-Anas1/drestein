@@ -17,6 +17,7 @@ export default function BuyPassPage() {
   const [cart, setCart] = useState([]);
   const [cartTotal, setCartTotal] = useState(0);
   const [loadingCart, setLoadingCart] = useState(false);
+  const [generalPassInCart, setGeneralPassInCart] = useState(false);
 
   const passes = [
     {
@@ -53,13 +54,81 @@ export default function BuyPassPage() {
       
       if (response.ok) {
         const data = await response.json();
-        setCart(data.cartItems || []);
-        setCartTotal(data.total || 0);
+        const cartItems = data.cartItems || [];
+        
+        // Check if general pass is in cart
+        const hasGeneralPass = cartItems.some(item => item.eventId === 'general-pass');
+        setGeneralPassInCart(hasGeneralPass);
+        
+        // Filter out general pass for display (we'll show it separately)
+        const specialEventsOnly = cartItems.filter(item => item.eventId !== 'general-pass');
+        setCart(specialEventsOnly);
+        
+        // Calculate total including general pass if present
+        const specialEventsTotal = specialEventsOnly.reduce((sum, item) => sum + (item.eventPrice || 0), 0);
+        const generalPassPrice = hasGeneralPass ? 250 : 0;
+        setCartTotal(specialEventsTotal + generalPassPrice);
       }
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {
       setLoadingCart(false);
+    }
+  };
+
+  const addGeneralPassToCart = async () => {
+    if (!isAuthenticated) {
+      alert('Please login to add items to cart');
+      return;
+    }
+
+    try {
+      const token = await auth.currentUser?.getIdToken?.();
+      const response = await fetch('/api/special-events/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          eventId: 'general-pass',
+          eventTitle: 'General Pass',
+          eventPrice: 250,
+          eventType: 'individual',
+          userUid: user.uid,
+        }),
+      });
+
+      if (response.ok) {
+        fetchCart(); // Refresh cart
+      }
+    } catch (error) {
+      console.error('Error adding general pass to cart:', error);
+    }
+  };
+
+  const removeGeneralPassFromCart = async () => {
+    try {
+      const token = await auth.currentUser?.getIdToken?.();
+      // Find the general pass cart item
+      const response = await fetch(`/api/special-events/register?userUid=${user.uid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const generalPassItem = data.cartItems?.find(item => item.eventId === 'general-pass');
+        
+        if (generalPassItem) {
+          await fetch(`/api/special-events/register?id=${generalPassItem.id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          fetchCart(); // Refresh cart
+        }
+      }
+    } catch (error) {
+      console.error('Error removing general pass from cart:', error);
     }
   };
 
@@ -85,18 +154,27 @@ export default function BuyPassPage() {
   };
 
   const handleBuyCustomPass = () => {
-    if (cart.length === 0) {
-      alert('Please add special events to your cart first');
+    if (cart.length === 0 && !generalPassInCart) {
+      alert('Please add items to your cart first');
       return;
     }
+    
+    const items = [];
+    if (generalPassInCart) {
+      items.push('General Pass - ₹250');
+    }
+    items.push(...cart.map(item => `${item.eventTitle} - ₹${item.eventPrice}`));
     
     const customPass = {
       id: 'custom',
       name: 'Custom Pass',
       price: cartTotal,
-      description: `Access to ${cart.length} selected special event${cart.length > 1 ? 's' : ''}`,
+      description: generalPassInCart 
+        ? `General Pass + ${cart.length} special event${cart.length !== 1 ? 's' : ''}`
+        : `Access to ${cart.length} selected special event${cart.length > 1 ? 's' : ''}`,
       customEvents: cart.map(item => item.eventId),
-      features: cart.map(item => `${item.eventTitle} - ₹${item.eventPrice}`),
+      includesGeneralPass: generalPassInCart,
+      features: items,
     };
     setSelectedPass(customPass);
     setShowModal(true);
@@ -155,12 +233,46 @@ export default function BuyPassPage() {
                 ))}
               </ul>
 
-              <button
-                onClick={() => handleBuyPass(pass)}
-                className="w-full bg-gradient-to-r from-primary to-secondary text-white font-audiowide py-3 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
-              >
-                Buy Now
-              </button>
+              {isAuthenticated ? (
+                <div className="space-y-3">
+                  {!generalPassInCart ? (
+                    <>
+                      <button
+                        onClick={addGeneralPassToCart}
+                        className="w-full bg-gradient-to-r from-primary to-secondary text-white font-audiowide py-3.5 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={() => handleBuyPass(pass)}
+                        className="w-full bg-background-soft border border-primary text-white font-audiowide py-3.5 rounded-lg hover:bg-background transition-all duration-300"
+                      >
+                        Buy Separately
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-primary/10 border-2 border-primary text-primary font-audiowide py-3.5 rounded-lg text-center flex items-center justify-center gap-2">
+                        <Check size={18} />
+                        Added to Cart
+                      </div>
+                      <button
+                        onClick={removeGeneralPassFromCart}
+                        className="w-full bg-background-soft border border-red-500 text-red-500 font-audiowide py-3.5 rounded-lg hover:bg-red-500/10 transition-all duration-300"
+                      >
+                        Remove from Cart
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleBuyPass(pass)}
+                  className="w-full bg-gradient-to-r from-primary to-secondary text-white font-audiowide py-3.5 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+                >
+                  Buy Now
+                </button>
+              )}
             </div>
           ))}
 
@@ -185,18 +297,41 @@ export default function BuyPassPage() {
 
             <div className="text-center mb-6">
               <div className="text-5xl font-audiowide text-white mb-2">
-                {cart.length > 0 ? `₹${cartTotal}` : 'Custom'}
+                {(cart.length > 0 || generalPassInCart) ? `₹${cartTotal}` : 'Custom'}
               </div>
               <div className="text-muted-text font-space text-sm">
-                {cart.length > 0 ? `${cart.length} event${cart.length > 1 ? 's' : ''} selected` : 'Pay only for what you want'}
+                {generalPassInCart && cart.length > 0 
+                  ? `General Pass + ${cart.length} event${cart.length > 1 ? 's' : ''}`
+                  : generalPassInCart 
+                  ? 'General Pass selected'
+                  : cart.length > 0 
+                  ? `${cart.length} event${cart.length > 1 ? 's' : ''} selected`
+                  : 'Pay only for what you want'}
               </div>
             </div>
 
             {/* Cart Preview */}
-            {cart.length > 0 ? (
+            {(cart.length > 0 || generalPassInCart) ? (
               <>
                 <div className="bg-background border border-border rounded-lg p-4 mb-6 max-h-48 overflow-y-auto">
                   <div className="space-y-2">
+                    {/* General Pass */}
+                    {generalPassInCart && (
+                      <div className="flex items-center justify-between text-sm bg-primary/5 rounded p-2">
+                        <span className="text-white font-space truncate flex-1 font-semibold">General Pass</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-primary font-audiowide">₹250</span>
+                          <button
+                            onClick={removeGeneralPassFromCart}
+                            className="text-red-500 hover:text-red-400"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Special Events */}
                     {cart.map((item) => (
                       <div key={item.id} className="flex items-center justify-between text-sm">
                         <span className="text-white font-space truncate flex-1">{item.eventTitle}</span>
@@ -214,27 +349,36 @@ export default function BuyPassPage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleBuyCustomPass}
-                  className="w-full bg-gradient-to-r from-secondary to-primary text-white font-audiowide py-3 rounded-lg hover:from-hover-primary hover:to-secondary transition-all duration-300 mb-3"
-                >
-                  Checkout - ₹{cartTotal}
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleBuyCustomPass}
+                    className="w-full bg-gradient-to-r from-secondary to-primary text-white font-audiowide py-3.5 rounded-lg hover:from-hover-primary hover:to-secondary transition-all duration-300"
+                  >
+                    Checkout - ₹{cartTotal}
+                  </button>
+                  <button
+                    onClick={() => router.push('/special-events')}
+                    className="w-full bg-background-soft border border-secondary text-white font-audiowide py-3.5 rounded-lg hover:bg-background transition-all duration-300"
+                  >
+                    Add More Events
+                  </button>
+                </div>
               </>
             ) : (
-              <div className="bg-background border border-border rounded-lg p-6 mb-6 text-center">
-                <p className="text-muted-text font-space text-sm mb-4">
-                  Browse special events and add them to your cart
-                </p>
+              <div className="space-y-4">
+                <div className="bg-background border border-border rounded-lg p-6 text-center">
+                  <p className="text-muted-text font-space text-sm">
+                    Your cart is empty. Add events to build your custom pass!
+                  </p>
+                </div>
+                <button
+                  onClick={() => router.push('/special-events')}
+                  className="w-full bg-gradient-to-r from-secondary to-primary text-white font-audiowide py-3.5 rounded-lg hover:from-hover-primary hover:to-secondary transition-all duration-300"
+                >
+                  Browse Special Events
+                </button>
               </div>
             )}
-
-            <button
-              onClick={() => router.push('/special-events')}
-              className="w-full bg-background-soft border border-border text-white font-audiowide py-3 rounded-lg hover:bg-background hover:border-secondary transition-all duration-300"
-            >
-              Browse Special Events
-            </button>
           </div>
         </div>
 

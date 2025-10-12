@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Users, Mail, User, Calendar, Download, UserCheck } from 'lucide-react';
+import { X, Users, Mail, User, Calendar, Download, UserCheck, Search } from 'lucide-react';
 
 export default function SpecialEventParticipantsModal({ event, onClose }) {
     const [participants, setParticipants] = useState([]);
+    const [filteredParticipants, setFilteredParticipants] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -20,7 +22,9 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
             const data = await response.json();
 
             if (response.ok) {
-                setParticipants(data.participants || []);
+                const participantsList = data.participants || [];
+                setParticipants(participantsList);
+                setFilteredParticipants(participantsList);
             } else {
                 setError(data.error || 'Failed to fetch participants');
             }
@@ -32,15 +36,42 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
         }
     };
 
+    // Search filter effect
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setFilteredParticipants(participants);
+            return;
+        }
+
+        const query = searchQuery.toLowerCase();
+        const filtered = participants.filter(p => {
+            const name = (p.name || '').toLowerCase();
+            const email = (p.email || '').toLowerCase();
+            const rollNo = (p.rollNo || '').toLowerCase();
+            const college = (p.college || '').toLowerCase();
+            const teamMembers = (p.teamMembers || []).join(' ').toLowerCase();
+
+            return name.includes(query) ||
+                   email.includes(query) ||
+                   rollNo.includes(query) ||
+                   college.includes(query) ||
+                   teamMembers.includes(query);
+        });
+
+        setFilteredParticipants(filtered);
+    }, [searchQuery, participants]);
+
     const exportToCSV = () => {
         if (participants.length === 0) return;
 
-        const headers = ['Name', 'Email', 'Team Members', 'Registration Date', 'Status'];
+        const headers = ['Name', 'Email', 'Roll No', 'College', 'Team Members', 'Registration Date', 'Status'];
         const csvContent = [
             headers.join(','),
             ...participants.map(p => [
                 `"${p.name || 'N/A'}"`,
                 `"${p.email || 'N/A'}"`,
+                `"${p.rollNo || 'N/A'}"`,
+                `"${p.college || 'N/A'}"`,
                 `"${p.teamMembers ? p.teamMembers.join('; ') : 'Individual'}"`,
                 `"${formatDate(p.registeredAt)}"`,
                 `"${p.status || 'confirmed'}"`
@@ -118,14 +149,43 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                     ) : (
                         <div className="bg-background-soft border border-border rounded-xl overflow-hidden">
                             <div className="p-4 border-b border-border bg-background">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-audiowide text-white">
-                                        Total Participants: {participants.length}
-                                    </h4>
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                    <div>
+                                        <h4 className="font-audiowide text-white">
+                                            Total Participants: {participants.length}
+                                        </h4>
+                                        {searchQuery && (
+                                            <p className="text-sm text-muted-text font-space mt-1">
+                                                Showing {filteredParticipants.length} of {participants.length} results
+                                            </p>
+                                        )}
+                                    </div>
                                     <div className="flex items-center gap-4 text-sm">
                                         <span className="text-muted-text font-space">
                                             Revenue: <span className="text-secondary font-audiowide">₹{participants.length * event.price}</span>
                                         </span>
+                                    </div>
+                                </div>
+
+                                {/* Search Bar */}
+                                <div className="mt-4">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" size={20} />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search by name, roll no, college, or team member..."
+                                            className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-white font-space placeholder:text-muted-text focus:outline-none focus:border-primary transition-colors"
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                onClick={() => setSearchQuery('')}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-text hover:text-white"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -136,14 +196,26 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                         <tr>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">#</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Name</th>
-                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Email</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Roll No</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">College</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Team Members</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Registration Date</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {participants.map((participant, index) => (
+                                        {filteredParticipants.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="p-8 text-center">
+                                                    <div className="flex flex-col items-center text-muted-text">
+                                                        <Search size={48} className="mb-4 opacity-50" />
+                                                        <p className="font-audiowide text-lg">No results found</p>
+                                                        <p className="font-space text-sm">Try a different search term</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filteredParticipants.map((participant, index) => (
                                             <tr key={participant.id} className="border-t border-border hover:bg-background/50">
                                                 <td className="p-4 text-muted-text font-space text-sm">
                                                     {index + 1}
@@ -155,10 +227,10 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Mail size={16} className="text-secondary" />
-                                                        <span className="text-white font-space text-sm">{participant.email || 'N/A'}</span>
-                                                    </div>
+                                                    <span className="text-white font-space text-sm">{participant.rollNo || '-'}</span>
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className="text-white font-space text-sm">{participant.college || '-'}</span>
                                                 </td>
                                                 <td className="p-4">
                                                     {participant.teamMembers && participant.teamMembers.length > 0 ? (
@@ -192,7 +264,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                                     </span>
                                                 </td>
                                             </tr>
-                                        ))}
+                                        )))}
                                     </tbody>
                                 </table>
                             </div>

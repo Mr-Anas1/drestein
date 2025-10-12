@@ -1,15 +1,41 @@
 "use client";
 
-import { AlignJustify, X, Ticket } from "lucide-react";
-import React, { useState } from "react";
+import { AlignJustify, X, Ticket, ShoppingCart } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/lib/firebase";
 
 const Header = () => {
   const [menuDisplay, setMenuDisplay] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const router = useRouter();
   const { isAuthenticated, studentProfile, loginWithGoogleStudent, logout, user } = useAuth();
+
+  // Fetch cart count
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchCartCount();
+    } else {
+      setCartCount(0);
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchCartCount = async () => {
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      const response = await fetch(`/api/special-events/cart?userUid=${user.uid}`, {
+        headers: { 'Authorization': `Bearer ${idToken}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCartCount(data.cartItems?.length || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching cart count:', error);
+    }
+  };
 
   const toggleMenu = () => {
     setMenuDisplay(!menuDisplay);
@@ -60,6 +86,22 @@ const Header = () => {
           >
             About
           </a>
+
+          {/* Cart Icon */}
+          {isAuthenticated && (
+            <button
+              onClick={() => router.push("/buy-pass")}
+              className="relative text-white hover:text-primary transition duration-300s p-2"
+              title="View Cart"
+            >
+              <ShoppingCart size={24} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-audiowide rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {/* Buy Pass Button */}
           <button
@@ -173,6 +215,21 @@ const Header = () => {
             </button>
           ) : (
             <div className="flex flex-col items-center w-full space-y-3">
+              <button
+                onClick={() => {
+                  setMenuDisplay(false);
+                  router.push("/buy-pass");
+                }}
+                className="w-3/4 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-gray-800 text-lg font-medium transition-colors duration-300 relative"
+              >
+                <ShoppingCart size={18} />
+                Cart
+                {cartCount > 0 && (
+                  <span className="bg-secondary text-white text-xs font-audiowide rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
               <button
                 onClick={() => {
                   setAccountOpen(false);

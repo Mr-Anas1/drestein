@@ -210,6 +210,7 @@ export const AuthProvider = ({ children }) => {
         // student-specific
         isStudent: userRole?.role === 'student',
         studentProfile,
+        profileCompleted: studentProfile?.profileCompleted || false,
         loginWithGoogleStudent,
         refreshStudentProfile,
     };

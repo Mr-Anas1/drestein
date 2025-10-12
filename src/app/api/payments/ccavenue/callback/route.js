@@ -42,12 +42,18 @@ async function autoRegisterSpecialEvents(db, userUid, customEvents, passId) {
     const studentDoc = await db.collection("students").doc(userUid).get();
     let userName = "Unknown";
     let userEmail = "unknown@example.com";
+    let userRollNo = null;
+    let userCollege = null;
+    let isStudent = false;
 
     if (studentDoc.exists) {
       const studentData = studentDoc.data();
       userName = studentData.name || studentData.displayName || "Unknown";
       userEmail = studentData.email || "unknown@example.com";
-      console.log(`[CCA CALLBACK] ✅ Fetched user data - Name: ${userName}, Email: ${userEmail}`);
+      userRollNo = studentData.rollNo || null;
+      userCollege = studentData.college || null;
+      isStudent = studentData.isStudent || false;
+      console.log(`[CCA CALLBACK] ✅ Fetched user data - Name: ${userName}, Email: ${userEmail}, Roll: ${userRollNo}, College: ${userCollege}`);
     } else {
       console.warn(`[CCA CALLBACK] ⚠️ Student document not found for ${userUid}, using defaults`);
     }
@@ -81,8 +87,8 @@ async function autoRegisterSpecialEvents(db, userUid, customEvents, passId) {
         const eventData = eventDoc.data();
         const cartItem = cartMap[eventId];
 
-        // Create registration with user data
-        await db.collection("registrations").add({
+        // Create registration with complete user data
+        const registrationData = {
           userUid,
           name: userName,
           email: userEmail,
@@ -95,7 +101,16 @@ async function autoRegisterSpecialEvents(db, userUid, customEvents, passId) {
           registeredAt: FieldValue.serverTimestamp(),
           status: "confirmed",
           paymentStatus: "paid",
-        });
+        };
+
+        // Add student-specific fields if user is a student
+        if (isStudent) {
+          registrationData.rollNo = userRollNo;
+          registrationData.college = userCollege;
+          registrationData.isStudent = true;
+        }
+
+        await db.collection("registrations").add(registrationData);
 
         console.log(`[CCA CALLBACK] ✅ Registered user for special event: ${eventData.title}`);
 

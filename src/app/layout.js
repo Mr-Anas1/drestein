@@ -5,6 +5,7 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import FloatingShapes from "@/components/FloatingShapes";
 import CursorEffect from "@/components/CursorEffect";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProfileGuard from "@/components/ProfileGuard";
 
 const audiowide = Audiowide({
   weight: "400",
@@ -30,11 +31,13 @@ export default function RootLayout({ children }) {
     >
       <body>
         <AuthProvider>
-          <SmoothFollower />
-          <AnimatedBackground />
-          <FloatingShapes />
-          <CursorEffect />
-          {children}
+          <ProfileGuard>
+            <SmoothFollower />
+            <AnimatedBackground />
+            <FloatingShapes />
+            <CursorEffect />
+            {children}
+          </ProfileGuard>
         </AuthProvider>
       </body>
     </html>
