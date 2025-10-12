@@ -38,6 +38,20 @@ async function autoRegisterSpecialEvents(db, userUid, customEvents, passId) {
   console.log(`[CCA CALLBACK] Auto-registering ${customEvents.length} special events for user ${userUid}`);
 
   try {
+    // Fetch user's profile data from students collection
+    const studentDoc = await db.collection("students").doc(userUid).get();
+    let userName = "Unknown";
+    let userEmail = "unknown@example.com";
+
+    if (studentDoc.exists) {
+      const studentData = studentDoc.data();
+      userName = studentData.name || studentData.displayName || "Unknown";
+      userEmail = studentData.email || "unknown@example.com";
+      console.log(`[CCA CALLBACK] ✅ Fetched user data - Name: ${userName}, Email: ${userEmail}`);
+    } else {
+      console.warn(`[CCA CALLBACK] ⚠️ Student document not found for ${userUid}, using defaults`);
+    }
+
     // Get user's cart items to extract team member info
     const cartSnapshot = await db
       .collection("specialEventCart")
@@ -67,9 +81,11 @@ async function autoRegisterSpecialEvents(db, userUid, customEvents, passId) {
         const eventData = eventDoc.data();
         const cartItem = cartMap[eventId];
 
-        // Create registration
+        // Create registration with user data
         await db.collection("registrations").add({
           userUid,
+          name: userName,
+          email: userEmail,
           eventId,
           eventTitle: eventData.title,
           eventType: "special", // Mark as special event
