@@ -68,6 +68,10 @@ export async function POST(request) {
     }
 
     const passData = passDoc.data();
+
+    // Fetch student profile (for name, rollNo, college)
+    const studentSnap = await db.collection("students").doc(decoded.uid).get();
+    const student = studentSnap.exists ? studentSnap.data() : null;
     
     // Verify ownership
     if (passData.userUid !== decoded.uid) {
@@ -144,7 +148,7 @@ export async function POST(request) {
       success: true,
       ticket: {
         passId: passId,
-        name: decoded.name || decoded.email?.split('@')[0] || "Event Attendee",
+        name: (student?.name && student.name.trim()) || decoded.name || decoded.email?.split('@')[0] || "Event Attendee",
         email: decoded.email || passData.email || "N/A",
         orderId: passData.orderId || "N/A",
         purchaseDate: purchaseDate,
@@ -154,7 +158,9 @@ export async function POST(request) {
         passType: typeInfo.name,
         validDates: typeInfo.validDates,
         access: typeInfo.access,
-        customEvents: typeInfo.customEvents || null
+        customEvents: typeInfo.customEvents || null,
+        rollNo: student?.rollNo || null,
+        college: student?.college || null
       }
     });
 
