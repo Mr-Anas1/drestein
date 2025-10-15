@@ -6,11 +6,30 @@ import { DollarSign, Users, MapPin, Calendar } from "lucide-react";
 
 const SpecialEventBox = ({ event }) => {
   const router = useRouter();
-  const { id, title, description, price, category, type, maxTeamSize, mode, img } = event;
+  const {
+    id,
+    title,
+    description,
+    price,
+    category,
+    type,
+    maxTeamSize,
+    mode,
+    img,
+  } = event;
+  const isExpired = (() => {
+    const raw = event?.expiryDate;
+    if (!raw) return false;
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return false;
+    const end = new Date(d);
+    if (String(raw).length <= 10 && /\d{4}-\d{2}-\d{2}/.test(String(raw)))
+      end.setHours(23, 59, 59, 999);
+    return new Date() > end;
+  })();
 
   return (
     <div className="group relative bg-background-soft border border-border rounded-3xl p-6 w-[280px] md:w-[320px] h-[500px] flex flex-col overflow-hidden hover:border-primary transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
-
       {/* Gradient Background Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
@@ -19,14 +38,19 @@ const SpecialEventBox = ({ event }) => {
 
       {/* Price Badge */}
       <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-primary to-secondary text-white px-3 py-1 rounded-full text-sm font-audiowide flex items-center gap-1">
-        <DollarSign className="w-4 h-4" />
-        ₹{price}
+        <DollarSign className="w-4 h-4" />₹{price}
       </div>
 
       {/* Category Badge */}
       <div className="absolute top-4 left-4 z-20 bg-background/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-audiowide uppercase">
         {category}
       </div>
+
+      {isExpired && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-red-500/90 text-white px-3 py-1 rounded-full text-xs font-audiowide">
+          Registration Closed
+        </div>
+      )}
 
       {/* Image Container */}
       <div className="relative w-full h-48 mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-background to-background-soft">
@@ -58,7 +82,9 @@ const SpecialEventBox = ({ event }) => {
             {type && (
               <div className="flex items-center gap-1 text-xs text-muted-text bg-background/50 px-2 py-1 rounded">
                 <Users className="w-3 h-3" />
-                {type === 'team' ? `Team (Max ${maxTeamSize || 4})` : 'Individual'}
+                {type === "team"
+                  ? `Team (Max ${maxTeamSize || 4})`
+                  : "Individual"}
               </div>
             )}
             {mode && (
@@ -74,9 +100,16 @@ const SpecialEventBox = ({ event }) => {
         <div className="mt-6 space-y-2">
           <button
             onClick={() => router.push(`/special-events/${id}`)}
-            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-audiowide text-sm py-3 px-4 rounded-xl hover:from-hover-primary hover:to-primary transition-all duration-300 transform hover:scale-105"
+            disabled={isExpired}
+            className={`w-full ${
+              isExpired
+                ? "bg-background-soft border border-border text-muted-text"
+                : "bg-gradient-to-r from-primary to-secondary text-white hover:from-hover-primary hover:to-primary"
+            } font-audiowide text-sm py-3 px-4 rounded-xl transition-all duration-300 ${
+              isExpired ? "" : "transform hover:scale-105"
+            }`}
           >
-            View Details & Register
+            {isExpired ? "Registration Closed" : "View Details & Register"}
           </button>
         </div>
       </div>

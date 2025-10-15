@@ -15,7 +15,8 @@ function getAdminDB() {
     if (!projectId || !clientEmail || !privateKey) {
       throw new Error("Missing Firebase Admin credentials");
     }
-    if (privateKey.includes("\\n")) privateKey = privateKey.replace(/\\n/g, "\n");
+    if (privateKey.includes("\\n"))
+      privateKey = privateKey.replace(/\\n/g, "\n");
 
     initializeApp({
       credential: cert({ projectId, clientEmail, privateKey }),
@@ -27,7 +28,8 @@ function getAdminDB() {
 async function verifyAuth(request) {
   getAdminDB();
   const authHeader =
-    request.headers.get("authorization") || request.headers.get("Authorization");
+    request.headers.get("authorization") ||
+    request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
   const idToken = authHeader.split(" ")[1];
   const { getAuth } = await import("firebase-admin/auth");
@@ -44,7 +46,9 @@ async function checkAdminRole(uid) {
   const userDoc = await db.collection("users").doc(uid).get();
   if (!userDoc.exists) return false;
   const userData = userDoc.data();
-  return userData.role === "super_admin" || userData.role === "department_admin";
+  return (
+    userData.role === "super_admin" || userData.role === "department_admin"
+  );
 }
 
 // GET - Fetch all special events
@@ -58,13 +62,19 @@ export async function GET(request) {
     if (id) {
       const doc = await db.collection("specialEvents").doc(id).get();
       if (!doc.exists) {
-        return NextResponse.json({ error: "Special event not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Special event not found" },
+          { status: 404 }
+        );
       }
       return NextResponse.json({ id: doc.id, ...doc.data() });
     }
 
     // Get all special events
-    const snapshot = await db.collection("specialEvents").orderBy("createdAt", "desc").get();
+    const snapshot = await db
+      .collection("specialEvents")
+      .orderBy("createdAt", "desc")
+      .get();
     const specialEvents = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -90,7 +100,10 @@ export async function POST(request) {
 
     const isAdmin = await checkAdminRole(decoded.uid);
     if (!isAdmin) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 }
+      );
     }
 
     const data = await request.json();
@@ -110,6 +123,7 @@ export async function POST(request) {
       prizes,
       contactEmail,
       contactPhone,
+      expiryDate,
     } = data;
 
     if (!title || !description || !price || !category) {
@@ -120,6 +134,15 @@ export async function POST(request) {
     }
 
     const db = getAdminDB();
+    let normalizedExpiry = null;
+    if (expiryDate) {
+      const raw = String(expiryDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        normalizedExpiry = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+
     const docRef = await db.collection("specialEvents").add({
       title,
       description,
@@ -136,6 +159,7 @@ export async function POST(request) {
       prizes: prizes || [],
       contactEmail: contactEmail || "",
       contactPhone: contactPhone || "",
+      expiryDate: normalizedExpiry,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
@@ -163,7 +187,10 @@ export async function PUT(request) {
 
     const isAdmin = await checkAdminRole(decoded.uid);
     if (!isAdmin) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -173,12 +200,22 @@ export async function PUT(request) {
     }
 
     const data = await request.json();
+    if (data.expiryDate) {
+      const raw = String(data.expiryDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        data.expiryDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
     const db = getAdminDB();
     const docRef = db.collection("specialEvents").doc(id);
-    
+
     const doc = await docRef.get();
     if (!doc.exists) {
-      return NextResponse.json({ error: "Special event not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Special event not found" },
+        { status: 404 }
+      );
     }
 
     const updateData = { ...data };
@@ -208,7 +245,10 @@ export async function DELETE(request) {
 
     const isAdmin = await checkAdminRole(decoded.uid);
     if (!isAdmin) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);

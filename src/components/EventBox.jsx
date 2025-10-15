@@ -7,9 +7,19 @@ import EventRegistrationModal from "./EventRegistrationModal";
 const EventBox = ({ img, title, description, link, id, event }) => {
   const router = useRouter();
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const isExpired = (() => {
+    const raw = event?.expiryDate;
+    if (!raw) return false;
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return false;
+    const end = new Date(d);
+    if (String(raw).length <= 10 && /\d{4}-\d{2}-\d{2}/.test(String(raw)))
+      end.setHours(23, 59, 59, 999);
+    return new Date() > end;
+  })();
+
   return (
     <div className="group relative bg-background-soft border border-border rounded-3xl p-6 w-[280px] md:w-[320px] h-[450px] flex flex-col overflow-hidden hover:border-primary transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
-
       {/* Gradient Background Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
@@ -29,6 +39,11 @@ const EventBox = ({ img, title, description, link, id, event }) => {
         </div>
         {/* Image Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        {isExpired && (
+          <div className="absolute top-3 left-3 z-10 bg-red-500/90 text-white px-3 py-1 rounded-full text-xs font-audiowide">
+            Registration Closed
+          </div>
+        )}
       </div>
 
       {/* Content Container */}
@@ -44,8 +59,6 @@ const EventBox = ({ img, title, description, link, id, event }) => {
 
         {/* Action Buttons */}
         <div className="mt-6 space-y-2">
-
-
           <button
             className="w-full bg-background-soft border border-border text-white font-audiowide text-sm py-2 px-4 rounded-xl hover:bg-background transition-all duration-300"
             onClick={() => router.push(`/events/${id}`)}
@@ -57,8 +70,6 @@ const EventBox = ({ img, title, description, link, id, event }) => {
 
       {/* Bottom Accent Line */}
       <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-center"></div>
-
-
     </div>
   );
 };

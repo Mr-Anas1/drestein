@@ -15,7 +15,8 @@ function getAdminDB() {
     if (!projectId || !clientEmail || !privateKey) {
       throw new Error("Missing Firebase Admin credentials");
     }
-    if (privateKey.includes("\\n")) privateKey = privateKey.replace(/\\n/g, "\n");
+    if (privateKey.includes("\\n"))
+      privateKey = privateKey.replace(/\\n/g, "\n");
 
     initializeApp({
       credential: cert({ projectId, clientEmail, privateKey }),
@@ -27,7 +28,8 @@ function getAdminDB() {
 async function verifyAuth(request) {
   getAdminDB();
   const authHeader =
-    request.headers.get("authorization") || request.headers.get("Authorization");
+    request.headers.get("authorization") ||
+    request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
   const idToken = authHeader.split(" ")[1];
   const { getAuth } = await import("firebase-admin/auth");
@@ -47,7 +49,8 @@ export async function POST(request) {
       return NextResponse.json({ error: "Auth required" }, { status: 401 });
     }
 
-    const { eventId, eventTitle, eventPrice, userUid, teamMembers } = await request.json();
+    const { eventId, eventTitle, eventPrice, userUid, teamMembers } =
+      await request.json();
 
     if (!eventId || !userUid) {
       return NextResponse.json(
@@ -61,6 +64,40 @@ export async function POST(request) {
     }
 
     const db = getAdminDB();
+
+    // Check if event is expired before adding to cart
+    try {
+      const eventSnap = await db.collection("specialEvents").doc(eventId).get();
+      if (!eventSnap.exists) {
+        return NextResponse.json(
+          { error: "Special event not found" },
+          { status: 404 }
+        );
+      }
+      const ev = eventSnap.data() || {};
+      const expiryRaw = ev.expiryDate;
+      if (expiryRaw) {
+        const d = new Date(expiryRaw);
+        if (!isNaN(d.getTime())) {
+          const now = new Date();
+          const expiryEndOfDay = new Date(d);
+          if (
+            String(expiryRaw).length <= 10 &&
+            /\d{4}-\d{2}-\d{2}/.test(String(expiryRaw))
+          ) {
+            expiryEndOfDay.setHours(23, 59, 59, 999);
+          }
+          if (now > expiryEndOfDay) {
+            return NextResponse.json(
+              { error: "Registration closed: Event has expired." },
+              { status: 403 }
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // On failure to check, proceed (do not block)
+    }
 
     // Check if user already has this event in cart
     const existingCart = await db
@@ -129,7 +166,10 @@ export async function GET(request) {
       ...doc.data(),
     }));
 
-    const total = cartItems.reduce((sum, item) => sum + (item.eventPrice || 0), 0);
+    const total = cartItems.reduce(
+      (sum, item) => sum + (item.eventPrice || 0),
+      0
+    );
 
     return NextResponse.json({ cartItems, total });
   } catch (error) {
@@ -153,7 +193,10 @@ export async function DELETE(request) {
     const cartItemId = searchParams.get("id");
 
     if (!cartItemId) {
-      return NextResponse.json({ error: "Cart item ID required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Cart item ID required" },
+        { status: 400 }
+      );
     }
 
     const db = getAdminDB();
@@ -161,7 +204,10 @@ export async function DELETE(request) {
     const cartItem = await cartItemRef.get();
 
     if (!cartItem.exists) {
-      return NextResponse.json({ error: "Cart item not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Cart item not found" },
+        { status: 404 }
+      );
     }
 
     const cartData = cartItem.data();
