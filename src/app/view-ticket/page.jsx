@@ -188,6 +188,20 @@ export default function ViewTicketPage() {
                 <p className="text-xl text-gray-900">{ticket.email}</p>
               </div>
 
+              {ticket.rollNo && (
+                <div className="border-l-4 border-purple-600 pl-6">
+                  <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">Roll Number</p>
+                  <p className="text-xl text-gray-900">{ticket.rollNo}</p>
+                </div>
+              )}
+
+              {ticket.college && (
+                <div className="border-l-4 border-purple-600 pl-6">
+                  <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">College</p>
+                  <p className="text-xl text-gray-900">{ticket.college}</p>
+                </div>
+              )}
+
               <div className="border-l-4 border-purple-600 pl-6">
                 <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">Order ID</p>
                 <p className="text-xl font-mono text-gray-900">{ticket.orderId}</p>
