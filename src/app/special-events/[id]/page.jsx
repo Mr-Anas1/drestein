@@ -1,12 +1,23 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import Image from 'next/image';
-import { Calendar, Clock, MapPin, Users, DollarSign, Trophy, FileText, Phone, Mail, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import SpecialEventRegistrationModal from '@/components/SpecialEventRegistrationModal';
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import Image from "next/image";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  DollarSign,
+  Trophy,
+  FileText,
+  Phone,
+  Mail,
+  ArrowLeft,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import SpecialEventRegistrationModal from "@/components/SpecialEventRegistrationModal";
 
 const SpecialEventDetailPage = () => {
   const params = useParams();
@@ -22,15 +33,15 @@ const SpecialEventDetailPage = () => {
       try {
         setLoading(true);
         const response = await fetch(`/api/special-events?id=${params.id}`);
-        
+
         if (!response.ok) {
-          throw new Error('Event not found');
+          throw new Error("Event not found");
         }
 
         const data = await response.json();
         setEvent(data);
       } catch (err) {
-        console.error('Error fetching event:', err);
+        console.error("Error fetching event:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -41,6 +52,17 @@ const SpecialEventDetailPage = () => {
       fetchEvent();
     }
   }, [params.id]);
+
+  const isExpired = (() => {
+    const raw = event?.expiryDate;
+    if (!raw) return false;
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return false;
+    const end = new Date(d);
+    if (String(raw).length <= 10 && /\d{4}-\d{2}-\d{2}/.test(String(raw)))
+      end.setHours(23, 59, 59, 999);
+    return new Date() > end;
+  })();
 
   if (loading) {
     return (
@@ -54,9 +76,11 @@ const SpecialEventDetailPage = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 font-audiowide text-xl mb-4">Event not found</div>
+          <div className="text-red-500 font-audiowide text-xl mb-4">
+            Event not found
+          </div>
           <button
-            onClick={() => router.push('/special-events')}
+            onClick={() => router.push("/special-events")}
             className="text-primary hover:text-hover-primary font-space"
           >
             Back to Special Events
@@ -69,11 +93,11 @@ const SpecialEventDetailPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background">
       <Header />
-      
+
       <div className="py-20 px-6 md:px-12 max-w-6xl mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => router.push('/special-events')}
+          onClick={() => router.push("/special-events")}
           className="flex items-center gap-2 text-muted-text hover:text-primary transition-colors mb-8 font-space"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -85,9 +109,9 @@ const SpecialEventDetailPage = () => {
           {/* Image */}
           <div className="relative h-[400px] rounded-2xl overflow-hidden border border-border">
             <Image
-              src={event.img || '/images/default-event.jpg'}
+              src={event.img || "/images/default-event.jpg"}
               fill
-              style={{ objectFit: 'cover' }}
+              style={{ objectFit: "cover" }}
               alt={event.title}
             />
           </div>
@@ -106,7 +130,9 @@ const SpecialEventDetailPage = () => {
               <h1 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
                 {event.title}
               </h1>
-              <p className="text-muted-text font-space text-lg">{event.description}</p>
+              <p className="text-muted-text font-space text-lg">
+                {event.description}
+              </p>
             </div>
 
             {/* Quick Info */}
@@ -119,7 +145,11 @@ const SpecialEventDetailPage = () => {
               {event.type && (
                 <div className="flex items-center gap-3 text-muted-text font-space">
                   <Users className="w-5 h-5 text-primary" />
-                  <span>{event.type === 'team' ? `Team Event (Max ${event.maxTeamSize || 4} members)` : 'Individual Event'}</span>
+                  <span>
+                    {event.type === "team"
+                      ? `Team Event (Max ${event.maxTeamSize || 4} members)`
+                      : "Individual Event"}
+                  </span>
                 </div>
               )}
 
@@ -148,9 +178,18 @@ const SpecialEventDetailPage = () => {
             {/* Register Button */}
             <button
               onClick={() => setShowRegistrationModal(true)}
-              className="w-full bg-gradient-to-r from-primary to-secondary text-white font-audiowide py-4 rounded-xl hover:from-hover-primary hover:to-primary transition-all duration-300 transform hover:scale-105"
+              disabled={isExpired}
+              className={`w-full ${
+                isExpired
+                  ? "bg-background-soft border border-border text-muted-text"
+                  : "bg-gradient-to-r from-primary to-secondary text-white hover:from-hover-primary hover:to-primary"
+              } font-audiowide py-4 rounded-xl transition-all duration-300 ${
+                isExpired ? "" : "transform hover:scale-105"
+              }`}
             >
-              Register Now - ₹{event.price}
+              {isExpired
+                ? "Registration Closed"
+                : `Register Now - ₹${event.price}`}
             </button>
           </div>
         </div>
@@ -166,7 +205,10 @@ const SpecialEventDetailPage = () => {
               </h2>
               <ul className="space-y-3">
                 {event.rules.map((rule, index) => (
-                  <li key={index} className="flex items-start gap-3 text-muted-text font-space">
+                  <li
+                    key={index}
+                    className="flex items-start gap-3 text-muted-text font-space"
+                  >
                     <span className="text-primary mt-1">•</span>
                     <span>{rule}</span>
                   </li>
@@ -184,8 +226,13 @@ const SpecialEventDetailPage = () => {
               </h2>
               <ul className="space-y-3">
                 {event.prizes.map((prize, index) => (
-                  <li key={index} className="flex items-start gap-3 text-muted-text font-space">
-                    <span className="text-primary font-audiowide">{index + 1}.</span>
+                  <li
+                    key={index}
+                    className="flex items-start gap-3 text-muted-text font-space"
+                  >
+                    <span className="text-primary font-audiowide">
+                      {index + 1}.
+                    </span>
                     <span>{prize}</span>
                   </li>
                 ))}
@@ -197,12 +244,17 @@ const SpecialEventDetailPage = () => {
         {/* Contact Info */}
         {(event.contactEmail || event.contactPhone) && (
           <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
-            <h2 className="font-audiowide text-2xl text-white mb-6">Contact Information</h2>
+            <h2 className="font-audiowide text-2xl text-white mb-6">
+              Contact Information
+            </h2>
             <div className="grid md:grid-cols-2 gap-4">
               {event.contactEmail && (
                 <div className="flex items-center gap-3 text-muted-text font-space">
                   <Mail className="w-5 h-5 text-primary" />
-                  <a href={`mailto:${event.contactEmail}`} className="hover:text-primary transition-colors">
+                  <a
+                    href={`mailto:${event.contactEmail}`}
+                    className="hover:text-primary transition-colors"
+                  >
                     {event.contactEmail}
                   </a>
                 </div>
@@ -210,7 +262,10 @@ const SpecialEventDetailPage = () => {
               {event.contactPhone && (
                 <div className="flex items-center gap-3 text-muted-text font-space">
                   <Phone className="w-5 h-5 text-primary" />
-                  <a href={`tel:${event.contactPhone}`} className="hover:text-primary transition-colors">
+                  <a
+                    href={`tel:${event.contactPhone}`}
+                    className="hover:text-primary transition-colors"
+                  >
                     {event.contactPhone}
                   </a>
                 </div>
@@ -223,7 +278,7 @@ const SpecialEventDetailPage = () => {
       <Footer />
 
       {/* Registration Modal */}
-      {showRegistrationModal && (
+      {showRegistrationModal && !isExpired && (
         <SpecialEventRegistrationModal
           event={event}
           onClose={() => setShowRegistrationModal(false)}

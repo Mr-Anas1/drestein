@@ -1,79 +1,80 @@
 "use client";
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from "react";
+import { X } from "lucide-react";
 
 const AddSpecialEventModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    category: 'competition',
-    type: 'individual',
-    maxTeamSize: '',
-    mode: 'offline',
-    img: '',
-    venue: '',
-    date: '',
-    time: '',
-    rules: [''],
-    prizes: [''],
-    contactEmail: '',
-    contactPhone: '',
+    title: "",
+    description: "",
+    price: "",
+    category: "competition",
+    type: "individual",
+    maxTeamSize: "",
+    mode: "offline",
+    img: "",
+    venue: "",
+    date: "",
+    time: "",
+    expiryDate: "",
+    rules: [""],
+    prizes: [""],
+    contactEmail: "",
+    contactPhone: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleArrayChange = (field, index, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: prev[field].map((item, i) => i === index ? value : item)
+      [field]: prev[field].map((item, i) => (i === index ? value : item)),
     }));
   };
 
   const addArrayItem = (field) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: [...prev[field], '']
+      [field]: [...prev[field], ""],
     }));
   };
 
   const removeArrayItem = (field, index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
+      [field]: prev[field].filter((_, i) => i !== index),
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const { auth } = await import('@/lib/firebase');
+      const { auth } = await import("@/lib/firebase");
       const token = await auth.currentUser?.getIdToken?.();
 
-      const response = await fetch('/api/special-events', {
-        method: 'POST',
+      const response = await fetch("/api/special-events", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
-          rules: formData.rules.filter(r => r.trim()),
-          prizes: formData.prizes.filter(p => p.trim()),
+          rules: formData.rules.filter((r) => r.trim()),
+          prizes: formData.prizes.filter((p) => p.trim()),
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to create event');
+        throw new Error(data.error || "Failed to create event");
       }
 
       onSuccess?.();
@@ -85,11 +86,22 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-background border border-border rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-background border border-border rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-audiowide text-2xl text-white">Add Special Event</h3>
-          <button onClick={onClose} className="text-muted-text hover:text-white">
+          <h3 className="font-audiowide text-2xl text-white">
+            Add Special Event
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-muted-text hover:text-white"
+          >
             <X size={24} />
           </button>
         </div>
@@ -98,7 +110,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
           {/* Basic Info */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Title *</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Title *
+              </label>
               <input
                 type="text"
                 name="title"
@@ -110,7 +124,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Price (₹) *</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Price (₹) *
+              </label>
               <input
                 type="number"
                 name="price"
@@ -124,7 +140,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-white font-audiowide text-sm mb-2">Description *</label>
+            <label className="block text-white font-audiowide text-sm mb-2">
+              Description *
+            </label>
             <textarea
               name="description"
               value={formData.description}
@@ -138,7 +156,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
           {/* Category & Type */}
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Category *</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Category *
+              </label>
               <select
                 name="category"
                 value={formData.category}
@@ -152,7 +172,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Type *</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Type *
+              </label>
               <select
                 name="type"
                 value={formData.type}
@@ -164,9 +186,11 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
               </select>
             </div>
 
-            {formData.type === 'team' && (
+            {formData.type === "team" && (
               <div>
-                <label className="block text-white font-audiowide text-sm mb-2">Max Team Size</label>
+                <label className="block text-white font-audiowide text-sm mb-2">
+                  Max Team Size
+                </label>
                 <input
                   type="number"
                   name="maxTeamSize"
@@ -182,7 +206,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
           {/* Event Details */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Mode</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Mode
+              </label>
               <select
                 name="mode"
                 value={formData.mode}
@@ -196,7 +222,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Venue</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Venue
+              </label>
               <input
                 type="text"
                 name="venue"
@@ -209,32 +237,49 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Date</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Date
+              </label>
               <input
-                type="text"
+                type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                placeholder="e.g., Nov 7, 2025"
                 className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Time</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Time
+              </label>
               <input
-                type="text"
+                type="time"
                 name="time"
                 value={formData.time}
                 onChange={handleChange}
-                placeholder="e.g., 10:00 AM - 2:00 PM"
                 className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-white font-audiowide text-sm mb-2">Image URL</label>
+            <label className="block text-white font-audiowide text-sm mb-2">
+              Registration Expiry
+            </label>
+            <input
+              type="date"
+              name="expiryDate"
+              value={formData.expiryDate}
+              onChange={handleChange}
+              className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-audiowide text-sm mb-2">
+              Image URL
+            </label>
             <input
               type="text"
               name="img"
@@ -247,18 +292,22 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
 
           {/* Rules */}
           <div>
-            <label className="block text-white font-audiowide text-sm mb-2">Rules</label>
+            <label className="block text-white font-audiowide text-sm mb-2">
+              Rules
+            </label>
             {formData.rules.map((rule, index) => (
               <div key={index} className="flex gap-2 mb-2">
                 <input
                   type="text"
                   value={rule}
-                  onChange={(e) => handleArrayChange('rules', index, e.target.value)}
+                  onChange={(e) =>
+                    handleArrayChange("rules", index, e.target.value)
+                  }
                   className="flex-1 bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
                 />
                 <button
                   type="button"
-                  onClick={() => removeArrayItem('rules', index)}
+                  onClick={() => removeArrayItem("rules", index)}
                   className="text-red-500 hover:text-red-400 px-3"
                 >
                   <X size={20} />
@@ -267,7 +316,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             ))}
             <button
               type="button"
-              onClick={() => addArrayItem('rules')}
+              onClick={() => addArrayItem("rules")}
               className="text-primary hover:text-hover-primary text-sm font-space"
             >
               + Add Rule
@@ -276,18 +325,22 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
 
           {/* Prizes */}
           <div>
-            <label className="block text-white font-audiowide text-sm mb-2">Prizes</label>
+            <label className="block text-white font-audiowide text-sm mb-2">
+              Prizes
+            </label>
             {formData.prizes.map((prize, index) => (
               <div key={index} className="flex gap-2 mb-2">
                 <input
                   type="text"
                   value={prize}
-                  onChange={(e) => handleArrayChange('prizes', index, e.target.value)}
+                  onChange={(e) =>
+                    handleArrayChange("prizes", index, e.target.value)
+                  }
                   className="flex-1 bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
                 />
                 <button
                   type="button"
-                  onClick={() => removeArrayItem('prizes', index)}
+                  onClick={() => removeArrayItem("prizes", index)}
                   className="text-red-500 hover:text-red-400 px-3"
                 >
                   <X size={20} />
@@ -296,7 +349,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             ))}
             <button
               type="button"
-              onClick={() => addArrayItem('prizes')}
+              onClick={() => addArrayItem("prizes")}
               className="text-primary hover:text-hover-primary text-sm font-space"
             >
               + Add Prize
@@ -306,7 +359,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
           {/* Contact */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Contact Email</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Contact Email
+              </label>
               <input
                 type="email"
                 name="contactEmail"
@@ -317,7 +372,9 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-white font-audiowide text-sm mb-2">Contact Phone</label>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Contact Phone
+              </label>
               <input
                 type="tel"
                 name="contactPhone"
@@ -340,7 +397,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
               disabled={loading}
               className="flex-1 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary disabled:opacity-50 transition-all"
             >
-              {loading ? 'Creating...' : 'Create Event'}
+              {loading ? "Creating..." : "Create Event"}
             </button>
             <button
               type="button"

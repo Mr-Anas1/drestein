@@ -119,10 +119,7 @@ export async function POST(request) {
     try {
       eventSnap = await db.collection("events").doc(eventId).get();
       if (!eventSnap.exists) {
-        return NextResponse.json(
-          { error: "Event not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "Event not found" }, { status: 404 });
       }
     } catch (e) {
       console.error("Failed to fetch event for registration:", e);
@@ -133,7 +130,36 @@ export async function POST(request) {
     }
 
     const eventData = eventSnap.data() || {};
-    const isWorkshop = String(eventData.category || "").toLowerCase() === "workshop";
+
+    // Enforce expiry date if provided on the event
+    try {
+      const expiryRaw = eventData.expiryDate;
+      if (expiryRaw) {
+        const expiry = new Date(expiryRaw);
+        // If the stored date has no time, consider end of day local
+        if (!isNaN(expiry.getTime())) {
+          const now = new Date();
+          // Treat the expiry as inclusive end-of-day when only a date is provided
+          const expiryEndOfDay = new Date(expiry);
+          if (
+            expiryRaw.length <= 10 &&
+            /\d{4}-\d{2}-\d{2}/.test(String(expiryRaw))
+          ) {
+            expiryEndOfDay.setHours(23, 59, 59, 999);
+          }
+          if (now > expiryEndOfDay) {
+            return NextResponse.json(
+              { error: "Registration closed: Event has expired." },
+              { status: 403 }
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // If parsing fails, do not block; treat as no expiry
+    }
+    const isWorkshop =
+      String(eventData.category || "").toLowerCase() === "workshop";
 
     // If not a workshop, require a verified Event Pass
     if (!isWorkshop) {
@@ -141,7 +167,7 @@ export async function POST(request) {
         // Check student's hasEventPass flag first (faster)
         const studentDoc = await db.collection("students").doc(userUid).get();
         const studentData = studentDoc.data();
-        
+
         if (!studentData?.hasEventPass) {
           // Double-check in passes collection as fallback
           const passSnap = await db
@@ -163,10 +189,13 @@ export async function POST(request) {
             );
           } else {
             // Update student flag if pass exists but flag is missing
-            await db.collection("students").doc(userUid).set(
-              { hasEventPass: true, eventPassId: passSnap.docs[0].id },
-              { merge: true }
-            );
+            await db
+              .collection("students")
+              .doc(userUid)
+              .set(
+                { hasEventPass: true, eventPassId: passSnap.docs[0].id },
+                { merge: true }
+              );
           }
         }
       } catch (e) {
@@ -304,7 +333,7 @@ export async function GET(request) {
       qRef = db.collection("registrations").where("userUid", "==", userUid);
     } else if (eventId) {
       qRef = db.collection("registrations").where("eventId", "==", eventId);
-      
+
       // Optional: Filter for special events only
       if (isSpecialEvent === "true") {
         // Note: Firestore doesn't support chaining where clauses on different fields without an index
@@ -325,7 +354,9 @@ export async function GET(request) {
 
     // Filter for special events if requested
     if (isSpecialEvent === "true") {
-      participants = participants.filter(p => p.isSpecialEvent === true || p.eventType === "special");
+      participants = participants.filter(
+        (p) => p.isSpecialEvent === true || p.eventType === "special"
+      );
     }
 
     // Sort by registration date (newest first)

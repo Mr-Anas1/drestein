@@ -142,6 +142,15 @@ export const AuthProvider = ({ children }) => {
             try {
                 await setDoc(studentRef, profile, { merge: true });
                 console.log('[AUTH] ✅ Student profile created/updated with hasEventPass');
+
+                // Check if this is the first login (new user)
+                if (!existing.exists()) {
+                    console.log('[AUTH] First login detected, initiating reload...');
+                    // Add a small delay to ensure auth state is fully updated before reload
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000); // 1 second delay
+                }
             } catch (studentErr) {
                 console.error('[AUTH] ❌ Failed to write student profile:', studentErr);
                 console.error('[AUTH] Error details:', {
