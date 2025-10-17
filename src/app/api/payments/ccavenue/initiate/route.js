@@ -53,7 +53,7 @@ export async function POST(request) {
     const decoded = await verifyAuth(request);
     if (!decoded) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
-    const { userUid, passType = 'general', passPrice, passName, customEvents } = await request.json();
+    const { userUid, passType = 'general', passPrice, passName, customEvents, includesGeneralPass } = await request.json();
     if (!userUid) return NextResponse.json({ error: "userUid required" }, { status: 400 });
     if (decoded.uid !== userUid) return NextResponse.json({ error: "UID mismatch" }, { status: 403 });
 
@@ -99,6 +99,11 @@ export async function POST(request) {
     // Add custom events if it's a custom pass
     if (passType === "custom" && customEvents && customEvents.length > 0) {
       passData.customEvents = customEvents;
+    }
+    
+    // Add flag if general pass is included in custom pass
+    if (includesGeneralPass) {
+      passData.includesGeneralPass = true;
     }
 
     const passRef = await db.collection("passes").add(passData);

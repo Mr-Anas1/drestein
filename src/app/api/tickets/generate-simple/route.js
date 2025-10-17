@@ -113,6 +113,7 @@ export async function POST(request) {
     let typeInfo = {
       name: 'General Pass',
       validDates: 'November 7-8, 2025',
+      eventDate: 'November 7-8, 2025',
       access: 'All technical, non-technical, and cultural events'
     };
 
@@ -123,22 +124,52 @@ export async function POST(request) {
         db.collection('specialEvents').doc(eventId).get()
       );
       const eventDocs = await Promise.all(eventPromises);
-      const eventTitles = eventDocs
+      const events = eventDocs
         .filter(doc => doc.exists)
-        .map(doc => doc.data().title);
+        .map(doc => ({ title: doc.data().title, date: doc.data().date }));
+      
+      const eventTitles = events.map(e => e.title);
+      
+      // Extract unique dates from events
+      const eventDates = [...new Set(events.map(e => e.date).filter(d => d))]
+        .sort((a, b) => new Date(a) - new Date(b));
+      
+      // Format dates for display
+      let formattedDates = 'November 7-8, 2025'; // fallback
+      if (eventDates.length > 0) {
+        formattedDates = eventDates.map(date => {
+          const d = new Date(date);
+          return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }).join(', ');
+      }
+      
+      // Check if general pass is included
+      const includesGeneralPass = passData.includesGeneralPass || false;
+      let accessText = '';
+      
+      if (includesGeneralPass) {
+        // General pass + custom events
+        accessText = `General Pass (All events) + ${eventTitles.length} Special Event${eventTitles.length > 1 ? 's' : ''}: ${eventTitles.join(', ')}`;
+      } else {
+        // Only custom events
+        accessText = eventTitles.length > 0 
+          ? eventTitles.join(', ') 
+          : `${passData.customEvents.length} premium events`;
+      }
 
       typeInfo = {
         name: passData.passName || 'Custom Pass',
-        validDates: 'November 7-8, 2025',
-        access: eventTitles.length > 0 
-          ? eventTitles.join(', ') 
-          : `${passData.customEvents.length} premium events`,
-        customEvents: eventTitles
+        validDates: includesGeneralPass ? 'November 7-8, 2025' : formattedDates,
+        eventDate: includesGeneralPass ? 'November 7-8, 2025' : formattedDates,
+        access: accessText,
+        customEvents: eventTitles,
+        includesGeneralPass: includesGeneralPass
       };
     } else if (passType === 'workshop') {
       typeInfo = {
         name: 'Workshop Pass',
         validDates: 'November 7-8, 2025',
+        eventDate: 'November 7-8, 2025',
         access: 'All workshop sessions'
       };
     }
@@ -157,6 +188,7 @@ export async function POST(request) {
         status: "active",
         passType: typeInfo.name,
         validDates: typeInfo.validDates,
+        eventDate: typeInfo.eventDate,
         access: typeInfo.access,
         customEvents: typeInfo.customEvents || null,
         rollNo: student?.rollNo || null,

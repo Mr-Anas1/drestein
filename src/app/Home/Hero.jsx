@@ -35,7 +35,9 @@ const Hero = () => {
 
       <div className="flex flex-col-reverse lg:flex-row items-center justify-between w-full h-[calc(100vh-80px)] px-4 md:px-12 relative z-10 gap-0 lg:gap-8">
         {/* Left Section */}
+        
         <div className="flex-1 flex flex-col gap-4 md:gap-6 justify-center items-center lg:items-start h-full pb-4 lg:pb-0">
+          
           <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-audiowide text-white animate-slide-in">
             <span className="text-primary animate-glow">DR</span>EAM
             <span className="text-secondary animate-glow"></span> D

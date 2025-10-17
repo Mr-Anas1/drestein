@@ -60,7 +60,9 @@ const Header = () => {
           className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer"
           onClick={() => router.push("/")}
         >
-          DRESTEIN
+          <div className="w-[200px] md:w-[250px]">
+            <img src="/saveetha.png" alt="saveetha-logo" />
+          </div>
         </h1>
       </div>
 

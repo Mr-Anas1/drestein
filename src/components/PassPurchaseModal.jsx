@@ -20,6 +20,7 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
   const passPrice = passData?.price || 250;
   const passName = passData?.name || 'General Pass';
   const customEvents = passData?.customEvents || [];
+  const includesGeneralPass = passData?.includesGeneralPass || false;
 
   const submit = async () => {
     setLoading(true);
@@ -45,7 +46,8 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
           passType,
           passPrice,
           passName,
-          customEvents: customEvents.length > 0 ? customEvents : undefined
+          customEvents: customEvents.length > 0 ? customEvents : undefined,
+          includesGeneralPass: includesGeneralPass || undefined
         })
       });
       const data = await res.json();

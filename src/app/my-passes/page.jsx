@@ -117,16 +117,43 @@ export default function MyPassesPage() {
       },
       custom: {
         name: pass.passName || 'Custom Pass',
-        description: `Access to ${pass.customEvents?.length || 0} selected special events`,
-        dates: 'November 7-8, 2025',
-        events: pass.customEvents?.length > 0 
-          ? `${pass.customEvents.length} premium events` 
-          : 'Custom selected events',
+        description: pass.includesGeneralPass 
+          ? `General Pass + ${pass.customEvents?.length || 0} special events`
+          : `Access to ${pass.customEvents?.length || 0} selected special events`,
+        dates: pass.includesGeneralPass ? 'November 7-8, 2025' : getCustomPassDates(pass),
+        events: pass.includesGeneralPass
+          ? `General Pass (All events) + ${pass.customEvents?.length || 0} special events`
+          : pass.customEvents?.length > 0 
+            ? `${pass.customEvents.length} premium events` 
+            : 'Custom selected events',
         color: 'from-secondary to-primary',
       },
     };
 
     return passTypes[passType] || passTypes.general;
+  };
+
+  const getCustomPassDates = (pass) => {
+    if (!pass.customEvents || pass.customEvents.length === 0) {
+      return 'November 7-8, 2025';
+    }
+    
+    // Extract unique dates from custom events
+    const eventDates = pass.customEvents
+      .map(eventId => specialEventsMap[eventId]?.date)
+      .filter(date => date)
+      .filter((date, index, self) => self.indexOf(date) === index)
+      .sort((a, b) => new Date(a) - new Date(b));
+    
+    if (eventDates.length === 0) {
+      return 'November 7-8, 2025';
+    }
+    
+    // Format dates
+    return eventDates.map(date => {
+      const d = new Date(date);
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }).join(', ');
   };
 
   if (loading) {
@@ -225,7 +252,9 @@ export default function MyPassesPage() {
                       <div className="flex items-start gap-3">
                         <Calendar className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                         <div>
-                          <div className="text-sm text-muted-text font-space">Valid Dates</div>
+                          <div className="text-sm text-muted-text font-space">
+                            {(pass.passType === 'general' || pass.includesGeneralPass) ? 'Valid Dates' : 'Event Dates'}
+                          </div>
                           <div className="text-white font-space">{passInfo.dates}</div>
                         </div>
                       </div>

@@ -92,11 +92,11 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-primary">📞</span>
-                <span>+1 (555) 123-4567</span>
+                <span>+91 89399 02737</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-primary">✉️</span>
-                <span>hello@drestein.com</span>
+                <span>drestein@saveetha.ac.in</span>
               </div>
             </div>
           </div>
@@ -104,11 +104,11 @@ const Footer = () => {
 
         {/* Bottom Section */}
         <div className="mt-12 pt-8 border-t border-border">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-col md:flex-row justify-center  items-center gap-4">
             <p className="text-muted-text font-space text-sm">
-              © 2025 DRESTEIN. All rights reserved.
+              Copyright © DRESTEIN 2025 - Saveetha Engineering College. All rights reserved.
             </p>
-            <div className="flex gap-6 text-sm font-space">
+            {/* <div className="flex gap-6 text-sm font-space">
               <a href="#" className="text-muted-text hover:text-primary transition-colors duration-300">
                 Privacy Policy
               </a>
@@ -118,7 +118,7 @@ const Footer = () => {
               <a href="#" className="text-muted-text hover:text-primary transition-colors duration-300">
                 Cookie Policy
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

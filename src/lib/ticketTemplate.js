@@ -133,34 +133,7 @@ export function generateTicketHTML(data) {
       word-break: break-word;
     }
     
-    .qr-section {
-      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-      border-radius: 16px;
-      padding: 30px;
-      text-align: center;
-      margin-top: 30px;
-    }
     
-    .qr-code {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      display: inline-block;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    .qr-code img {
-      width: 200px;
-      height: 200px;
-      display: block;
-    }
-    
-    .qr-label {
-      margin-top: 16px;
-      font-size: 14px;
-      color: #6b7280;
-      font-weight: 500;
-    }
     
     .ticket-footer {
       background: #f9fafb;
@@ -245,19 +218,12 @@ export function generateTicketHTML(data) {
       </div>
       
       <div class="divider"></div>
-      
-      <div class="qr-section">
-        <div class="qr-code">
-          <img src="${qrCodeData}" alt="QR Code" />
-        </div>
-        <div class="qr-label">Scan this code at the event entrance</div>
-      </div>
     </div>
     
     <div class="ticket-footer">
       <div class="pass-id">PASS ID: ${passId}</div>
       <div class="footer-note">
-        This pass is valid for all DRESTEIN 2025 events. Please present this ticket at the venue.
+        This pass grants access only to the events listed on this ticket. Please present this ticket at the venue.
       </div>
     </div>
   </div>

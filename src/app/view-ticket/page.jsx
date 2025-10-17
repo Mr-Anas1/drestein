@@ -231,8 +231,8 @@ export default function ViewTicketPage() {
 
               {ticket.validDates && (
                 <div className="border-l-4 border-purple-600 pl-6">
-                  <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">Valid Dates</p>
-                  <p className="text-xl text-gray-900">{ticket.validDates}</p>
+                  <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-2">Event Date</p>
+                  <p className="text-xl text-gray-900">{ticket.eventDate || ticket.validDates}</p>
                 </div>
               )}
 
@@ -261,15 +261,7 @@ export default function ViewTicketPage() {
               </div>
             )}
 
-            {/* QR Code Section */}
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 text-center">
-              <div className="bg-white p-6 rounded-xl inline-block shadow-lg">
-                <img src={ticket.qrCode} alt="QR Code" className="w-64 h-64" />
-              </div>
-              <p className="mt-6 text-gray-600 font-medium text-lg">
-                Scan this code at the event entrance
-              </p>
-            </div>
+            
           </div>
 
           {/* Footer */}
@@ -278,7 +270,7 @@ export default function ViewTicketPage() {
               PASS ID: {ticket.passId}
             </p>
             <p className="text-sm text-gray-500">
-              This pass is valid for all DRESTEIN 2025 events. Please present this ticket at the venue.
+              This pass grants access only to the events listed on this ticket. Please present this ticket at the venue.
             </p>
           </div>
         </div>
