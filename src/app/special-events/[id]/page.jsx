@@ -130,9 +130,9 @@ const SpecialEventDetailPage = () => {
               <h1 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
                 {event.title}
               </h1>
-              <p className="text-muted-text font-space text-lg">
+              {/* <p className="text-muted-text font-space text-lg">
                 {event.description}
-              </p>
+              </p> */}
             </div>
 
             {/* Quick Info */}
@@ -176,7 +176,7 @@ const SpecialEventDetailPage = () => {
             </div>
 
             {/* Register Button */}
-            <button
+            {/* <button
               onClick={() => setShowRegistrationModal(true)}
               disabled={isExpired}
               className={`w-full ${
@@ -190,11 +190,28 @@ const SpecialEventDetailPage = () => {
               {isExpired
                 ? "Registration Closed"
                 : `Register Now - ₹${event.price}`}
-            </button>
+            </button> */}
+            
+            <div className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center">
+              <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
+              <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
+            </div>
           </div>
         </div>
 
-        {/* Details Sections */}
+        {/* Description Section */}
+        {(event.description || event.fullDescription) && (
+          <div className="bg-background-soft border border-border rounded-2xl p-8 mb-8">
+            <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-primary" />
+              About this event
+            </h2>
+            <p className="text-muted-text font-space leading-relaxed whitespace-pre-line">
+              {event.description || event.fullDescription}
+            </p>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-8">
           {/* Rules */}
           {event.rules && event.rules.length > 0 && (
@@ -242,32 +259,135 @@ const SpecialEventDetailPage = () => {
         </div>
 
         {/* Contact Info */}
-        {(event.contactEmail || event.contactPhone) && (
+        {((event.studentCoordinators && event.studentCoordinators.length > 0) || 
+          (event.facultyCoordinator && event.facultyCoordinator.name) || 
+          event.contactEmail || event.contactPhone) && (
           <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
             <h2 className="font-audiowide text-2xl text-white mb-6">
               Contact Information
             </h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {event.contactEmail && (
-                <div className="flex items-center gap-3 text-muted-text font-space">
-                  <Mail className="w-5 h-5 text-primary" />
-                  <a
-                    href={`mailto:${event.contactEmail}`}
-                    className="hover:text-primary transition-colors"
-                  >
-                    {event.contactEmail}
-                  </a>
+            <div className="space-y-6">
+              {/* Student Coordinators */}
+              {event.studentCoordinators && event.studentCoordinators.length > 0 && (
+                <div>
+                  <p className="font-audiowide text-sm text-primary mb-3">
+                    Student Coordinators
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {event.studentCoordinators.map((coordinator, index) => (
+                      <div key={index} className="bg-background rounded-lg p-4 space-y-2">
+                        <p className="text-white font-space font-semibold">{coordinator.name}</p>
+                        <div className="space-y-1">
+                          <a
+                            href={`tel:${coordinator.phone}`}
+                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                          >
+                            <Phone className="w-4 h-4" />
+                            {coordinator.phone}
+                          </a>
+                          {coordinator.email && (
+                            <a
+                              href={`mailto:${coordinator.email}`}
+                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                            >
+                              <Mail className="w-4 h-4" />
+                              {coordinator.email}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
-              {event.contactPhone && (
-                <div className="flex items-center gap-3 text-muted-text font-space">
-                  <Phone className="w-5 h-5 text-primary" />
-                  <a
-                    href={`tel:${event.contactPhone}`}
-                    className="hover:text-primary transition-colors"
-                  >
-                    {event.contactPhone}
-                  </a>
+
+              {/* Faculty Coordinators */}
+              {event.facultyCoordinators && event.facultyCoordinators.length > 0 && (
+                <div>
+                  <p className="font-audiowide text-sm text-secondary mb-3">
+                    Faculty Coordinators
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {event.facultyCoordinators.map((coordinator, index) => (
+                      <div key={index} className="bg-background rounded-lg p-4 space-y-2">
+                        <p className="text-white font-space font-semibold">{coordinator.name}</p>
+                        <div className="space-y-1">
+                          <a
+                            href={`tel:${coordinator.phone}`}
+                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                          >
+                            <Phone className="w-4 h-4" />
+                            {coordinator.phone}
+                          </a>
+                          <a
+                            href={`mailto:${coordinator.email}`}
+                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                          >
+                            <Mail className="w-4 h-4" />
+                            {coordinator.email}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Fallback for old single faculty coordinator */}
+              {!event.facultyCoordinators && event.facultyCoordinator && event.facultyCoordinator.name && (
+                <div>
+                  <p className="font-audiowide text-sm text-secondary mb-3">
+                    Faculty Coordinator
+                  </p>
+                  <div className="bg-background rounded-lg p-4 space-y-2">
+                    <p className="text-white font-space font-semibold">{event.facultyCoordinator.name}</p>
+                    <div className="space-y-1">
+                      <a
+                        href={`tel:${event.facultyCoordinator.phone}`}
+                        className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                      >
+                        <Phone className="w-4 h-4" />
+                        {event.facultyCoordinator.phone}
+                      </a>
+                      {event.facultyCoordinator.email && (
+                        <a
+                          href={`mailto:${event.facultyCoordinator.email}`}
+                          className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                        >
+                          <Mail className="w-4 h-4" />
+                          {event.facultyCoordinator.email}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Fallback for old contact structure */}
+              {!event.studentCoordinators && (event.contactEmail || event.contactPhone) && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {event.contactEmail && (
+                    <div className="flex items-center gap-3 text-muted-text font-space">
+                      <Mail className="w-5 h-5 text-primary" />
+                      <a
+                        href={`mailto:${event.contactEmail}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {event.contactEmail}
+                      </a>
+                    </div>
+                  )}
+                  {event.contactPhone && (
+                    <div className="flex items-center gap-3 text-muted-text font-space">
+                      <Phone className="w-5 h-5 text-primary" />
+                      <a
+                        href={`tel:${event.contactPhone}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {event.contactPhone}
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

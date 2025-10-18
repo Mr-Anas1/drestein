@@ -22,11 +22,8 @@ export default function AddEventModal({ onClose, onEventAdded }) {
     department: isDepartmentAdmin ? userDepartment : "",
     rules: [""],
     prizes: ["", "", ""],
-    contact: {
-      name: "",
-      phone: "",
-      email: "",
-    },
+    studentCoordinators: [{ name: "", phone: "", email: "" }],
+    facultyCoordinators: [{ name: "", phone: "", email: "" }],
   });
   const [loading, setLoading] = useState(false);
 
@@ -76,6 +73,52 @@ export default function AddEventModal({ onClose, onEventAdded }) {
     setFormData((prev) => ({
       ...prev,
       rules: prev.rules.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addStudentCoordinator = () => {
+    setFormData((prev) => ({
+      ...prev,
+      studentCoordinators: [...prev.studentCoordinators, { name: "", phone: "", email: "" }],
+    }));
+  };
+
+  const updateStudentCoordinator = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      studentCoordinators: prev.studentCoordinators.map((coord, i) =>
+        i === index ? { ...coord, [field]: value } : coord
+      ),
+    }));
+  };
+
+  const removeStudentCoordinator = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      studentCoordinators: prev.studentCoordinators.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addFacultyCoordinator = () => {
+    setFormData((prev) => ({
+      ...prev,
+      facultyCoordinators: [...prev.facultyCoordinators, { name: "", phone: "", email: "" }],
+    }));
+  };
+
+  const updateFacultyCoordinator = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      facultyCoordinators: prev.facultyCoordinators.map((coord, i) =>
+        i === index ? { ...coord, [field]: value } : coord
+      ),
+    }));
+  };
+
+  const removeFacultyCoordinator = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      facultyCoordinators: prev.facultyCoordinators.filter((_, i) => i !== index),
     }));
   };
 
@@ -365,49 +408,108 @@ export default function AddEventModal({ onClose, onEventAdded }) {
 
           <div>
             <label className="block text-sm font-audiowide text-muted-text mb-2">
-              Contact Information
+              Student Coordinators
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input
-                type="text"
-                required
-                value={formData.contact.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    contact: { ...prev.contact, name: e.target.value },
-                  }))
-                }
-                className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                placeholder="Contact Name"
-              />
-              <input
-                type="tel"
-                required
-                value={formData.contact.phone}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    contact: { ...prev.contact, phone: e.target.value },
-                  }))
-                }
-                className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                placeholder="Phone Number"
-              />
-              <input
-                type="email"
-                required
-                value={formData.contact.email}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    contact: { ...prev.contact, email: e.target.value },
-                  }))
-                }
-                className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                placeholder="Email Address"
-              />
-            </div>
+            {formData.studentCoordinators.map((coordinator, index) => (
+              <div key={index} className="mb-4 p-4 bg-background-soft rounded-lg border border-border">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+                  <input
+                    type="text"
+                    required
+                    value={coordinator.name}
+                    onChange={(e) => updateStudentCoordinator(index, "name", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                    placeholder="Name"
+                  />
+                  <input
+                    type="tel"
+                    required
+                    value={coordinator.phone}
+                    onChange={(e) => updateStudentCoordinator(index, "phone", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                    placeholder="Phone"
+                  />
+                  <input
+                    type="email"
+                    value={coordinator.email}
+                    onChange={(e) => updateStudentCoordinator(index, "email", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                    placeholder="Email"
+                  />
+                </div>
+                {formData.studentCoordinators.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeStudentCoordinator(index)}
+                    className="text-red-400 hover:text-red-300 transition-colors font-space text-sm flex items-center gap-1"
+                  >
+                    <Minus size={16} />
+                    Remove Coordinator
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addStudentCoordinator}
+              className="text-primary hover:text-primary-dark transition-colors font-space text-sm flex items-center gap-1"
+            >
+              <Plus size={16} />
+              Add Student Coordinator
+            </button>
+          </div>
+
+          <div>
+            <label className="block text-sm font-audiowide text-muted-text mb-2">
+              Faculty Coordinators
+            </label>
+            {formData.facultyCoordinators.map((coordinator, index) => (
+              <div key={index} className="mb-4 p-4 bg-background-soft rounded-lg border border-border">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+                  <input
+                    type="text"
+                    required
+                    value={coordinator.name}
+                    onChange={(e) => updateFacultyCoordinator(index, "name", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                    placeholder="Name"
+                  />
+                  <input
+                    type="tel"
+                    required
+                    value={coordinator.phone}
+                    onChange={(e) => updateFacultyCoordinator(index, "phone", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                    placeholder="Phone"
+                  />
+                  <input
+                    type="email"
+                    value={coordinator.email}
+                    onChange={(e) => updateFacultyCoordinator(index, "email", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                    placeholder="Email"
+                  />
+                </div>
+                {formData.facultyCoordinators.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeFacultyCoordinator(index)}
+                    className="text-red-400 hover:text-red-300 transition-colors font-space text-sm flex items-center gap-1"
+                  >
+                    <Minus size={16} />
+                    Remove Coordinator
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addFacultyCoordinator}
+              className="text-primary hover:text-primary-dark transition-colors font-space text-sm flex items-center gap-1"
+            >
+              <Plus size={16} />
+              Add Faculty Coordinator
+            </button>
           </div>
 
           <div className="flex gap-4 pt-4">

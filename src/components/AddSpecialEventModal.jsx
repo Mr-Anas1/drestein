@@ -8,6 +8,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
     description: "",
     price: "",
     category: "competition",
+    department: "AI-DS",
     type: "individual",
     maxTeamSize: "",
     mode: "offline",
@@ -18,8 +19,8 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
     expiryDate: "",
     rules: [""],
     prizes: [""],
-    contactEmail: "",
-    contactPhone: "",
+    studentCoordinators: [{ name: "", phone: "", email: "" }],
+    facultyCoordinators: [{ name: "", phone: "", email: "" }],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -47,6 +48,52 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
     setFormData((prev) => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
+    }));
+  };
+
+  const addStudentCoordinator = () => {
+    setFormData((prev) => ({
+      ...prev,
+      studentCoordinators: [...prev.studentCoordinators, { name: "", phone: "", email: "" }],
+    }));
+  };
+
+  const updateStudentCoordinator = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      studentCoordinators: prev.studentCoordinators.map((coord, i) =>
+        i === index ? { ...coord, [field]: value } : coord
+      ),
+    }));
+  };
+
+  const removeStudentCoordinator = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      studentCoordinators: prev.studentCoordinators.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addFacultyCoordinator = () => {
+    setFormData((prev) => ({
+      ...prev,
+      facultyCoordinators: [...prev.facultyCoordinators, { name: "", phone: "", email: "" }],
+    }));
+  };
+
+  const updateFacultyCoordinator = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      facultyCoordinators: prev.facultyCoordinators.map((coord, i) =>
+        i === index ? { ...coord, [field]: value } : coord
+      ),
+    }));
+  };
+
+  const removeFacultyCoordinator = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      facultyCoordinators: prev.facultyCoordinators.filter((_, i) => i !== index),
     }));
   };
 
@@ -153,7 +200,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             />
           </div>
 
-          {/* Category & Type */}
+          {/* Category, Department & Type */}
           <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">
@@ -173,6 +220,36 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
 
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">
+                Department *
+              </label>
+              <select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+              >
+                <option value="AI-DS">AI-DS - Artificial Intelligence and Data Science</option>
+                <option value="AI-ML">AI-ML - Artificial Intelligence and Machine Learning</option>
+                <option value="AGRI">AGRI - Agricultural Engineering</option>
+                <option value="BIO-MED">BIO-MED - Biomedical Engineering</option>
+                <option value="CHEM">CHEM - Chemical Engineering</option>
+                <option value="CIVIL">CIVIL - Civil Engineering</option>
+                <option value="CSE">CSE - Computer Science and Engineering</option>
+                <option value="CSE-CYB">CSE-CYB - Computer Science and Engineering (Cyber Security)</option>
+                <option value="CSE-IOT">CSE-IOT - Computer Science and Engineering (Internet of Things)</option>
+                <option value="IT">IT - Information Technology</option>
+                <option value="ECE">ECE - Electronics and Communication Engineering</option>
+                <option value="EEE">EEE - Electrical and Electronics Engineering</option>
+                <option value="EIE">EIE - Electronics and Instrumentation Engineering</option>
+                <option value="MECH">MECH - Mechanical Engineering</option>
+                <option value="MED-ELE">MED-ELE - Medical Electronics Engineering</option>
+                <option value="MBA">MBA - Master of Business Administration</option>
+                <option value="S&H">S&H - Science and Humanities</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-white font-audiowide text-sm mb-2">
                 Type *
               </label>
               <select
@@ -185,6 +262,10 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
                 <option value="team">Team</option>
               </select>
             </div>
+          </div>
+
+          {/* Max Team Size */}
+          <div className="grid md:grid-cols-3 gap-4">
 
             {formData.type === "team" && (
               <div>
@@ -356,33 +437,108 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             </button>
           </div>
 
-          {/* Contact */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-white font-audiowide text-sm mb-2">
-                Contact Email
-              </label>
-              <input
-                type="email"
-                name="contactEmail"
-                value={formData.contactEmail}
-                onChange={handleChange}
-                className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-              />
-            </div>
+          {/* Student Coordinators */}
+          <div>
+            <label className="block text-white font-audiowide text-sm mb-2">
+              Student Coordinators
+            </label>
+            {formData.studentCoordinators.map((coordinator, index) => (
+              <div key={index} className="mb-4 p-4 bg-background-soft rounded-lg border border-border">
+                <div className="grid md:grid-cols-3 gap-3 mb-2">
+                  <input
+                    type="text"
+                    required
+                    value={coordinator.name}
+                    onChange={(e) => updateStudentCoordinator(index, "name", e.target.value)}
+                    className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                    placeholder="Name"
+                  />
+                  <input
+                    type="tel"
+                    required
+                    value={coordinator.phone}
+                    onChange={(e) => updateStudentCoordinator(index, "phone", e.target.value)}
+                    className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                    placeholder="Phone"
+                  />
+                  <input
+                    type="email"
+                    value={coordinator.email}
+                    onChange={(e) => updateStudentCoordinator(index, "email", e.target.value)}
+                    className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                    placeholder="Email"
+                  />
+                </div>
+                {formData.studentCoordinators.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeStudentCoordinator(index)}
+                    className="text-red-500 hover:text-red-400 text-sm font-space"
+                  >
+                    Remove Coordinator
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addStudentCoordinator}
+              className="text-primary hover:text-hover-primary text-sm font-space"
+            >
+              + Add Student Coordinator
+            </button>
+          </div>
 
-            <div>
-              <label className="block text-white font-audiowide text-sm mb-2">
-                Contact Phone
-              </label>
-              <input
-                type="tel"
-                name="contactPhone"
-                value={formData.contactPhone}
-                onChange={handleChange}
-                className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-              />
-            </div>
+          {/* Faculty Coordinators */}
+          <div>
+            <label className="block text-white font-audiowide text-sm mb-2">
+              Faculty Coordinators
+            </label>
+            {formData.facultyCoordinators.map((coordinator, index) => (
+              <div key={index} className="mb-4 p-4 bg-background-soft rounded-lg border border-border">
+                <div className="grid md:grid-cols-3 gap-3 mb-2">
+                  <input
+                    type="text"
+                    required
+                    value={coordinator.name}
+                    onChange={(e) => updateFacultyCoordinator(index, "name", e.target.value)}
+                    className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                    placeholder="Name"
+                  />
+                  <input
+                    type="tel"
+                    required
+                    value={coordinator.phone}
+                    onChange={(e) => updateFacultyCoordinator(index, "phone", e.target.value)}
+                    className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                    placeholder="Phone"
+                  />
+                  <input
+                    type="email"
+                    value={coordinator.email}
+                    onChange={(e) => updateFacultyCoordinator(index, "email", e.target.value)}
+                    className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                    placeholder="Email"
+                  />
+                </div>
+                {formData.facultyCoordinators.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeFacultyCoordinator(index)}
+                    className="text-red-500 hover:text-red-400 text-sm font-space"
+                  >
+                    Remove Coordinator
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addFacultyCoordinator}
+              className="text-primary hover:text-hover-primary text-sm font-space"
+            >
+              + Add Faculty Coordinator
+            </button>
           </div>
 
           {error && (

@@ -8,7 +8,8 @@ const SpecialEventsPage = () => {
   const [specialEvents, setSpecialEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('all'); // all, competition, workshop, event
+  const [categoryFilter, setCategoryFilter] = useState('all'); // all, competition, workshop, event
+  const [departmentFilter, setDepartmentFilter] = useState('all'); // all, CSE, ECE, EEE, MECH, CIVIL, etc.
 
   useEffect(() => {
     const fetchSpecialEvents = async () => {
@@ -34,15 +35,38 @@ const SpecialEventsPage = () => {
     fetchSpecialEvents();
   }, []);
 
-  const filteredEvents = filter === 'all'
-    ? specialEvents
-    : specialEvents.filter(event => event.category === filter);
+  const filteredEvents = specialEvents.filter(event => {
+    const matchesCategory = categoryFilter === 'all' || event.category === categoryFilter;
+    const matchesDepartment = departmentFilter === 'all' || event.department === departmentFilter;
+    return matchesCategory && matchesDepartment;
+  });
 
   const categories = [
     { id: 'all', name: 'All Events' },
     { id: 'competition', name: 'Competitions' },
     { id: 'workshop', name: 'Workshops' },
     { id: 'event', name: 'Special Events' },
+  ];
+
+  const departments = [
+    { id: 'all', name: 'All Departments', short: 'All' },
+    { id: 'AI-DS', name: 'Artificial Intelligence and Data Science', short: 'AI-DS' },
+    { id: 'AI-ML', name: 'Artificial Intelligence and Machine Learning', short: 'AI-ML' },
+    { id: 'AGRI', name: 'Agricultural Engineering', short: 'AGRI' },
+    { id: 'BIO-MED', name: 'Biomedical Engineering', short: 'BIO-MED' },
+    { id: 'CHEM', name: 'Chemical Engineering', short: 'CHEM' },
+    { id: 'CIVIL', name: 'Civil Engineering', short: 'CIVIL' },
+    { id: 'CSE', name: 'Computer Science and Engineering', short: 'CSE' },
+    { id: 'CSE-CYB', name: 'Computer Science and Engineering (Cyber Security)', short: 'CSE-CYB' },
+    { id: 'CSE-IOT', name: 'Computer Science and Engineering (Internet of Things)', short: 'CSE-IOT' },
+    { id: 'IT', name: 'Information Technology', short: 'IT' },
+    { id: 'ECE', name: 'Electronics and Communication Engineering', short: 'ECE' },
+    { id: 'EEE', name: 'Electrical and Electronics Engineering', short: 'EEE' },
+    { id: 'EIE', name: 'Electronics and Instrumentation Engineering', short: 'EIE' },
+    { id: 'MECH', name: 'Mechanical Engineering', short: 'MECH' },
+    { id: 'MED-ELE', name: 'Medical Electronics Engineering', short: 'MED-ELE' },
+    { id: 'MBA', name: 'Master of Business Administration', short: 'MBA' },
+    { id: 'S&H', name: 'Science and Humanities', short: 'S&H' },
   ];
 
   return (
@@ -57,20 +81,47 @@ const SpecialEventsPage = () => {
           Premium competitions, workshops, and exclusive events with custom pricing
         </p>
 
-        {/* Category Filter */}
-        <div className="flex justify-center gap-4 mb-12 flex-wrap">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setFilter(cat.id)}
-              className={`px-6 py-3 rounded-lg font-audiowide transition-all duration-300 ${filter === cat.id
-                ? 'bg-gradient-to-r from-primary to-secondary text-white'
-                : 'bg-background-soft border border-border text-muted-text hover:border-primary'
-                }`}
+        {/* Filters */}
+        <div className="mb-12 flex flex-col md:flex-row justify-center items-center gap-6">
+          {/* Category Filter */}
+          <div className="flex flex-wrap justify-center gap-3">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCategoryFilter(cat.id)}
+                className={`px-5 py-2.5 rounded-lg font-audiowide text-sm transition-all duration-300 ${categoryFilter === cat.id
+                  ? 'bg-gradient-to-r from-primary to-secondary text-white'
+                  : 'bg-background-soft border border-border text-muted-text hover:border-primary'
+                  }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Department Dropdown */}
+          <div className="relative min-w-[280px]">
+            {/* <label className="block text-white font-audiowide text-xs mb-2 text-center">
+              Filter by Department
+            </label> */}
+            <select
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="w-full bg-background-soft border-2 border-border text-white px-4 py-3 rounded-xl font-space text-sm focus:outline-none focus:border-secondary hover:border-secondary transition-all duration-300 cursor-pointer appearance-none"
+              style={{ paddingRight: '2.5rem' }}
             >
-              {cat.name}
-            </button>
-          ))}
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.id} className="bg-background text-white py-2">
+                  {dept.short} - {dept.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-4 top-[calc(50%+0.5rem)] -translate-y-1/2 pointer-events-none text-secondary">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         {loading && (
@@ -92,13 +143,36 @@ const SpecialEventsPage = () => {
         )}
 
         {!loading && !error && filteredEvents.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center ">
-            {filteredEvents.map((event) => (
-              <SpecialEventBox
-                key={event.id}
-                event={event}
-              />
-            ))}
+          <div className="space-y-16">
+            {departments.filter(dept => dept.id !== 'all').map((dept) => {
+              // Filter events for this department that match current filters
+              const deptEvents = filteredEvents.filter(event => event.department === dept.id);
+              
+              // Skip if no events for this department
+              if (deptEvents.length === 0) return null;
+              
+              return (
+                <section key={dept.id} className="space-y-6">
+                  {/* Department Header */}
+                  <div className="text-center md:text-left">
+                    <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+                      {dept.name}
+                    </h2>
+                    <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto md:mx-0"></div>
+                  </div>
+                  
+                  {/* Events Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                    {deptEvents.map((event) => (
+                      <SpecialEventBox
+                        key={event.id}
+                        event={event}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         )}
       </div>

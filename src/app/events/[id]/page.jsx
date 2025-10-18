@@ -78,45 +78,13 @@ const EventDetailPage = () => {
   //                 'Content-Type': 'application/json'
   //             },
   //             body: JSON.stringify({
-  //                 eventId: params.id,
-  //                 name: name.trim(),
-  //                 email: email.trim()
-  //             })
-  //         })
-
-  //         const data = await response.json();
-
-  //         if (response.ok) {
-  //             setIsRegistered(true)
-  //             // Update local event data to reflect new participation count
-  //             setEvent(prev => ({
-  //                 ...prev,
-  //                 participationCount: (prev.participationCount || 0) + 1
-  //             }))
-  //             alert(data.message || "Registration successful!");
-  //         } else {
-  //             alert(data.error || 'Registration failed');
-  //         }
-  //     } catch (error) {
-  //         console.error('Error during registration:', error)
-  //         alert('Registration failed. Please try again.');
-  //     }
-  // }
-
-  const handleRegistration = () => {
-    setShowRegistrationModal(true);
-  };
-
-  // Show loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background flex flex-col">
         <Header />
         <div className="text-center h-[calc(100vh-80px)] flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-          <h1 className="font-audiowide text-2xl text-white">
-            Loading Event...
-          </h1>
+          <h1 className="font-audiowide text-2xl text-white">Loading Event...</h1>
         </div>
       </div>
     );
@@ -127,9 +95,7 @@ const EventDetailPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background flex flex-col">
         <Header />
         <div className="text-center h-[calc(100vh-80px)] flex flex-col items-center justify-center">
-          <h1 className="font-audiowide text-4xl text-white mb-4">
-            Event Not Found
-          </h1>
+          <h1 className="font-audiowide text-4xl text-white mb-4">Event Not Found</h1>
           <button
             onClick={() => router.push("/events")}
             className="cursor-pointer bg-primary text-white px-6 py-3 rounded-lg font-audiowide hover:bg-hover-primary transition-colors duration-300"
@@ -226,6 +192,22 @@ const EventDetailPage = () => {
         </div>
       </div>
 
+      {/* Description Section */}
+      {(event.description || event.fullDescription) && (
+        <div className="px-6 md:px-12 pb-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-background-soft border border-border rounded-2xl p-8">
+              <h3 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+                📝 About this event
+              </h3>
+              <p className="text-muted-text font-space leading-relaxed text-base whitespace-pre-line">
+                {event.description || event.fullDescription}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Event Details Section */}
       <div className="py-16 px-6 md:px-12 bg-background-soft/50">
         <div className="max-w-7xl mx-auto">
@@ -264,19 +246,11 @@ const EventDetailPage = () => {
                     className="flex items-center justify-between bg-background-soft rounded-lg p-3"
                   >
                     <span className="font-audiowide text-sm text-muted-text">
-                      {index === 0
-                        ? "1st Place"
-                        : index === 1
-                        ? "2nd Place"
-                        : "3rd Place"}
+                      {index === 0 ? "1st Place" : index === 1 ? "2nd Place" : "3rd Place"}
                     </span>
                     <span
                       className={`font-audiowide text-lg ${
-                        index === 0
-                          ? "text-primary"
-                          : index === 1
-                          ? "text-secondary"
-                          : "text-accent"
+                        index === 0 ? "text-primary" : index === 1 ? "text-secondary" : "text-accent"
                       }`}
                     >
                       {prize}
@@ -291,35 +265,140 @@ const EventDetailPage = () => {
               <h3 className="font-audiowide text-xl text-white mb-6 flex items-center gap-2">
                 📞 CONTACT
               </h3>
-              <div className="space-y-4">
-                <div>
-                  <p className="font-audiowide text-sm text-primary mb-1">
-                    Coordinator
-                  </p>
-                  <p className="text-white font-space">{event.contact.name}</p>
-                </div>
-                <div>
-                  <p className="font-audiowide text-sm text-secondary mb-1">
-                    Phone
-                  </p>
-                  <a
-                    href={`tel:${event.contact.phone}`}
-                    className="text-muted-text hover:text-white transition-colors duration-300 font-space"
-                  >
-                    {event.contact.phone}
-                  </a>
-                </div>
-                <div>
-                  <p className="font-audiowide text-sm text-accent mb-1">
-                    Email
-                  </p>
-                  <a
-                    href={`mailto:${event.contact.email}`}
-                    className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm"
-                  >
-                    {event.contact.email}
-                  </a>
-                </div>
+              <div className="space-y-6">
+                {/* Student Coordinators */}
+                {event.studentCoordinators && event.studentCoordinators.length > 0 && (
+                  <div>
+                    <p className="font-audiowide text-sm text-primary mb-3">
+                      Student Coordinators
+                    </p>
+                    <div className="space-y-4">
+                      {event.studentCoordinators.map((coordinator, index) => (
+                        <div
+                          key={index}
+                          className="bg-background-soft rounded-lg p-3 space-y-2"
+                        >
+                          <p className="text-white font-space font-semibold">
+                            {coordinator.name}
+                          </p>
+                          <div className="space-y-1">
+                            <a
+                              href={`tel:${coordinator.phone}`}
+                              className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                            >
+                              📱 {coordinator.phone}
+                            </a>
+                            {coordinator.email && (
+                              <a
+                                href={`mailto:${coordinator.email}`}
+                                className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                              >
+                                ✉️ {coordinator.email}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Faculty Coordinators */}
+                {event.facultyCoordinators && event.facultyCoordinators.length > 0 && (
+                  <div>
+                    <p className="font-audiowide text-sm text-secondary mb-3">
+                      Faculty Coordinators
+                    </p>
+                    <div className="space-y-4">
+                      {event.facultyCoordinators.map((coordinator, index) => (
+                        <div
+                          key={index}
+                          className="bg-background-soft rounded-lg p-3 space-y-2"
+                        >
+                          <p className="text-white font-space font-semibold">
+                            {coordinator.name}
+                          </p>
+                          <div className="space-y-1">
+                            <a
+                              href={`tel:${coordinator.phone}`}
+                              className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                            >
+                              📱 {coordinator.phone}
+                            </a>
+                            {coordinator.email && (
+                              <a
+                                href={`mailto:${coordinator.email}`}
+                                className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                              >
+                                ✉️ {coordinator.email}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fallback for old single faculty coordinator */}
+                {!event.facultyCoordinators && event.facultyCoordinator && event.facultyCoordinator.name && (
+                  <div>
+                    <p className="font-audiowide text-sm text-secondary mb-3">
+                      Faculty Coordinator
+                    </p>
+                    <div className="bg-background-soft rounded-lg p-3 space-y-2">
+                      <p className="text-white font-space font-semibold">
+                        {event.facultyCoordinator.name}
+                      </p>
+                      <div className="space-y-1">
+                        <a
+                          href={`tel:${event.facultyCoordinator.phone}`}
+                          className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                        >
+                          📱 {event.facultyCoordinator.phone}
+                        </a>
+                        {event.facultyCoordinator.email && (
+                          <a
+                            href={`mailto:${event.facultyCoordinator.email}`}
+                            className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                          >
+                            ✉️ {event.facultyCoordinator.email}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Fallback for old contact structure */}
+                {!event.studentCoordinators && event.contact && (
+                  <div>
+                    <p className="font-audiowide text-sm text-primary mb-3">
+                      Coordinator
+                    </p>
+                    <div className="bg-background-soft rounded-lg p-3 space-y-2">
+                      <p className="text-white font-space font-semibold">
+                        {event.contact.name}
+                      </p>
+                      <div className="space-y-1">
+                        <a
+                          href={`tel:${event.contact.phone}`}
+                          className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                        >
+                          📱 {event.contact.phone}
+                        </a>
+                        {event.contact.email && (
+                          <a
+                            href={`mailto:${event.contact.email}`}
+                            className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                          >
+                            ✉️ {event.contact.email}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -341,22 +420,11 @@ const EventDetailPage = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <button
-                  onClick={handleRegistration}
-                  disabled={isExpired}
-                  className={`cursor-pointer px-8 py-4 rounded-xl font-audiowide text-lg transition-all duration-300 ${
-                    isExpired
-                      ? "bg-background-soft border border-border text-muted-text"
-                      : "transform hover:scale-105 bg-gradient-to-r from-primary to-secondary text-white hover:from-hover-primary hover:to-primary shadow-lg hover:shadow-primary/30"
-                  }`}
-                >
-                  {isExpired
-                    ? "Registration Closed"
-                    : isRegistered
-                    ? "✓ REGISTERED"
-                    : "REGISTER NOW"}
-                </button>
-
+                {/* Registration button temporarily disabled */}
+                <div className="bg-primary/10 border border-primary/30 rounded-xl px-8 py-4 text-center">
+                  <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
+                  <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
+                </div>
                 <button
                   onClick={() => router.push("/events")}
                   className="cursor-pointer px-8 py-4 border border-border text-muted-text rounded-xl font-audiowide text-lg hover:border-primary hover:text-primary transition-all duration-300"
@@ -387,7 +455,6 @@ const EventDetailPage = () => {
           onClose={() => setShowRegistrationModal(false)}
           onRegistrationSuccess={() => {
             setIsRegistered(true);
-            // Optionally reflect local count increment
             setEvent((prev) =>
               prev
                 ? {

@@ -12,6 +12,7 @@ const SpecialEventBox = ({ event }) => {
     description,
     price,
     category,
+    department,
     type,
     maxTeamSize,
     mode,
@@ -41,9 +42,16 @@ const SpecialEventBox = ({ event }) => {
         <DollarSign className="w-4 h-4" />₹{price}
       </div>
 
-      {/* Category Badge */}
-      <div className="absolute top-4 left-4 z-20 bg-background/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-audiowide uppercase">
-        {category}
+      {/* Category & Department Badges */}
+      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+        <div className="bg-background/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-audiowide uppercase">
+          {category}
+        </div>
+        {department && (
+          <div className="bg-secondary/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-audiowide uppercase">
+            {department}
+          </div>
+        )}
       </div>
 
       {isExpired && (
