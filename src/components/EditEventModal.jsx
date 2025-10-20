@@ -256,16 +256,14 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                     }
                   />
                   <div
-                    className={`block w-14 h-8 rounded-full ${
-                      formData.requiresPass
+                    className={`block w-14 h-8 rounded-full ${formData.requiresPass
                         ? "bg-primary"
                         : "bg-background-soft border border-border"
-                    }`}
+                      }`}
                   ></div>
                   <div
-                    className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${
-                      formData.requiresPass ? "translate-x-6" : ""
-                    }`}
+                    className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${formData.requiresPass ? "translate-x-6" : ""
+                      }`}
                   ></div>
                 </div>
                 <div className="ml-3 text-white font-space text-sm">
@@ -406,7 +404,6 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                   />
                   <input
                     type="tel"
-                    required
                     value={coordinator.phone}
                     onChange={(e) => updateStudentCoordinator(index, "phone", e.target.value)}
                     className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
@@ -459,7 +456,6 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                   />
                   <input
                     type="tel"
-                    required
                     value={coordinator.phone}
                     onChange={(e) => updateFacultyCoordinator(index, "phone", e.target.value)}
                     className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
