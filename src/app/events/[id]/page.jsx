@@ -7,6 +7,16 @@ import Footer from "@/components/Footer";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import EventRegistrationModal from "@/components/EventRegistrationModal";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Trophy,
+  FileText,
+  Phone,
+  Mail,
+  ArrowLeft,
+} from "lucide-react";
 
 const EventDetailPage = () => {
   const params = useParams();
@@ -122,328 +132,276 @@ const EventDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background">
       <Header />
 
-      {/* Hero Section */}
-      <div className="relative pt-20 pb-12 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 mb-4">
-                <button
-                  onClick={() => router.push("/events")}
-                  className="text-muted-text hover:text-primary transition-colors duration-300 font-space"
-                >
-                  ← Back to Events
-                </button>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-audiowide ${
-                    event.category === "Technical"
-                      ? "bg-primary/20 text-primary"
-                      : "bg-secondary/20 text-secondary"
-                  }`}
-                >
+      <div className="py-20 px-6 md:px-12 max-w-6xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push("/events")}
+          className="flex items-center gap-2 text-muted-text hover:text-primary transition-colors mb-8 font-space"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Events
+        </button>
+
+        {/* Hero Section */}
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* Image */}
+          <div className="relative h-[400px] rounded-2xl overflow-hidden border border-border">
+            <Image
+              src={event.img || "/images/default-event.jpg"}
+              fill
+              style={{ objectFit: "cover" }}
+              alt={event.title}
+            />
+          </div>
+
+          {/* Event Info Card */}
+          <div className="bg-background-soft border border-border rounded-2xl p-8 space-y-6">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-audiowide uppercase">
                   {event.category}
                 </span>
               </div>
-
-              <h1 className="font-audiowide text-4xl md:text-6xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <h1 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
                 {event.title}
               </h1>
-
-              <p className="text-muted-text font-space text-lg leading-relaxed">
-                {event.fullDescription}
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-background-soft border border-border rounded-lg p-4">
-                  <h3 className="font-audiowide text-sm text-primary mb-2">
-                    📅 DATE
-                  </h3>
-                  <p className="text-white font-space">{event.date}</p>
-                </div>
-                <div className="bg-background-soft border border-border rounded-lg p-4">
-                  <h3 className="font-audiowide text-sm text-secondary mb-2">
-                    ⏰ TIME
-                  </h3>
-                  <p className="text-white font-space">{event.time}</p>
-                </div>
-                <div className="bg-background-soft border border-border rounded-lg p-4">
-                  <h3 className="font-audiowide text-sm text-accent mb-2">
-                    📍 VENUE
-                  </h3>
-                  <p className="text-white font-space text-sm">{event.venue}</p>
-                </div>
-              </div>
             </div>
 
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-3xl shadow-2xl">
-                <Image
-                  src={event.img}
-                  alt={event.title}
-                  width={600}
-                  height={400}
-                  className="w-full h-auto object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
-              </div>
-              <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-r from-primary to-secondary rounded-full animate-glow opacity-30"></div>
+            {/* Quick Info */}
+            <div className="space-y-3">
+              {event.venue && (
+                <div className="flex items-center gap-3 text-muted-text font-space">
+                  <MapPin className="w-5 h-5 text-primary" />
+                  <span>{event.venue}</span>
+                </div>
+              )}
+
+              {event.date && (
+                <div className="flex items-center gap-3 text-muted-text font-space">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <span>{event.date}</span>
+                </div>
+              )}
+
+              {event.time && (
+                <div className="flex items-center gap-3 text-muted-text font-space">
+                  <Clock className="w-5 h-5 text-primary" />
+                  <span>{event.time}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Register Button */}
+            <div className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center">
+              <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
+              <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Description Section */}
-      {(event.description || event.fullDescription) && (
-        <div className="px-6 md:px-12 pb-8">
-          <div className="max-w-7xl mx-auto">
+        {/* Description Section */}
+        {(event.description || event.fullDescription) && (
+          <div className="bg-background-soft border border-border rounded-2xl p-8 mb-8">
+            <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-primary" />
+              About this event
+            </h2>
+            <p className="text-muted-text font-space leading-relaxed whitespace-pre-line">
+              {event.description || event.fullDescription}
+            </p>
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Rules */}
+          {event.rules && event.rules.length > 0 && (
             <div className="bg-background-soft border border-border rounded-2xl p-8">
-              <h3 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
-                📝 About this event
-              </h3>
-              <p className="text-muted-text font-space leading-relaxed text-base whitespace-pre-line">
-                {event.description || event.fullDescription}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Event Details Section */}
-      <div className="py-16 px-6 md:px-12 bg-background-soft/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-12">
-            {/* Rules & Guidelines */}
-            <div className="bg-background border border-border rounded-2xl p-6">
-              <h3 className="font-audiowide text-xl text-white mb-6 flex items-center gap-2">
-                📋 RULES & GUIDELINES
-              </h3>
-              <div className="max-h-80 overflow-y-auto custom-scrollbar">
-                <ul className="space-y-3 pr-2">
-                  {event.rules.map((rule, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start gap-3 text-muted-text font-space"
-                    >
-                      <span className="text-primary text-sm mt-1 flex-shrink-0">
-                        •
-                      </span>
-                      <span className="text-sm">{rule}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Prizes */}
-            <div className="bg-background border border-border rounded-2xl p-6">
-              <h3 className="font-audiowide text-xl text-white mb-6 flex items-center gap-2">
-                🏆 PRIZES
-              </h3>
-              <div className="space-y-4">
-                {event.prizes.map((prize, index) => (
-                  <div
+              <h2 className="font-audiowide text-2xl text-white mb-6 flex items-center gap-2">
+                <FileText className="w-6 h-6 text-primary" />
+                Rules & Guidelines
+              </h2>
+              <ul className="space-y-3">
+                {event.rules.map((rule, index) => (
+                  <li
                     key={index}
-                    className="flex items-center justify-between bg-background-soft rounded-lg p-3"
+                    className="flex items-start gap-3 text-muted-text font-space"
                   >
-                    <span className="font-audiowide text-sm text-muted-text">
-                      {index === 0 ? "1st Place" : index === 1 ? "2nd Place" : "3rd Place"}
-                    </span>
-                    <span
-                      className={`font-audiowide text-lg ${
-                        index === 0 ? "text-primary" : index === 1 ? "text-secondary" : "text-accent"
-                      }`}
-                    >
-                      {prize}
-                    </span>
-                  </div>
+                    <span className="text-primary mt-1">•</span>
+                    <span>{rule}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
+          )}
 
-            {/* Contact Information */}
-            <div className="bg-background border border-border rounded-2xl p-6">
-              <h3 className="font-audiowide text-xl text-white mb-6 flex items-center gap-2">
-                📞 CONTACT
-              </h3>
-              <div className="space-y-6">
-                {/* Student Coordinators */}
-                {event.studentCoordinators && event.studentCoordinators.length > 0 && (
-                  <div>
-                    <p className="font-audiowide text-sm text-primary mb-3">
-                      Student Coordinators
-                    </p>
-                    <div className="space-y-4">
-                      {event.studentCoordinators.map((coordinator, index) => (
-                        <div
-                          key={index}
-                          className="bg-background-soft rounded-lg p-3 space-y-2"
-                        >
-                          <p className="text-white font-space font-semibold">
-                            {coordinator.name}
-                          </p>
-                          <div className="space-y-1">
+          {/* Prizes */}
+          {event.prizes && event.prizes.length > 0 && (
+            <div className="bg-background-soft border border-border rounded-2xl p-8">
+              <h2 className="font-audiowide text-2xl text-white mb-6 flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-primary" />
+                Prizes
+              </h2>
+              <ul className="space-y-3">
+                {event.prizes.map((prize, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start gap-3 text-muted-text font-space"
+                  >
+                    <span className="text-primary font-audiowide">
+                      {index + 1}.
+                    </span>
+                    <span>{prize}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Contact Info */}
+        {((event.studentCoordinators && event.studentCoordinators.length > 0) || 
+          (event.facultyCoordinator && event.facultyCoordinator.name) || 
+          (event.facultyCoordinators && event.facultyCoordinators.length > 0) ||
+          event.contact) && (
+          <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
+            <h2 className="font-audiowide text-2xl text-white mb-6">
+              Contact Information
+            </h2>
+            <div className="space-y-6">
+              {/* Student Coordinators */}
+              {event.studentCoordinators && event.studentCoordinators.length > 0 && (
+                <div>
+                  <p className="font-audiowide text-sm text-primary mb-3">
+                    Student Coordinators
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {event.studentCoordinators.map((coordinator, index) => (
+                      <div key={index} className="bg-background rounded-lg p-4 space-y-2">
+                        <p className="text-white font-space font-semibold">{coordinator.name}</p>
+                        <div className="space-y-1">
+                          <a
+                            href={`tel:${coordinator.phone}`}
+                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                          >
+                            <Phone className="w-4 h-4" />
+                            {coordinator.phone}
+                          </a>
+                          {coordinator.email && (
+                            <a
+                              href={`mailto:${coordinator.email}`}
+                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                            >
+                              <Mail className="w-4 h-4" />
+                              {coordinator.email}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Faculty Coordinators */}
+              {event.facultyCoordinators && event.facultyCoordinators.length > 0 && (
+                <div>
+                  <p className="font-audiowide text-sm text-secondary mb-3">
+                    Faculty Coordinators
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {event.facultyCoordinators.map((coordinator, index) => (
+                      <div key={index} className="bg-background rounded-lg p-4 space-y-2">
+                        <p className="text-white font-space font-semibold">{coordinator.name}</p>
+                        <div className="space-y-1">
+                          {coordinator.phone && (
                             <a
                               href={`tel:${coordinator.phone}`}
-                              className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
                             >
-                              📱 {coordinator.phone}
+                              <Phone className="w-4 h-4" />
+                              {coordinator.phone}
                             </a>
-                            {coordinator.email && (
-                              <a
-                                href={`mailto:${coordinator.email}`}
-                                className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
-                              >
-                                ✉️ {coordinator.email}
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Faculty Coordinators */}
-                {event.facultyCoordinators && event.facultyCoordinators.length > 0 && (
-                  <div>
-                    <p className="font-audiowide text-sm text-secondary mb-3">
-                      Faculty Coordinators
-                    </p>
-                    <div className="space-y-4">
-                      {event.facultyCoordinators.map((coordinator, index) => (
-                        <div
-                          key={index}
-                          className="bg-background-soft rounded-lg p-3 space-y-2"
-                        >
-                          <p className="text-white font-space font-semibold">
-                            {coordinator.name}
-                          </p>
-                          <div className="space-y-1">
+                          )}
+                          {coordinator.email && (
                             <a
-                              href={`tel:${coordinator.phone}`}
-                              className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                              href={`mailto:${coordinator.email}`}
+                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
                             >
-                              📱 {coordinator.phone}
+                              <Mail className="w-4 h-4" />
+                              {coordinator.email}
                             </a>
-                            {coordinator.email && (
-                              <a
-                                href={`mailto:${coordinator.email}`}
-                                className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
-                              >
-                                ✉️ {coordinator.email}
-                              </a>
-                            )}
-                          </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Fallback for old single faculty coordinator */}
-                {!event.facultyCoordinators && event.facultyCoordinator && event.facultyCoordinator.name && (
-                  <div>
-                    <p className="font-audiowide text-sm text-secondary mb-3">
-                      Faculty Coordinator
-                    </p>
-                    <div className="bg-background-soft rounded-lg p-3 space-y-2">
-                      <p className="text-white font-space font-semibold">
-                        {event.facultyCoordinator.name}
-                      </p>
-                      <div className="space-y-1">
+              {/* Fallback for old single faculty coordinator */}
+              {!event.facultyCoordinators && event.facultyCoordinator && event.facultyCoordinator.name && (
+                <div>
+                  <p className="font-audiowide text-sm text-secondary mb-3">
+                    Faculty Coordinator
+                  </p>
+                  <div className="bg-background rounded-lg p-4 space-y-2">
+                    <p className="text-white font-space font-semibold">{event.facultyCoordinator.name}</p>
+                    <div className="space-y-1">
+                      {event.facultyCoordinator.phone && (
                         <a
                           href={`tel:${event.facultyCoordinator.phone}`}
-                          className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                          className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
                         >
-                          📱 {event.facultyCoordinator.phone}
+                          <Phone className="w-4 h-4" />
+                          {event.facultyCoordinator.phone}
                         </a>
-                        {event.facultyCoordinator.email && (
-                          <a
-                            href={`mailto:${event.facultyCoordinator.email}`}
-                            className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
-                          >
-                            ✉️ {event.facultyCoordinator.email}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Fallback for old contact structure */}
-                {!event.studentCoordinators && event.contact && (
-                  <div>
-                    <p className="font-audiowide text-sm text-primary mb-3">
-                      Coordinator
-                    </p>
-                    <div className="bg-background-soft rounded-lg p-3 space-y-2">
-                      <p className="text-white font-space font-semibold">
-                        {event.contact.name}
-                      </p>
-                      <div className="space-y-1">
+                      )}
+                      {event.facultyCoordinator.email && (
                         <a
-                          href={`tel:${event.contact.phone}`}
-                          className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
+                          href={`mailto:${event.facultyCoordinator.email}`}
+                          className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
                         >
-                          📱 {event.contact.phone}
+                          <Mail className="w-4 h-4" />
+                          {event.facultyCoordinator.email}
                         </a>
-                        {event.contact.email && (
-                          <a
-                            href={`mailto:${event.contact.email}`}
-                            className="text-muted-text hover:text-white transition-colors duration-300 font-space text-sm block"
-                          >
-                            ✉️ {event.contact.email}
-                          </a>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Registration Section */}
-      <div className="py-16 px-6 md:px-12">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-8">
-            READY TO PARTICIPATE?
-          </h2>
-
-          <div className="bg-background-soft border border-border rounded-2xl p-8 md:p-12">
-            <div className="space-y-6">
-              <p className="text-muted-text font-space text-lg">
-                Join us for an amazing experience at {event.title}. Register now
-                to secure your spot!
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                {/* Registration button temporarily disabled */}
-                <div className="bg-primary/10 border border-primary/30 rounded-xl px-8 py-4 text-center">
-                  <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
-                  <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
                 </div>
-                <button
-                  onClick={() => router.push("/events")}
-                  className="cursor-pointer px-8 py-4 border border-border text-muted-text rounded-xl font-audiowide text-lg hover:border-primary hover:text-primary transition-all duration-300"
-                >
-                  VIEW ALL EVENTS
-                </button>
-              </div>
+              )}
 
-              {isRegistered && (
-                <div className="mt-6 p-4 bg-green-600/20 border border-green-600/50 rounded-lg">
-                  <p className="text-green-400 font-space">
-                    🎉 Registration successful! Check your email for
-                    confirmation details.
+              {/* Fallback for old contact structure */}
+              {!event.studentCoordinators && event.contact && (
+                <div>
+                  <p className="font-audiowide text-sm text-primary mb-3">
+                    Coordinator
                   </p>
+                  <div className="bg-background rounded-lg p-4 space-y-2">
+                    <p className="text-white font-space font-semibold">{event.contact.name}</p>
+                    <div className="space-y-1">
+                      <a
+                        href={`tel:${event.contact.phone}`}
+                        className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                      >
+                        <Phone className="w-4 h-4" />
+                        {event.contact.phone}
+                      </a>
+                      {event.contact.email && (
+                        <a
+                          href={`mailto:${event.contact.email}`}
+                          className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                        >
+                          <Mail className="w-4 h-4" />
+                          {event.contact.email}
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Registration Modal */}

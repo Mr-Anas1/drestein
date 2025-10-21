@@ -323,8 +323,15 @@ const SpecialEventDetailPage = () => {
                             href={`mailto:${coordinator.email}`}
                             className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
                           >
-                            <Mail className="w-4 h-4" />
-                            {coordinator.email}
+                            {coordinator.email && (
+                            <a
+                              href={`mailto:${coordinator.email}`}
+                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                            >
+                              <Mail className="w-4 h-4" />
+                              {coordinator.email}
+                            </a>
+                          )}
                           </a>
                         </div>
                       </div>

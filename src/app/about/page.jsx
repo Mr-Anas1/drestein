@@ -17,18 +17,7 @@ const About = () => {
             department: "Information Technology",
             email: "priya.sharma@student.saveetha.ac.in"
         },
-        // {
-        //     name: "Arjun Patel",
-        //     role: "Technical Coordinator",
-        //     department: "Electronics & Communication",
-        //     email: "arjun.patel@student.saveetha.ac.in"
-        // },
-        // {
-        //     name: "Sneha Reddy",
-        //     role: "Cultural Coordinator",
-        //     department: "Computer Science & Engineering",
-        //     email: "sneha.reddy@student.saveetha.ac.in"
-        // }
+
     ]
 
     return (

@@ -39,7 +39,7 @@ const SpecialEventBox = ({ event }) => {
 
       {/* Price Badge */}
       <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-primary to-secondary text-white px-3 py-1 rounded-full text-sm font-audiowide flex items-center gap-1">
-        <DollarSign className="w-4 h-4" />₹{price}
+₹{price}
       </div>
 
       {/* Category & Department Badges */}

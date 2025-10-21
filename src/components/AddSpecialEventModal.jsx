@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import ImageUpload from "./ImageUpload";
 
 const AddSpecialEventModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -357,19 +358,11 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-white font-audiowide text-sm mb-2">
-              Image URL
-            </label>
-            <input
-              type="text"
-              name="img"
-              value={formData.img}
-              onChange={handleChange}
-              placeholder="https://..."
-              className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-            />
-          </div>
+          <ImageUpload
+            onImageUpload={(url) => setFormData((prev) => ({ ...prev, img: url }))}
+            currentImage={formData.img}
+            disabled={loading}
+          />
 
           {/* Rules */}
           <div>

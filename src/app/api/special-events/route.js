@@ -112,6 +112,7 @@ export async function POST(request) {
       description,
       price,
       category,
+      department,
       type,
       maxTeamSize,
       mode,
@@ -148,6 +149,7 @@ export async function POST(request) {
       description,
       price: parseFloat(price),
       category, // competition, workshop, event
+      department: department || "",
       type: type || "individual", // individual, team
       maxTeamSize: maxTeamSize ? parseInt(maxTeamSize) : null,
       mode: mode || "offline", // online, offline, hybrid
