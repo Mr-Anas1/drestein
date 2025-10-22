@@ -7,6 +7,7 @@ import CursorEffect from "@/components/CursorEffect";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProfileGuard from "@/components/ProfileGuard";
 import PageLoader from "@/components/PageLoader";
+import { Suspense } from "react";
 
 const audiowide = Audiowide({
   weight: "400",
@@ -33,7 +34,9 @@ export default function RootLayout({ children }) {
       <body>
         <AuthProvider>
           <ProfileGuard>
-            <PageLoader />
+            <Suspense fallback={null}>
+              <PageLoader />
+            </Suspense>
             <SmoothFollower />
             <AnimatedBackground />
             <FloatingShapes />
