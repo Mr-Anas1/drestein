@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Calendar } from "lucide-react";
 import EventRegistrationModal from "./EventRegistrationModal";
 
 const EventBox = ({ img, title, description, link, id, event }) => {
@@ -55,6 +56,19 @@ const EventBox = ({ img, title, description, link, id, event }) => {
           <p className="font-space text-sm md:text-base text-muted-text leading-relaxed line-clamp-3 group-hover:text-white transition-colors duration-300">
             {description}
           </p>
+          
+          {/* Date Info */}
+          {event?.isMultiDay && event?.startDate && event?.endDate ? (
+            <div className="flex items-center gap-1 text-xs text-muted-text bg-background/50 px-2 py-1 rounded w-fit">
+              <Calendar className="w-3 h-3" />
+              {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </div>
+          ) : event?.date ? (
+            <div className="flex items-center gap-1 text-xs text-muted-text bg-background/50 px-2 py-1 rounded w-fit">
+              <Calendar className="w-3 h-3" />
+              {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </div>
+          ) : null}
         </div>
 
         {/* Action Buttons */}

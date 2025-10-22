@@ -144,6 +144,24 @@ export async function POST(request) {
       }
     }
 
+    // Normalize startDate and endDate for multi-day events
+    let normalizedStartDate = null;
+    if (data.startDate) {
+      const raw = String(data.startDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        normalizedStartDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+    let normalizedEndDate = null;
+    if (data.endDate) {
+      const raw = String(data.endDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        normalizedEndDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+
     const docRef = await db.collection("specialEvents").add({
       title,
       description,
@@ -157,10 +175,15 @@ export async function POST(request) {
       venue: venue || "",
       date: date || "",
       time: time || "",
+      isMultiDay: data.isMultiDay || false,
+      startDate: normalizedStartDate,
+      endDate: normalizedEndDate,
       rules: rules || [],
       prizes: prizes || [],
       contactEmail: contactEmail || "",
       contactPhone: contactPhone || "",
+      studentCoordinators: data.studentCoordinators || [],
+      facultyCoordinators: data.facultyCoordinators || [],
       expiryDate: normalizedExpiry,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
@@ -207,6 +230,21 @@ export async function PUT(request) {
       const d = new Date(raw);
       if (!isNaN(d.getTime())) {
         data.expiryDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+    // Normalize startDate and endDate for multi-day events
+    if (data.startDate) {
+      const raw = String(data.startDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        data.startDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+    if (data.endDate) {
+      const raw = String(data.endDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        data.endDate = raw.length <= 10 ? raw : d.toISOString();
       }
     }
     const db = getAdminDB();

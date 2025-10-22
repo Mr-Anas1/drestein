@@ -65,38 +65,40 @@ export async function POST(request) {
 
     const db = getAdminDB();
 
-    // Check if event is expired before adding to cart
-    try {
-      const eventSnap = await db.collection("specialEvents").doc(eventId).get();
-      if (!eventSnap.exists) {
-        return NextResponse.json(
-          { error: "Special event not found" },
-          { status: 404 }
-        );
-      }
-      const ev = eventSnap.data() || {};
-      const expiryRaw = ev.expiryDate;
-      if (expiryRaw) {
-        const d = new Date(expiryRaw);
-        if (!isNaN(d.getTime())) {
-          const now = new Date();
-          const expiryEndOfDay = new Date(d);
-          if (
-            String(expiryRaw).length <= 10 &&
-            /\d{4}-\d{2}-\d{2}/.test(String(expiryRaw))
-          ) {
-            expiryEndOfDay.setHours(23, 59, 59, 999);
-          }
-          if (now > expiryEndOfDay) {
-            return NextResponse.json(
-              { error: "Registration closed: Event has expired." },
-              { status: 403 }
-            );
+    // Check if event is expired before adding to cart (skip for general pass)
+    if (eventId !== 'general-pass') {
+      try {
+        const eventSnap = await db.collection("specialEvents").doc(eventId).get();
+        if (!eventSnap.exists) {
+          return NextResponse.json(
+            { error: "Special event not found" },
+            { status: 404 }
+          );
+        }
+        const ev = eventSnap.data() || {};
+        const expiryRaw = ev.expiryDate;
+        if (expiryRaw) {
+          const d = new Date(expiryRaw);
+          if (!isNaN(d.getTime())) {
+            const now = new Date();
+            const expiryEndOfDay = new Date(d);
+            if (
+              String(expiryRaw).length <= 10 &&
+              /\d{4}-\d{2}-\d{2}/.test(String(expiryRaw))
+            ) {
+              expiryEndOfDay.setHours(23, 59, 59, 999);
+            }
+            if (now > expiryEndOfDay) {
+              return NextResponse.json(
+                { error: "Registration closed: Event has expired." },
+                { status: 403 }
+              );
+            }
           }
         }
+      } catch (e) {
+        // On failure to check, proceed (do not block)
       }
-    } catch (e) {
-      // On failure to check, proceed (do not block)
     }
 
     // Check if user already has this event in cart

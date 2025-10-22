@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, Trash2, Eye, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Users, ArrowLeft } from 'lucide-react';
 import AddSpecialEventModal from '@/components/AddSpecialEventModal';
 import EditSpecialEventModal from '@/components/EditSpecialEventModal';
 import SpecialEventParticipantsModal from '@/components/SpecialEventParticipantsModal';
@@ -88,6 +88,15 @@ const AdminSpecialEventsPage = () => {
       <Header />
 
       <div className="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push('/admin')}
+          className="mb-6 flex items-center gap-2 text-muted-text hover:text-white transition-colors duration-300 font-space"
+        >
+          <ArrowLeft size={20} />
+          Back to Admin Dashboard
+        </button>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>

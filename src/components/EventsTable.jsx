@@ -75,8 +75,19 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
                                     </div>
                                 </td>
                                 <td className="p-4">
-                                    <p className="text-white font-space text-sm">{event.date}</p>
-                                    <p className="text-muted-text font-space text-xs">{event.time}</p>
+                                    {event.isMultiDay && event.startDate && event.endDate ? (
+                                        <>
+                                            <p className="text-white font-space text-sm">
+                                                {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </p>
+                                            <p className="text-muted-text font-space text-xs">{event.time || 'Multi-day'}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-white font-space text-sm">{event.date}</p>
+                                            <p className="text-muted-text font-space text-xs">{event.time}</p>
+                                        </>
+                                    )}
                                 </td>
                                 <td className="p-4">
                                     <p className="text-white font-space text-sm">

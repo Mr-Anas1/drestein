@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { Ticket, Users, DollarSign, CheckCircle, XCircle, Clock, Eye, Filter } from 'lucide-react';
+import { Ticket, Users, DollarSign, CheckCircle, XCircle, Clock, Eye, Filter, ArrowLeft } from 'lucide-react';
 import { CUSTOM_PASS_EVENTS } from '@/constants/customPassEvents';
 
 const AdminPassesPage = () => {
@@ -88,6 +88,15 @@ const AdminPassesPage = () => {
       <Header />
 
       <div className="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push('/admin')}
+          className="mb-6 flex items-center gap-2 text-muted-text hover:text-white transition-colors duration-300 font-space"
+        >
+          <ArrowLeft size={20} />
+          Back to Admin Dashboard
+        </button>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="font-audiowide text-4xl md:text-6xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">

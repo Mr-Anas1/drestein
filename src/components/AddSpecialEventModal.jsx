@@ -15,7 +15,10 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
     mode: "offline",
     img: "",
     venue: "",
+    isMultiDay: false,
     date: "",
+    startDate: "",
+    endDate: "",
     time: "",
     expiryDate: "",
     rules: [""],
@@ -317,19 +320,67 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-white font-audiowide text-sm mb-2">
-                Date
-              </label>
+          {/* Multi-day Event Toggle */}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center cursor-pointer">
               <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                type="checkbox"
+                checked={formData.isMultiDay}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, isMultiDay: e.target.checked }))
+                }
+                className="w-4 h-4 text-primary bg-background-soft border-border rounded focus:ring-primary"
               />
-            </div>
+              <span className="ml-2 text-white font-space text-sm">
+                Multi-day Event
+              </span>
+            </label>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {!formData.isMultiDay ? (
+              <div>
+                <label className="block text-white font-audiowide text-sm mb-2">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-white font-audiowide text-sm mb-2">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    required
+                    className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white font-audiowide text-sm mb-2">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    required
+                    className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">

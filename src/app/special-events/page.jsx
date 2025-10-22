@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import React, { useEffect, useState } from 'react';
 import Footer from '@/components/Footer';
 import SpecialEventBox from '@/components/SpecialEventBox';
+import CustomDropdown from '@/components/CustomDropdown';
 
 const SpecialEventsPage = () => {
   const [specialEvents, setSpecialEvents] = useState([]);
@@ -100,28 +101,12 @@ const SpecialEventsPage = () => {
           </div>
 
           {/* Department Dropdown */}
-          <div className="relative min-w-[280px]">
-            {/* <label className="block text-white font-audiowide text-xs mb-2 text-center">
-              Filter by Department
-            </label> */}
-            <select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="w-full bg-background-soft border-2 border-border text-white px-4 py-3 rounded-xl font-space text-sm focus:outline-none focus:border-secondary hover:border-secondary transition-all duration-300 cursor-pointer appearance-none"
-              style={{ paddingRight: '2.5rem' }}
-            >
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id} className="bg-background text-white py-2">
-                  {dept.short} - {dept.name}
-                </option>
-              ))}
-            </select>
-            <div className="absolute right-4 top-[calc(50%+0.5rem)] -translate-y-1/2 pointer-events-none text-secondary">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
+          <CustomDropdown
+            value={departmentFilter}
+            onChange={setDepartmentFilter}
+            options={departments}
+            placeholder="Select Department"
+          />
         </div>
 
         {loading && (

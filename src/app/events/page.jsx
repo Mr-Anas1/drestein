@@ -3,6 +3,7 @@ import Header from '@/components/Header'
 import React, { useEffect, useState } from 'react'
 import Footer from '@/components/Footer'
 import EventBox from '@/components/EventBox'
+import CustomDropdown from '@/components/CustomDropdown'
 import { DEPARTMENTS } from '@/constants/departments'
 
 const page = () => {
@@ -61,29 +62,15 @@ const page = () => {
 
                 {/* Department Filter Dropdown */}
                 <div className="flex justify-center mb-12">
-                    <div className="relative min-w-[320px] max-w-md">
-                        {/* <label className="block text-white font-audiowide text-xs mb-2 text-center">
-                            Filter by Department
-                        </label> */}
-                        <select
-                            value={selectedDepartment}
-                            onChange={(e) => setSelectedDepartment(e.target.value)}
-                            className="w-full bg-background-soft border-2 border-border text-white px-4 py-3 rounded-xl font-space text-sm focus:outline-none focus:border-primary hover:border-primary transition-all duration-300 cursor-pointer appearance-none"
-                            style={{ paddingRight: '2.5rem' }}
-                        >
-                            <option value="all" className="bg-background text-white py-2">All Departments</option>
-                            {DEPARTMENTS.map((dept) => (
-                                <option key={dept.id} value={dept.id} className="bg-background text-white py-2">
-                                    {dept.short} - {dept.name}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="absolute right-4 top-[calc(50%+0.5rem)] -translate-y-1/2 pointer-events-none text-primary">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
-                    </div>
+                    <CustomDropdown
+                        value={selectedDepartment}
+                        onChange={setSelectedDepartment}
+                        options={[
+                            { id: 'all', name: 'All Departments', short: 'ALL' },
+                            ...DEPARTMENTS
+                        ]}
+                        placeholder="Select Department"
+                    />
                 </div>
 
                 {loading && (

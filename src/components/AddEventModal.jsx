@@ -14,7 +14,10 @@ export default function AddEventModal({ onClose, onEventAdded }) {
     fullDescription: "",
     img: "",
     requiresPass: true, // Events require pass by default
+    isMultiDay: false,
     date: "",
+    startDate: "",
+    endDate: "",
     time: "",
     venue: "",
     expiryDate: "",
@@ -227,21 +230,71 @@ export default function AddEventModal({ onClose, onEventAdded }) {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-audiowide text-muted-text mb-2">
-                Date
-              </label>
+          {/* Multi-day Event Toggle */}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center cursor-pointer">
               <input
-                type="date"
-                required
-                value={formData.date}
+                type="checkbox"
+                checked={formData.isMultiDay}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, date: e.target.value }))
+                  setFormData((prev) => ({ ...prev, isMultiDay: e.target.checked }))
                 }
-                className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                className="w-4 h-4 text-primary bg-background-soft border-border rounded focus:ring-primary"
               />
-            </div>
+              <span className="ml-2 text-white font-space text-sm">
+                Multi-day Event
+              </span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {!formData.isMultiDay ? (
+              <div>
+                <label className="block text-sm font-audiowide text-muted-text mb-2">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, date: e.target.value }))
+                  }
+                  className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-audiowide text-muted-text mb-2">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.startDate}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, startDate: e.target.value }))
+                    }
+                    className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-audiowide text-muted-text mb-2">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.endDate}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, endDate: e.target.value }))
+                    }
+                    className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </>
+            )}
 
             <div className="flex items-end">
               <label className="flex items-center cursor-pointer">

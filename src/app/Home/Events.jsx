@@ -1,42 +1,32 @@
 "use client";
 import EventBox from "@/components/EventBox";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Reveal from "@/components/Reveal";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Events = () => {
-  const eventsData = [
-    {
-      img: "/circle.png",
-      title: "Event Catch",
-      description:
-        "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quis dolorum a, ducimus esse pariatur assumenda cum eveniet unde.",
-      link: "/",
-    },
-    {
-      img: "/cube.png",
-      title: "Cube Quest",
-      description:
-        "Embark on an adventure to solve the mysteries of the Cube Kingdom and conquer its geometric challenges.",
-      link: "/cube-quest",
-    },
-    {
-      img: "/square.png",
-      title: "Square Fest",
-      description:
-        "Celebrate symmetry and style at the annual Square Fest, filled with art, games, and food from all corners.",
-      link: "/square-fest",
-    },
-    {
-      img: "/circle.png",
-      title: "Event Catch",
-      description:
-        "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quis dolorum a, ducimus esse pariatur assumenda cum eveniet unde.",
-      link: "/",
-    },
-  ];
-
   const router = useRouter();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/events');
+        const data = await response.json();
+        // Get the first 4 events to display on home page
+        setEvents(data.slice(0, 4));
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   return (
     <div className="mt-24 md:mt-38">
@@ -46,16 +36,28 @@ const Events = () => {
         </h1>
       </Reveal>
       <div className="flex md:flex-row flex-col mx-12 mt-10  justify-center items-center gap-12">
-        {eventsData.map((event, index) => (
-          <Reveal effect="fade-up" delay={index * 100} key={index}>
-            <EventBox
-              img={event.img}
-              title={event.title}
-              description={event.description}
-              link={event.link}
-            />
-          </Reveal>
-        ))}
+        {loading ? (
+          <div className="py-12">
+            <LoadingSpinner size="lg" text="Loading events..." />
+          </div>
+        ) : events.length > 0 ? (
+          events.map((event, index) => (
+            <Reveal effect="fade-up" delay={index * 100} key={event.id || index}>
+              <EventBox
+                img={event.img}
+                title={event.title}
+                description={event.description}
+                link={`/events/${event.id}`}
+                id={event.id}
+                event={event}
+              />
+            </Reveal>
+          ))
+        ) : (
+          <div className="py-12">
+            <p className="text-muted-text font-space text-center">No events available at the moment</p>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-center items-center my-12">

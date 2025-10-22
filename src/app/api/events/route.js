@@ -52,6 +52,22 @@ export async function POST(request) {
       }
     }
 
+    // Normalize startDate and endDate for multi-day events
+    if (eventData.startDate) {
+      const raw = String(eventData.startDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        eventData.startDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+    if (eventData.endDate) {
+      const raw = String(eventData.endDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        eventData.endDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+
     // Validate required fields including department
     if (!eventData.department) {
       return NextResponse.json(
@@ -87,6 +103,21 @@ export async function PUT(request) {
       const d = new Date(raw);
       if (!isNaN(d.getTime())) {
         eventData.expiryDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+    // Normalize startDate and endDate for multi-day events
+    if (eventData.startDate) {
+      const raw = String(eventData.startDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        eventData.startDate = raw.length <= 10 ? raw : d.toISOString();
+      }
+    }
+    if (eventData.endDate) {
+      const raw = String(eventData.endDate);
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        eventData.endDate = raw.length <= 10 ? raw : d.toISOString();
       }
     }
 
