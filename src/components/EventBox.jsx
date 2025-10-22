@@ -28,10 +28,10 @@ const EventBox = ({ img, title, description, link, id, event }) => {
       <div className="absolute -top-2 -right-2 w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
 
       {/* Image Container */}
-      <div className="relative w-full h-48 mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-background to-background-soft">
+      <div className="relative w-full h-48 mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-background to-background-soft flex-shrink-0">
         <div className="absolute inset-2">
           <Image
-            src={img}
+            src={img || "/images/default-event.jpg"}
             fill
             style={{ objectFit: "cover" }}
             className="rounded-xl group-hover:scale-110 transition-transform duration-500"
@@ -48,9 +48,12 @@ const EventBox = ({ img, title, description, link, id, event }) => {
       </div>
 
       {/* Content Container */}
-      <div className="relative z-10 flex flex-col flex-1 justify-between">
-        <div className="space-y-4">
-          <h2 className="font-audiowide text-xl md:text-2xl bg-gradient-to-r from-white to-muted-text bg-clip-text text-transparent group-hover:from-primary group-hover:to-secondary transition-all duration-300">
+      <div className="relative z-10 flex flex-col flex-1 justify-between min-h-0">
+        <div className="space-y-3 flex-shrink overflow-hidden">
+          <h2 
+            className="font-audiowide text-xl md:text-2xl bg-gradient-to-r from-white to-muted-text bg-clip-text text-transparent group-hover:from-primary group-hover:to-secondary transition-all duration-300 line-clamp-2"
+            title={title}
+          >
             {title}
           </h2>
           <p className="font-space text-sm md:text-base text-muted-text leading-relaxed line-clamp-3 group-hover:text-white transition-colors duration-300">
@@ -72,7 +75,7 @@ const EventBox = ({ img, title, description, link, id, event }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 space-y-2">
+        <div className="mt-4 flex-shrink-0">
           <button
             className="w-full bg-background-soft border border-border text-white font-audiowide text-sm py-2 px-4 rounded-xl hover:bg-background transition-all duration-300"
             onClick={() => router.push(`/events/${id}`)}
