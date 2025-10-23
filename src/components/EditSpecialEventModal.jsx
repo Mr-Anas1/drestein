@@ -20,6 +20,7 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
     startDate: event.startDate || "",
     endDate: event.endDate || "",
     time: event.time || "",
+    endTime: event.endTime || "",
     expiryDate: event.expiryDate || "",
     rules: event.rules || [""],
     prizes: event.prizes || [""],
@@ -381,7 +382,7 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
 
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">
-                Time
+                Start Time
               </label>
               <input
                 type="time"
@@ -393,17 +394,32 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-white font-audiowide text-sm mb-2">
-              Registration Expiry
-            </label>
-            <input
-              type="date"
-              name="expiryDate"
-              value={formData.expiryDate}
-              onChange={handleChange}
-              className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-            />
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                End Time
+              </label>
+              <input
+                type="time"
+                name="endTime"
+                value={formData.endTime}
+                onChange={handleChange}
+                className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-white font-audiowide text-sm mb-2">
+                Registration Expiry
+              </label>
+              <input
+                type="date"
+                name="expiryDate"
+                value={formData.expiryDate}
+                onChange={handleChange}
+                className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+              />
+            </div>
           </div>
 
           <ImageUpload
@@ -486,7 +502,6 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
                 <div className="grid md:grid-cols-3 gap-3 mb-2">
                   <input
                     type="text"
-                    required
                     value={coordinator.name}
                     onChange={(e) => updateStudentCoordinator(index, "name", e.target.value)}
                     className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
@@ -537,7 +552,6 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
                 <div className="grid md:grid-cols-3 gap-3 mb-2">
                   <input
                     type="text"
-                    required
                     value={coordinator.name}
                     onChange={(e) => updateFacultyCoordinator(index, "name", e.target.value)}
                     className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"

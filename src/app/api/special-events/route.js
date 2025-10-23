@@ -179,6 +179,7 @@ export async function POST(request) {
       venue: venue || "",
       date: date || "",
       time: time || "",
+      endTime: data.endTime || "",
       isMultiDay: data.isMultiDay || false,
       startDate: normalizedStartDate,
       endDate: normalizedEndDate,

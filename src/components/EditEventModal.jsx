@@ -19,6 +19,7 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
     startDate: event.startDate || "",
     endDate: event.endDate || "",
     time: event.time || "",
+    endTime: event.endTime || "",
     venue: event.venue || "",
     expiryDate: event.expiryDate || "",
     category: event.category || "Technical",
@@ -327,7 +328,7 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
 
             <div>
               <label className="block text-sm font-audiowide text-muted-text mb-2">
-                Time
+                Start Time
               </label>
               <input
                 type="time"
@@ -335,6 +336,20 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                 value={formData.time}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, time: e.target.value }))
+                }
+                className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-audiowide text-muted-text mb-2">
+                End Time
+              </label>
+              <input
+                type="time"
+                value={formData.endTime}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, endTime: e.target.value }))
                 }
                 className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
               />
@@ -449,7 +464,6 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
                   <input
                     type="text"
-                    required
                     value={coordinator.name}
                     onChange={(e) => updateStudentCoordinator(index, "name", e.target.value)}
                     className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
@@ -501,7 +515,6 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
                   <input
                     type="text"
-                    required
                     value={coordinator.name}
                     onChange={(e) => updateFacultyCoordinator(index, "name", e.target.value)}
                     className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"

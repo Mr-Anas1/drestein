@@ -307,13 +307,15 @@ const EventDetailPage = () => {
                       <div key={index} className="bg-background rounded-lg p-4 space-y-2">
                         <p className="text-white font-space font-semibold">{coordinator.name}</p>
                         <div className="space-y-1">
-                          <a
-                            href={`tel:${coordinator.phone}`}
-                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                          >
-                            <Phone className="w-4 h-4" />
-                            {coordinator.phone}
-                          </a>
+                          {coordinator.phone && (
+                            <a
+                              href={`tel:${coordinator.phone}`}
+                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                            >
+                              <Phone className="w-4 h-4" />
+                              {coordinator.phone}
+                            </a>
+                          )}
                           {coordinator.email && (
                             <a
                               href={`mailto:${coordinator.email}`}

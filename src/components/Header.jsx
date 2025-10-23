@@ -54,54 +54,54 @@ const Header = () => {
   }, [menuDisplay]);
 
   return (
-    <div className="flex justify-between items-center px-4 md:px-12 h-20 border-b border-gray-600">
-      <div className="flex items-center gap-2 md:gap-2">
+    <div className="flex justify-between items-center px-4 md:px-6 lg:px-12 h-20 border-b border-gray-600">
+      <div className="flex items-center gap-2">
         <h1
           className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer"
           onClick={() => router.push("/")}
         >
-          <div className="w-[200px] md:w-[250px]">
+          <div className="w-[160px] sm:w-[180px] md:w-[200px] lg:w-[250px]">
             <img src="/new-logo.png" alt="saveetha-logo" />
           </div>
         </h1>
         
         {/* Excellence Logo */}
-        <div className="w-[60px] md:w-[70px] flex-shrink-0">
+        <div className="w-[50px] sm:w-[55px] md:w-[60px] lg:w-[70px] flex-shrink-0">
           <img src="/excellence.png" alt="excellence-logo" className="w-full h-auto object-contain" />
         </div>
       </div>
 
-      <div className="flex items-center ">
-        <div className="hidden items-center gap-4 md:flex">
+      <div className="flex items-center">
+        <div className="hidden items-center gap-3 xl:gap-4 xl:flex">
           <a
             onClick={() => router.push("/")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
           >
             Home
           </a>
           <a
             onClick={() => router.push("/departments")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
           >
             Departments
           </a>
           <a
             onClick={() => router.push("/events")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
           >
             Events
           </a>
 
           <a
             onClick={() => router.push("/special-events")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
           >
             Special Events
           </a>
 
           <a
             onClick={() => router.push("/about")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-4 cursor-pointer"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
           >
             About
           </a>
@@ -125,7 +125,7 @@ const Header = () => {
           {/* Buy Pass Button */}
           <button
             onClick={() => router.push("/buy-pass")}
-            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide hover:from-hover-primary hover:to-primary transition duration-300s px-4 py-2 rounded-lg flex items-center gap-2"
+            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide hover:from-hover-primary hover:to-primary transition duration-300s px-4 py-2 rounded-lg flex items-center gap-2 text-sm xl:text-base"
           >
             <Ticket size={18} />
             Buy Pass
@@ -134,7 +134,7 @@ const Header = () => {
           {!isAuthenticated ? (
             <button
               onClick={loginWithGoogleStudent}
-              className="bg-primary text-white font-audiowide hover:bg-hover-primary transition duration-300s px-6 py-2 rounded-lg"
+              className="bg-primary text-white font-audiowide hover:bg-hover-primary transition duration-300s px-6 py-2 rounded-lg text-sm xl:text-base"
             >
               Student Login
             </button>
@@ -186,8 +186,25 @@ const Header = () => {
             </div>
           )}
         </div>
-        {/* menu */}
-        <div className="md:hidden flex">
+        {/* Mobile/Tablet Cart & Menu */}
+        <div className="xl:hidden flex items-center gap-3">
+          {/* Mobile Cart Icon */}
+          {isAuthenticated && (
+            <button
+              onClick={() => router.push("/buy-pass")}
+              className="relative text-white hover:text-primary transition duration-300s p-2"
+              title="View Cart"
+            >
+              <ShoppingCart size={28} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-audiowide rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          )}
+          
+          {/* Hamburger Menu */}
           {menuDisplay ? (
             <X
               className="text-white cursor-pointer"

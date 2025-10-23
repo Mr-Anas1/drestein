@@ -2,6 +2,7 @@ import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { DEPARTMENTS } from '@/constants/departments'
 import { ArrowRight } from 'lucide-react'
 
@@ -19,27 +20,38 @@ const page = () => {
                             key={dept.id}
                             className='group rounded-2xl p-[1px] bg-gradient-to-r from-primary/30 to-secondary/30 hover:from-primary/60 hover:to-secondary/60 transition-all duration-300 hover:-translate-y-0.5'
                         >
-                            <div className='rounded-2xl flex flex-col justify-between bg-background-soft/80 border border-border/60 backdrop-blur-sm p-6 h-full'>
-                                <div className='flex items-start gap-4'>
-                                    <div className='h-12 w-12 min-h-[48px] min-w-[48px] rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-sm font-audiowide text-white border border-border/60'>
+                            <div className='rounded-2xl flex flex-col justify-between bg-background-soft/80 border border-border/60 backdrop-blur-sm overflow-hidden h-full'>
+                                {/* Department Image */}
+                                <div className='relative w-full h-48 overflow-hidden'>
+                                    <Image
+                                        src={dept.image}
+                                        alt={dept.name}
+                                        fill
+                                        className='object-cover group-hover:scale-110 transition-transform duration-300'
+                                    />
+                                    <div className='absolute inset-0 bg-gradient-to-t from-background-soft via-background-soft/50 to-transparent'></div>
+                                    <div className='absolute bottom-3 left-3 h-10 w-10 rounded-lg bg-gradient-to-br from-primary/80 to-secondary/80 flex items-center justify-center text-xs font-audiowide text-white border border-white/20 backdrop-blur-sm'>
                                         {dept.code}
                                     </div>
-                                    <div className='flex-1'>
-                                        <h2 className='font-audiowide text-xl text-white group-hover:text-primary transition-colors duration-300'>
+                                </div>
+                                
+                                <div className='p-6 flex flex-col justify-between flex-1'>
+                                    <div>
+                                        <h2 className='font-audiowide text-lg text-white group-hover:text-primary transition-colors duration-300 mb-2'>
                                             {dept.name}
                                         </h2>
-                                        <p className='text-xs text-muted-text mt-1'>
+                                        <p className='text-xs text-muted-text'>
                                             Department Code: <span className='text-white/80'>{dept.code}</span>
                                         </p>
                                     </div>
-                                </div>
-                                <div className='mt-6 flex justify-end'>
-                                    <Link
-                                        href={`/events#dept-${dept.id}`}
-                                        className='inline-flex items-center gap-2 rounded-lg px-4 py-2 border border-primary/40 text-white font-audiowide bg-primary/10 hover:bg-primary hover:text-white hover:border-primary transition-colors duration-300'
-                                    >
-                                        View Events <ArrowRight size={16} />
-                                    </Link>
+                                    <div className='mt-4 flex justify-end'>
+                                        <Link
+                                            href={`/departments/${dept.id.toLowerCase()}`}
+                                            className='inline-flex items-center gap-2 rounded-lg px-4 py-2 border border-primary/40 text-white font-audiowide text-sm bg-primary/10 hover:bg-primary hover:text-white hover:border-primary transition-colors duration-300'
+                                        >
+                                            View Events <ArrowRight size={16} />
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
                         </div>
