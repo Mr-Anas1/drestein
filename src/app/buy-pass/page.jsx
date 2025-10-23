@@ -26,7 +26,7 @@ export default function BuyPassPage() {
       price: 250,
       description: 'Access to all events on November 7-8, 2025',
       features: [
-        'Access to all events',
+        'Access to all events on Nov 7-8, 2025',
         'Valid for Nov 7-8, 2025',
         'Cultural performances',
         'Networking opportunities',
@@ -386,9 +386,9 @@ export default function BuyPassPage() {
         <div className="mt-16 grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <div className="bg-background-soft border border-border rounded-xl p-6 text-center">
             <Calendar className="w-10 h-10 text-primary mx-auto mb-4" />
-            <h4 className="font-audiowide text-lg mb-2">Event Dates</h4>
+            <h4 className="font-audiowide text-lg mb-2">Drestein Dates</h4>
             <p className="text-muted-text font-space text-sm">
-              November 7-8, 2025
+              November 3-8, 2025
             </p>
           </div>
 

@@ -80,7 +80,11 @@ export async function GET(request) {
       ...doc.data(),
     }));
 
-    return NextResponse.json(specialEvents);
+    return NextResponse.json(specialEvents, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error("Error fetching special events:", error);
     return NextResponse.json(

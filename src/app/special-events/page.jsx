@@ -1,9 +1,10 @@
 "use client";
 import Header from '@/components/Header';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Footer from '@/components/Footer';
 import SpecialEventBox from '@/components/SpecialEventBox';
 import CustomDropdown from '@/components/CustomDropdown';
+import { Info } from 'lucide-react';
 
 const SpecialEventsPage = () => {
   const [specialEvents, setSpecialEvents] = useState([]);
@@ -36,11 +37,14 @@ const SpecialEventsPage = () => {
     fetchSpecialEvents();
   }, []);
 
-  const filteredEvents = specialEvents.filter(event => {
-    const matchesCategory = categoryFilter === 'all' || event.category === categoryFilter;
-    const matchesDepartment = departmentFilter === 'all' || event.department === departmentFilter;
-    return matchesCategory && matchesDepartment;
-  });
+  // Memoize filtered events to avoid recalculation on every render
+  const filteredEvents = useMemo(() => {
+    return specialEvents.filter(event => {
+      const matchesCategory = categoryFilter === 'all' || event.category === categoryFilter;
+      const matchesDepartment = departmentFilter === 'all' || event.department === departmentFilter;
+      return matchesCategory && matchesDepartment;
+    });
+  }, [specialEvents, categoryFilter, departmentFilter]);
 
   const categories = [
     { id: 'all', name: 'All Events' },
@@ -83,7 +87,7 @@ const SpecialEventsPage = () => {
         </p>
 
         {/* Filters */}
-        <div className="mb-12 flex flex-col md:flex-row justify-center items-center gap-6">
+        <div className="mb-8 flex flex-col md:flex-row justify-center items-center gap-6">
           {/* Category Filter */}
           <div className="flex flex-wrap justify-center gap-3">
             {categories.map((cat) => (
@@ -107,6 +111,31 @@ const SpecialEventsPage = () => {
             options={departments}
             placeholder="Select Department"
           />
+        </div>
+
+        {/* Info Box for Special Events */}
+        <div className="max-w-4xl mx-auto mb-12 bg-gradient-to-r from-secondary/10 via-accent/10 to-secondary/10 border-2 border-secondary/30 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 mt-1">
+              <div className="bg-secondary/20 p-3 rounded-full">
+                <Info className="w-6 h-6 text-secondary" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-audiowide text-xl text-white mb-3 flex items-center gap-2">
+                ⭐ Premium Events - Individual Pricing
+              </h3>
+              <p className="text-muted-text font-space leading-relaxed mb-3">
+                These are <span className="text-secondary font-semibold">special premium events</span> with individual pricing. <span className="text-white font-semibold">Add events to your cart</span> and purchase them together!
+              </p>
+              <p className="text-muted-text font-space leading-relaxed text-sm mb-2">
+                🛒 <span className="text-white font-semibold">Add to Cart:</span> Select multiple events and checkout together
+              </p>
+              <p className="text-muted-text font-space leading-relaxed text-sm">
+                🎟️ <span className="text-white font-semibold">Custom Pass:</span> Purchase multiple special events in one go for convenience
+              </p>
+            </div>
+          </div>
         </div>
 
         {loading && (

@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Calendar } from "lucide-react";
+import { Calendar, Clock } from "lucide-react";
 import EventRegistrationModal from "./EventRegistrationModal";
 
-const EventBox = ({ img, title, description, link, id, event }) => {
+const EventBox = React.memo(({ img, title, description, link, id, event }) => {
   const router = useRouter();
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const isExpired = (() => {
@@ -36,6 +36,8 @@ const EventBox = ({ img, title, description, link, id, event }) => {
             style={{ objectFit: "cover" }}
             className="rounded-xl group-hover:scale-110 transition-transform duration-500"
             alt={title}
+            loading="lazy"
+            sizes="(max-width: 768px) 280px, 320px"
           />
         </div>
         {/* Image Overlay */}
@@ -56,22 +58,28 @@ const EventBox = ({ img, title, description, link, id, event }) => {
           >
             {title}
           </h2>
-          <p className="font-space text-sm md:text-base text-muted-text leading-relaxed line-clamp-3 group-hover:text-white transition-colors duration-300">
-            {description}
-          </p>
           
-          {/* Date Info */}
-          {event?.isMultiDay && event?.startDate && event?.endDate ? (
-            <div className="flex items-center gap-1 text-xs text-muted-text bg-background/50 px-2 py-1 rounded w-fit">
-              <Calendar className="w-3 h-3" />
-              {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            </div>
-          ) : event?.date ? (
-            <div className="flex items-center gap-1 text-xs text-muted-text bg-background/50 px-2 py-1 rounded w-fit">
-              <Calendar className="w-3 h-3" />
-              {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </div>
-          ) : null}
+          {/* Date and Time Info */}
+          <div className="space-y-2">
+            {event?.isMultiDay && event?.startDate && event?.endDate ? (
+              <div className="flex items-center gap-2 text-xs text-muted-text bg-background/50 px-3 py-1.5 rounded w-fit">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              </div>
+            ) : event?.date ? (
+              <div className="flex items-center gap-2 text-xs text-muted-text bg-background/50 px-3 py-1.5 rounded w-fit">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              </div>
+            ) : null}
+            
+            {event?.time && (
+              <div className="flex items-center gap-2 text-xs text-muted-text bg-background/50 px-3 py-1.5 rounded w-fit">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{event.time}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -89,6 +97,8 @@ const EventBox = ({ img, title, description, link, id, event }) => {
       <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-center"></div>
     </div>
   );
-};
+});
+
+EventBox.displayName = 'EventBox';
 
 export default EventBox;

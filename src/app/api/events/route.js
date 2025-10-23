@@ -34,7 +34,11 @@ export async function GET() {
       .get();
     const events = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-    return NextResponse.json(events);
+    return NextResponse.json(events, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

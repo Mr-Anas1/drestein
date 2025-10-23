@@ -15,9 +15,11 @@ import {
   Phone,
   Mail,
   ArrowLeft,
+  Info,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import SpecialEventRegistrationModal from "@/components/SpecialEventRegistrationModal";
+import { getDepartmentName } from "@/constants/departments";
 
 const SpecialEventDetailPage = () => {
   const params = useParams();
@@ -119,13 +121,18 @@ const SpecialEventDetailPage = () => {
           {/* Event Info Card */}
           <div className="bg-background-soft border border-border rounded-2xl p-8 space-y-6">
             <div>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-audiowide uppercase">
                   {event.category}
                 </span>
                 <span className="bg-secondary/20 text-secondary px-3 py-1 rounded-full text-xs font-audiowide uppercase">
                   {event.mode}
                 </span>
+                {event.department && (
+                  <span className="bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-audiowide uppercase">
+                    {getDepartmentName(event.department)}
+                  </span>
+                )}
               </div>
               <h1 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
                 {event.title}
@@ -195,6 +202,33 @@ const SpecialEventDetailPage = () => {
             <div className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center">
               <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
               <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Info Box for Special Event Pricing */}
+        <div className="mb-8 bg-gradient-to-r from-secondary/10 via-accent/10 to-secondary/10 border-2 border-secondary/30 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 mt-1">
+              <div className="bg-secondary/20 p-3 rounded-full">
+                <Info className="w-6 h-6 text-secondary" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-audiowide text-lg md:text-xl text-white mb-3">
+                ⭐ Premium Event - Add to Cart
+              </h3>
+              <p className="text-muted-text font-space leading-relaxed mb-3">
+                This is a <span className="text-secondary font-semibold">premium special event</span> priced at <span className="text-white font-semibold">₹{event.price}</span>. Add it to your cart and purchase along with other special events!
+              </p>
+              <div className="space-y-2">
+                <p className="text-muted-text font-space leading-relaxed text-sm">
+                  🛒 <span className="text-white font-semibold">Add to Cart:</span> Select this and other events, then checkout together
+                </p>
+                <p className="text-muted-text font-space leading-relaxed text-sm">
+                  🎟️ <span className="text-white font-semibold">Custom Pass:</span> Purchase multiple special events in one convenient transaction
+                </p>
+              </div>
             </div>
           </div>
         </div>

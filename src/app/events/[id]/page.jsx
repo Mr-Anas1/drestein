@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import EventRegistrationModal from "@/components/EventRegistrationModal";
+import { getDepartmentName } from "@/constants/departments";
 import {
   Calendar,
   Clock,
@@ -16,6 +17,7 @@ import {
   Phone,
   Mail,
   ArrowLeft,
+  Info,
 } from "lucide-react";
 
 const EventDetailPage = () => {
@@ -151,16 +153,23 @@ const EventDetailPage = () => {
               fill
               style={{ objectFit: "cover" }}
               alt={event.title}
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
 
           {/* Event Info Card */}
           <div className="bg-background-soft border border-border rounded-2xl p-8 space-y-6">
             <div>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-audiowide uppercase">
                   {event.category}
                 </span>
+                {event.department && (
+                  <span className="bg-secondary/20 text-secondary px-3 py-1 rounded-full text-xs font-audiowide uppercase">
+                    {getDepartmentName(event.department)}
+                  </span>
+                )}
               </div>
               <h1 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
                 {event.title}
@@ -199,6 +208,25 @@ const EventDetailPage = () => {
           </div>
         </div>
 
+        {/* Info Box for Common Pass */}
+        <div className="mb-8 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-2 border-primary/30 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 mt-1">
+              <div className="bg-primary/20 p-3 rounded-full">
+                <Info className="w-6 h-6 text-primary" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-audiowide text-lg md:text-xl text-white mb-3">
+                💳 Access with Common Pass
+              </h3>
+              <p className="text-muted-text font-space leading-relaxed">
+                This event is included in the <span className="text-primary font-semibold">Common Pass (₹250)</span>. Purchase once and enjoy unlimited access to all regular events during the fest!
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Description Section */}
         {(event.description || event.fullDescription) && (
           <div className="bg-background-soft border border-border rounded-2xl p-8 mb-8">
@@ -207,7 +235,7 @@ const EventDetailPage = () => {
               About this event
             </h2>
             <p className="text-muted-text font-space leading-relaxed whitespace-pre-line">
-              {event.description || event.fullDescription}
+              {event.fullDescription}
             </p>
           </div>
         )}

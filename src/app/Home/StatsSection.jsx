@@ -14,7 +14,7 @@ const StatsSection = () => {
       title: "Speakers",
     },
     {
-      value: "1,00,000",
+      value: "10L",
       title: "Prize",
     },
     {
