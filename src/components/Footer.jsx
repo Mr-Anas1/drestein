@@ -1,5 +1,5 @@
 import React from 'react'
-import { Facebook } from 'lucide-react'
+import { Facebook, MessageSquareDot } from 'lucide-react'
 import { Twitter } from 'lucide-react'
 import { Instagram } from 'lucide-react'
 import { Linkedin } from 'lucide-react'
@@ -7,11 +7,12 @@ import { Youtube } from 'lucide-react'
 
 const Footer = () => {
   const socialLinks = [
-    { name: 'Facebook', url: '#', icon: <Facebook /> },
-    { name: 'Twitter', url: '#', icon: <Twitter /> },
-    { name: 'Instagram', url: '#', icon: <Instagram /> },
-    { name: 'LinkedIn', url: '#', icon: <Linkedin /> },
-    { name: 'YouTube', url: '#', icon: <Youtube /> }
+    { name: 'Facebook', url: 'https://www.facebook.com/SaveethaEngineeringCollegeSEC/', icon: <Facebook /> },
+    { name: 'Instagram', url: 'https://www.instagram.com/secdrestein', icon: <Instagram /> },
+    { name: 'LinkedIn', url: 'https://www.linkedin.com/school/saveetha-engineering-college/', icon: <Linkedin /> },
+    { name: 'YouTube', url: 'https://www.youtube.com/@saveethaengineeringcollege1624', icon: <Youtube /> },
+    { name: 'Arattai', url: 'https://aratt.ai/@saveetha_engineering_college', icon: <MessageSquareDot />},
+
   ]
 
   const pages = [
