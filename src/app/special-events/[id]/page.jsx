@@ -82,7 +82,7 @@ const SpecialEventDetailPage = () => {
             Event not found
           </div>
           <button
-            onClick={() => router.push("/special-events")}
+            onClick={() => router.back()}
             className="text-primary hover:text-hover-primary font-space"
           >
             Back to Special Events
@@ -99,7 +99,13 @@ const SpecialEventDetailPage = () => {
       <div className="py-20 px-6 md:px-12 max-w-6xl mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => router.push("/special-events")}
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/special-events");
+            }
+          }}
           className="flex items-center gap-2 text-muted-text hover:text-primary transition-colors mb-8 font-space"
         >
           <ArrowLeft className="w-5 h-5" />

@@ -109,7 +109,13 @@ const EventDetailPage = () => {
         <div className="text-center h-[calc(100vh-80px)] flex flex-col items-center justify-center">
           <h1 className="font-audiowide text-4xl text-white mb-4">Event Not Found</h1>
           <button
-            onClick={() => router.push("/events")}
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/events");
+              }
+            }}
             className="cursor-pointer bg-primary text-white px-6 py-3 rounded-lg font-audiowide hover:bg-hover-primary transition-colors duration-300"
           >
             Back to Events
@@ -137,7 +143,13 @@ const EventDetailPage = () => {
       <div className="py-20 px-6 md:px-12 max-w-6xl mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => router.push("/events")}
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/events");
+            }
+          }}
           className="flex items-center gap-2 text-muted-text hover:text-primary transition-colors mb-8 font-space"
         >
           <ArrowLeft className="w-5 h-5" />

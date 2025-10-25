@@ -6,13 +6,9 @@ import Image from 'next/image'
 const Sponsors = () => {
 
     const sponsers = [
-        "/arjunvision.jpeg",
-        "/dansas.png",
-        "/arjunvision.png"
-        // "/pngwing.com(1).png",
-        // "/pngwing.com(2).png",
-        // "/pngwing.com(3).png",
-        // "/pngwing.com(4).png",
+        "/arjun-vision-logo.png",
+        "/dansas-logo.png",
+      
     ]
 
     // Only animate if there are multiple sponsors
