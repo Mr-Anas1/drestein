@@ -53,7 +53,9 @@ const Hero = () => {
             16th National Level Inter Collegiate Technical and Management Fest
           </p>
 
-          <button className="bg-primary w-[150px] md:w-[250px] text-white rounded-lg hover:bg-hover-primary hover:scale-105 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 py-2 md:py-3 cursor-pointer font-audiowide animate-slide-in">
+          <button className="bg-primary w-[150px] md:w-[250px] text-white rounded-lg hover:bg-hover-primary hover:scale-105 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 py-2 md:py-3 cursor-pointer font-audiowide animate-slide-in"
+          onClick={() => router.push("/buy-pass")}
+          >
             Register
           </button>
         </div>
