@@ -6,7 +6,7 @@ function page() {
   return (
     <div className="w-screen h-screen">
 
-      <Home />
+      <Home className="bg-background" />
     </div>
   );
 }

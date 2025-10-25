@@ -6,7 +6,9 @@ import Image from 'next/image'
 const Sponsors = () => {
 
     const sponsers = [
-        "/dansas.jpeg",
+        "/arjunvision.jpeg",
+        "/dansas.png",
+        "/arjunvision.png"
         // "/pngwing.com(1).png",
         // "/pngwing.com(2).png",
         // "/pngwing.com(3).png",
@@ -16,7 +18,7 @@ const Sponsors = () => {
     // Only animate if there are multiple sponsors
     const shouldAnimate = sponsers.length > 1;
     // Duplicate sponsors for seamless loop if animating
-    const displaySponsors = shouldAnimate ? [...sponsers, ...sponsers, ...sponsers, ...sponsers] : sponsers;
+    const displaySponsors = shouldAnimate ? [...sponsers, ...sponsers, ...sponsers,...sponsers,...sponsers,...sponsers,...sponsers,...sponsers, ...sponsers] : sponsers;
 
     return (
         <div className='flex flex-col items-center justify-center h-fit w-full py-24'>

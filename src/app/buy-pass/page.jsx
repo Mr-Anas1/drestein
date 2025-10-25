@@ -180,25 +180,31 @@ export default function BuyPassPage() {
     setShowModal(true);
   };
 
+  // Set to false to show Coming Soon, true to show pass purchase
+  const showPassPurchase = false;
+
   return (
     <div className="min-h-screen bg-background text-white">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-16">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-audiowide mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Get Your Event Pass
-          </h1>
-          <p className="text-xl text-muted-text font-space max-w-2xl mx-auto">
-            Purchase your pass and unlock access to DRESTEIN 2025's amazing events
-          </p>
-        </div>
-
-        {/* Pass Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
-          {/* General Pass */}
-          {passes.map((pass) => (
+        {!showPassPurchase ? (
+         
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-5xl md:text-7xl font-audiowide mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Coming Soon
+              </h1>
+              <p className="text-xl text-muted-text font-space max-w-2xl mx-auto mb-8">
+                Pass sales will be available soon. Stay tuned for updates!
+              </p>
+              
+            </div>
+          </div>
+        ) : (
+          <>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+            {passes.map((pass) => (
             <div
               key={pass.id}
               className="relative bg-background-soft border border-primary rounded-2xl p-8 hover:shadow-xl hover:shadow-primary/20 transition-all duration-300"
@@ -276,7 +282,7 @@ export default function BuyPassPage() {
             </div>
           ))}
 
-          {/* Custom Pass Card */}
+       
           <div className="relative bg-background-soft border border-secondary rounded-2xl p-8 hover:shadow-xl hover:shadow-secondary/20 transition-all duration-300">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <span className="bg-gradient-to-r from-secondary to-primary text-white px-4 py-1 rounded-full text-sm font-audiowide flex items-center gap-1">
@@ -301,7 +307,7 @@ export default function BuyPassPage() {
               </div>
               <div className="text-muted-text font-space text-sm">
                 {generalPassInCart && cart.length > 0 
-                  ? `General Pass + ${cart.length} event${cart.length > 1 ? 's' : ''}`
+                  ? `General Pass + ${cart.length} event${cart.length !== 1 ? 's' : ''}`
                   : generalPassInCart 
                   ? 'General Pass selected'
                   : cart.length > 0 
@@ -310,7 +316,7 @@ export default function BuyPassPage() {
               </div>
             </div>
 
-            {/* Cart Preview */}
+          
             {(cart.length > 0 || generalPassInCart) ? (
               <>
                 <div className="bg-background border border-border rounded-lg p-4 mb-6 max-h-48 overflow-y-auto">
@@ -382,38 +388,40 @@ export default function BuyPassPage() {
           </div>
         </div>
 
-        {/* Info Section */}
+
         <div className="mt-16 grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <div className="bg-background-soft border border-border rounded-xl p-6 text-center">
-            <Calendar className="w-10 h-10 text-primary mx-auto mb-4" />
-            <h4 className="font-audiowide text-lg mb-2">Drestein Dates</h4>
-            <p className="text-muted-text font-space text-sm">
-              November 3-8, 2025
-            </p>
-          </div>
+            <div className="bg-background-soft border border-border rounded-xl p-6 text-center">
+              <Calendar className="w-10 h-10 text-primary mx-auto mb-4" />
+              <h4 className="font-audiowide text-lg mb-2">Drestein Dates</h4>
+              <p className="text-muted-text font-space text-sm">
+                November 3-8, 2025
+              </p>
+            </div>
 
-          <div className="bg-background-soft border border-border rounded-xl p-6 text-center">
-            <Users className="w-10 h-10 text-primary mx-auto mb-4" />
-            <h4 className="font-audiowide text-lg mb-2">For Everyone</h4>
-            <p className="text-muted-text font-space text-sm">
-              Students from all colleges welcome
-            </p>
-          </div>
+            <div className="bg-background-soft border border-border rounded-xl p-6 text-center">
+              <Users className="w-10 h-10 text-primary mx-auto mb-4" />
+              <h4 className="font-audiowide text-lg mb-2">For Everyone</h4>
+              <p className="text-muted-text font-space text-sm">
+                Students from all colleges welcome
+              </p>
+            </div>
 
-          <div className="bg-background-soft border border-border rounded-xl p-6 text-center">
-            <Ticket className="w-10 h-10 text-primary mx-auto mb-4" />
-            <h4 className="font-audiowide text-lg mb-2">Instant Access</h4>
-            <p className="text-muted-text font-space text-sm">
-              Download your pass immediately after payment
-            </p>
+            <div className="bg-background-soft border border-border rounded-xl p-6 text-center">
+              <Ticket className="w-10 h-10 text-primary mx-auto mb-4" />
+              <h4 className="font-audiowide text-lg mb-2">Instant Access</h4>
+              <p className="text-muted-text font-space text-sm">
+                Download your pass immediately after payment
+              </p>
+            </div>
           </div>
-        </div>
+          </>
+        )}
       </div>
 
       <Footer />
 
-      {/* Purchase Modal */}
-      {showModal && selectedPass && (
+      {/* PURCHASE MODAL - COMMENTED OUT FOR COMING SOON */}
+      {showPassPurchase && showModal && selectedPass && (
         <PassPurchaseModal
           passData={selectedPass}
           onClose={() => {
@@ -423,10 +431,10 @@ export default function BuyPassPage() {
           onPurchased={() => {
             setShowModal(false);
             setSelectedPass(null);
-            // Optionally redirect to my-passes page
           }}
         />
       )}
+     
     </div>
   );
 }

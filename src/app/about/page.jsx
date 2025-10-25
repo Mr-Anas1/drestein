@@ -6,16 +6,20 @@ import Footer from '../../components/Footer'
 const About = () => {
     const coordinators = [
         {
-            name: "Dr. Rajesh Kumar",
-            role: "Faculty Coordinator",
-            department: "Computer Science & Engineering",
-            email: "rajesh.kumar@saveetha.ac.in"
+            name: "Dr. G. Nagappan",
+            role: "Associate Dean (SCOFT)",
+            department: "Professor & Head - CSE",
+            email: "nagappan@saveetha.ac.in",
+            image: "/nagappan-sir.jpeg",
+            linkedin: "https://linkedin.com/in/nagappan"
         },
         {
-            name: "Priya Sharma",
-            role: "Student Coordinator",
-            department: "Information Technology",
-            email: "priya.sharma@student.saveetha.ac.in"
+            name: "Dr. Jyothi P",
+            role: "Associate Professor - MBA",
+            department: "MBA",
+            email: "jyothi.p@saveetha.ac.in",
+            image: "/jyothi-mam.jpeg",
+            linkedin: "https://linkedin.com/in/jyothi-p"
         },
 
     ]
@@ -145,18 +149,32 @@ const About = () => {
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6 justify-center">
                         {coordinators.map((coordinator, index) => (
-                            <div key={index} className="bg-background-soft border border-border rounded-xl p-6 text-center hover:border-primary transition-all duration-300 hover:transform hover:scale-105">
-                                <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center">
-                                    <span className="text-white font-audiowide text-xl">
-                                        {coordinator.name.split(' ').map(n => n[0]).join('')}
-                                    </span>
+                            <div key={index} className="bg-background-soft border border-border rounded-xl p-6 text-center hover:border-primary transition-all duration-300 hover:transform hover:scale-105 cursor-pointer group">
+                                <div className="relative w-24 h-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                                    <img 
+                                        className="w-full h-full object-cover" 
+                                        src={coordinator.image} 
+                                        alt={coordinator.name}
+                                    />
                                 </div>
                                 <h3 className="font-audiowide text-lg text-white mb-2">{coordinator.name}</h3>
                                 <p className="text-primary font-space text-sm mb-1">{coordinator.role}</p>
-                                <p className="text-muted-text font-space text-xs mb-3">{coordinator.department}</p>
-                                <a href={`mailto:${coordinator.email}`} className="text-accent hover:text-white transition-colors duration-300 font-space text-xs">
-                                    {coordinator.email}
-                                </a>
+                                <p className="text-muted-text font-space text-xs mb-4">{coordinator.department}</p>
+                                <div className="flex flex-col gap-2">
+                                    <a href={`mailto:${coordinator.email}`} className="text-accent hover:text-white transition-colors duration-300 font-space text-xs">
+                                        {coordinator.email}
+                                    </a>
+                                    {/* {coordinator.linkedin && (
+                                        <a 
+                                            href={coordinator.linkedin} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary/20 hover:bg-primary/40 text-primary hover:text-white rounded-lg transition-all duration-300 font-space text-xs"
+                                        >
+                                            <span>🔗</span> LinkedIn
+                                        </a>
+                                    )} */}
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -192,21 +210,31 @@ const About = () => {
                         </div>
 
                         <div className="border-t border-border pt-6">
-                            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-3 flex items-center justify-center">
+                            <div className="grid md:grid-cols-3 gap-6 mb-6">
+                                <a href="#" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                         <span className="text-white font-audiowide text-lg">MA</span>
                                     </div>
-                                    <h4 className="font-audiowide text-lg text-white mb-1">MOHAMED ANAS</h4>
+                                    <h4 className="font-audiowide text-lg text-white mb-1 group-hover:text-primary transition-colors duration-300">MOHAMED ANAS</h4>
                                     <p className="text-primary font-space text-sm">React Developer</p>
-                                </div>
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center">
+                                    <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
+                                </a>
+                                <a href="#" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                         <span className="text-white font-audiowide text-lg">MF</span>
                                     </div>
-                                    <h4 className="font-audiowide text-lg text-white mb-1">MOHAMED FAROOK</h4>
+                                    <h4 className="font-audiowide text-lg text-white mb-1 group-hover:text-secondary transition-colors duration-300">MOHAMED FAROOK</h4>
                                     <p className="text-secondary font-space text-sm">UI/UX Designer</p>
-                                </div>
+                                    <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
+                                </a>
+                                <a href="#" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <span className="text-white font-audiowide text-lg">K</span>
+                                    </div>
+                                    <h4 className="font-audiowide text-lg text-white mb-1 group-hover:text-accent transition-colors duration-300">KEERTHIVASAN</h4>
+                                    <p className="text-accent font-space text-sm">Security & Testing</p>
+                                    <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
+                                </a>
                             </div>
                             <p className="text-muted-text font-space text-sm">
                                 Developed by the <span className="text-primary font-audiowide">DRESTEIN Development Team</span>
@@ -214,6 +242,97 @@ const About = () => {
                             <p className="text-muted-text font-space text-xs mt-2">
                                 © 2025 Saveetha Engineering College. All rights reserved.
                             </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* DSC Coordinators Section */}
+            <div className="py-16 px-6 md:px-12">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-6">
+                            DSC COORDINATORS
+                        </h2>
+                        <p className="text-muted-text font-space text-lg">
+                            Department Student Coordinators leading DRESTEIN across all branches
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {[
+                            { dept: "AI-DS", name: "SANTHIYA R", contact: "212223230192" },
+                            { dept: "AI-ML", name: "Anu Varshini M B", contact: "9933247477" },
+                            { dept: "AGRI", name: "Ms. Sanjana", contact: "9600037887" },
+                            { dept: "BIO-MED", name: "Ms. Sherena", contact: "9566533465" },
+                            { dept: "CHEM", name: "Mr. Harishankar E", contact: "8807051192"},
+                            { dept: "CIVIL", name: "Mr. K. Arun Kumar", contact: "8072582553" },
+                            { dept: "CSE", name: "GOKUL SHARAN R", contact: "9791486718" },
+                            { dept: "CYB SEC", name: "RAGUL RAAJAN T", contact: "9488001452" },
+                            { dept: "ECE", name: "Mr. Abhinandhan G", contact: "6383796369" },
+                            { dept: "EEE", name: "Mr. Visvanth P.S.", contact: "9840928549"},
+                            { dept: "EIE", name: "Jeginthan", contact: "6374470752"},
+                            { dept: "IoT", name: "BHAVYASHREE R", contact: "9345850687" },
+                            { dept: "MECH", name: "VISAKAN G", contact: "7094998410"},
+                            { dept: "MED ELE", name: "Madhumitha. E. M", contact: "9629934867" },
+                            { dept: "IT", name: "Lakshmi Priya.V", contact: "6381478448" },
+                            { dept: "S&H", name: "Jothikrishnaa V", contact: "9042162885" },
+                        ].map((coord, index) => (
+                            <div key={index} className="bg-background-soft border border-border rounded-lg p-4 hover:border-primary transition-all duration-300 hover:transform hover:scale-105 w-full">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span className="text-white font-audiowide text-xs">
+                                            {coord.dept.split(' ').map(w => w[0]).join('')}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-audiowide text-xs text-primary mb-1">{coord.dept}</h4>
+                                        <h3 className="font-space text-sm text-white truncate">{coord.name}</h3>
+                                        {coord.extra && (
+                                            <p className="text-muted-text font-space text-xs">{coord.extra}</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
+                                    <span className="text-accent text-xs">📞</span>
+                                    <a href={`tel:${coord.contact}`} className="text-muted-text hover:text-accent transition-colors duration-300 font-space text-xs">
+                                        {coord.contact}
+                                    </a>
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {/* MBA with two coordinators */}
+                        
+                        <div className="bg-background-soft border border-border rounded-lg p-4 hover:border-primary transition-all duration-300 hover:transform hover:scale-105">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white font-audiowide text-xs">MBA</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-audiowide text-xs text-primary mb-1">MBA</h4>
+                                </div>
+                            </div>
+                            <div className="space-y-2 mt-2 pt-2 border-t border-border">
+                                <div>
+                                    <h3 className="font-space text-sm text-white">Mr. Aakash</h3>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-accent text-xs">📞</span>
+                                        <a href="tel:7305323223" className="text-muted-text hover:text-accent transition-colors duration-300 font-space text-xs">
+                                            7305323223
+                                        </a>
+                                    </div>
+                                </div>
+                                <div className="pt-2 border-t border-border/50">
+                                    <h3 className="font-space text-sm text-white">Mr. Harivignesh</h3>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-accent text-xs">📞</span>
+                                        <a href="tel:9445946319" className="text-muted-text hover:text-accent transition-colors duration-300 font-space text-xs">
+                                            9445946319
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -83,7 +83,7 @@ const SpecialEventsPage = () => {
         </h1>
 
         <p className='text-muted-text text-center font-space text-lg mb-8'>
-          Premium competitions, workshops, and exclusive events with custom pricing
+          Special competitions, workshops, and exclusive events with custom pricing
         </p>
 
         {/* Filters */}
@@ -123,10 +123,10 @@ const SpecialEventsPage = () => {
             </div>
             <div className="flex-1">
               <h3 className="font-audiowide text-xl text-white mb-3 flex items-center gap-2">
-                ⭐ Premium Events - Individual Pricing
+                ⭐ Special Events - Individual Pricing
               </h3>
               <p className="text-muted-text font-space leading-relaxed mb-3">
-                These are <span className="text-secondary font-semibold">special premium events</span> with individual pricing. <span className="text-white font-semibold">Add events to your cart</span> and purchase them together!
+                These are <span className="text-secondary font-semibold">special events</span> with individual pricing. <span className="text-white font-semibold">Add events to your cart</span> and purchase them together!
               </p>
               <p className="text-muted-text font-space leading-relaxed text-sm mb-2">
                 🛒 <span className="text-white font-semibold">Add to Cart:</span> Select multiple events and checkout together

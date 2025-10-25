@@ -11,7 +11,7 @@ import Footer from "../../components/Footer";
 
 const Home = () => {
   return (
-    <div className=" h-screen ">
+    <div className="min-h-screen bg-background">
       <Header />
       <Hero />
       <About />
