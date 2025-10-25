@@ -228,10 +228,10 @@ const SpecialEventDetailPage = () => {
                 This is a <span className="text-secondary font-semibold">premium special event</span> priced at <span className="text-white font-semibold">₹{event.price}</span>. Add it to your cart and purchase along with other special events!
               </p>
               <div className="space-y-2">
-                <p className="text-muted-text font-space leading-relaxed text-sm">
+                <p className="text-muted-text font-space  leading-relaxed">
                   🛒 <span className="text-white font-semibold">Add to Cart:</span> Select this and other events, then checkout together
                 </p>
-                <p className="text-muted-text font-space leading-relaxed text-sm">
+                <p className="text-muted-text font-space leading-relaxed ">
                   🎟️ <span className="text-white font-semibold">Custom Pass:</span> Purchase multiple special events in one convenient transaction
                 </p>
               </div>
@@ -246,7 +246,7 @@ const SpecialEventDetailPage = () => {
               <FileText className="w-6 h-6 text-primary" />
               About this event
             </h2>
-            <p className="text-muted-text font-space leading-relaxed whitespace-pre-line">
+            <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">
               {event.description || event.fullDescription}
             </p>
           </div>

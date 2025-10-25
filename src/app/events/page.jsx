@@ -3,12 +3,14 @@ import Header from '@/components/Header'
 import React, { useEffect, useState, useMemo } from 'react'
 import Footer from '@/components/Footer'
 import EventBox from '@/components/EventBox'
+import SpecialEventBox from '@/components/SpecialEventBox'
 import CustomDropdown from '@/components/CustomDropdown'
 import { DEPARTMENTS } from '@/constants/departments'
 import { Info } from 'lucide-react'
 
 const page = () => {
     const [events, setEvents] = useState([]);
+    const [specialEvents, setSpecialEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedDepartment, setSelectedDepartment] = useState('all');
@@ -17,15 +19,23 @@ const page = () => {
         const fetchEvents = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/events');
+                const [eventsRes, specialRes] = await Promise.all([
+                    fetch('/api/events'),
+                    fetch('/api/special-events')
+                ]);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (!eventsRes.ok) {
+                    throw new Error(`HTTP error! status: ${eventsRes.status}`);
                 }
 
-                const data = await response.json();
-                console.log("Fetched events from Firestore:", data);
-                setEvents(data);
+                const eventsData = await eventsRes.json();
+                const specialData = specialRes.ok ? await specialRes.json() : [];
+                
+                console.log("Fetched events from Firestore:", eventsData);
+                console.log("Fetched special events:", specialData);
+                
+                setEvents(eventsData);
+                setSpecialEvents(specialData);
             } catch (err) {
                 console.error("Error fetching events:", err);
                 setError(err.message);
@@ -42,14 +52,16 @@ const page = () => {
         const deptIds = new Set(DEPARTMENTS.map(d => d.id));
         const others = events.filter(e => !e?.department || !deptIds.has(e.department));
         
-        // Pre-filter departments that have events
+        // Pre-filter departments that have events or special events
         const filtered = DEPARTMENTS.filter(dept => {
             if (selectedDepartment !== 'all' && dept.id !== selectedDepartment) return false;
-            return events.some(e => e.department === dept.id);
+            const hasCommonEvents = events.some(e => e.department === dept.id);
+            const hasSpecialEvents = specialEvents.some(e => e.department === dept.id);
+            return hasCommonEvents || hasSpecialEvents;
         });
         
         return { departmentIds: deptIds, otherEvents: others, filteredDepartments: filtered };
-    }, [events, selectedDepartment]);
+    }, [events, specialEvents, selectedDepartment]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -85,7 +97,7 @@ const page = () => {
                     />
                 </div>
 
-                {/* Info Box for Common Pass */}
+                {/* Info Box for Events */}
                 <div className="max-w-4xl mx-auto mb-12 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-2 border-primary/30 rounded-2xl p-6 backdrop-blur-sm">
                     <div className="flex items-start gap-4">
                         <div className="flex-shrink-0 mt-1">
@@ -95,14 +107,19 @@ const page = () => {
                         </div>
                         <div className="flex-1">
                             <h3 className="font-audiowide text-xl text-white mb-3 flex items-center gap-2">
-                                💳 Common Pass Access
+                                🎫 Events Overview
                             </h3>
-                            <p className="text-muted-text font-space leading-relaxed mb-3">
-                                Purchase the <span className="text-primary font-semibold">Common Pass (₹250)</span> to get unlimited access to <span className="text-white font-semibold">all these events</span> during the fest!
+                            <p className="text-muted-text font-space leading-relaxed mb-3 text-md md:text-lg">
+                                This page features two types of events:
                             </p>
-                            <p className="text-muted-text font-space leading-relaxed text-sm">
-                                ✨ One pass, all events • Valid for Nov 7-8, 2025 • Best value for money
-                            </p>
+                            <div className="space-y-2 text-sm">
+                                <p className="text-muted-text text-lg font-space leading-relaxed">
+                                    <span className="text-primary font-semibold">Common Events:</span> Included in the <span className="text-primary font-semibold">Common Pass (₹300)</span> • Valid for Nov 7-8, 2025
+                                </p>
+                                <p className="text-muted-text font-space leading-relaxed text-md md:text-lg">
+                                    <span className="text-secondary font-semibold">Premium Events:</span> Individual pricing • Add to cart and purchase separately
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -122,7 +139,8 @@ const page = () => {
                 {!loading && !error && (
                     <div className="w-full pt-10 space-y-16">
                         {filteredDepartments.map((dept) => {
-                            const deptEvents = events.filter(e => e.department === dept.id);
+                            const deptCommonEvents = events.filter(e => e.department === dept.id);
+                            const deptSpecialEvents = specialEvents.filter(e => e.department === dept.id);
                             return (
                                 <section key={dept.id} id={`dept-${dept.id}`} className="space-y-6">
                                     {/* Department Header */}
@@ -133,20 +151,40 @@ const page = () => {
                                         <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto md:mx-0"></div>
                                     </div>
                                     
-                                    {/* Events Grid */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
-                                        {deptEvents.map((event) => (
-                                            <EventBox
-                                                key={event.id}
-                                                img={event.img}
-                                                title={event.title}
-                                                description={event.description}
-                                                link={`/events/${event.id}`}
-                                                id={event.id}
-                                                event={event}
-                                            />
-                                        ))}
-                                    </div>
+                                    {/* Common Events */}
+                                    {deptCommonEvents.length > 0 && (
+                                        <div className="space-y-4">
+                                            <h3 className="font-audiowide text-lg text-primary">Common Events</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
+                                                {deptCommonEvents.map((event) => (
+                                                    <EventBox
+                                                        key={event.id}
+                                                        img={event.img}
+                                                        title={event.title}
+                                                        description={event.description}
+                                                        link={`/events/${event.id}`}
+                                                        id={event.id}
+                                                        event={event}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Premium Events */}
+                                    {deptSpecialEvents.length > 0 && (
+                                        <div className="space-y-4">
+                                            <h3 className="font-audiowide text-lg text-secondary">Premium Events</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
+                                                {deptSpecialEvents.map((event) => (
+                                                    <SpecialEventBox
+                                                        key={event.id}
+                                                        event={event}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </section>
                             );
                         })}

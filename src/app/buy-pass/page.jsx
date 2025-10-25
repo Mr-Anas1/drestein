@@ -23,7 +23,7 @@ export default function BuyPassPage() {
     {
       id: 'general',
       name: 'General Pass',
-      price: 250,
+      price: 300,
       description: 'Access to all events on November 7-8, 2025',
       features: [
         'Access to all events on Nov 7-8, 2025',
@@ -66,7 +66,7 @@ export default function BuyPassPage() {
         
         // Calculate total including general pass if present
         const specialEventsTotal = specialEventsOnly.reduce((sum, item) => sum + (item.eventPrice || 0), 0);
-        const generalPassPrice = hasGeneralPass ? 250 : 0;
+        const generalPassPrice = hasGeneralPass ? 300 : 0;
         setCartTotal(specialEventsTotal + generalPassPrice);
       }
     } catch (error) {
@@ -93,7 +93,7 @@ export default function BuyPassPage() {
         body: JSON.stringify({
           eventId: 'general-pass',
           eventTitle: 'General Pass',
-          eventPrice: 250,
+          eventPrice: 300,
           eventType: 'individual',
           userUid: user.uid,
         }),
@@ -161,7 +161,7 @@ export default function BuyPassPage() {
     
     const items = [];
     if (generalPassInCart) {
-      items.push('General Pass - ₹250');
+      items.push('General Pass - ₹300');
     }
     items.push(...cart.map(item => `${item.eventTitle} - ₹${item.eventPrice}`));
     
@@ -326,7 +326,7 @@ export default function BuyPassPage() {
                       <div className="flex items-center justify-between text-sm bg-primary/5 rounded p-2">
                         <span className="text-white font-space truncate flex-1 font-semibold">General Pass</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-primary font-audiowide">₹250</span>
+                          <span className="text-primary font-audiowide">₹300</span>
                           <button
                             onClick={removeGeneralPassFromCart}
                             className="text-red-500 hover:text-red-400"

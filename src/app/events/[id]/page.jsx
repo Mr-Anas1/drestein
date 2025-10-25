@@ -233,7 +233,7 @@ const EventDetailPage = () => {
                 💳 Access with Common Pass
               </h3>
               <p className="text-muted-text font-space leading-relaxed">
-                This event is included in the <span className="text-primary font-semibold">Common Pass (₹250)</span>. Purchase once and enjoy unlimited access to all regular events during the fest!
+                This event is included in the <span className="text-primary font-semibold">Common Pass (₹300)</span>. Purchase once and enjoy unlimited access to all regular events during the fest!
               </p>
             </div>
           </div>
@@ -246,7 +246,7 @@ const EventDetailPage = () => {
               <FileText className="w-6 h-6 text-primary" />
               About this event
             </h2>
-            <p className="text-muted-text font-space leading-relaxed whitespace-pre-line">
+            <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">
               {event.fullDescription}
             </p>
           </div>

@@ -119,7 +119,7 @@ export default function DepartmentPage() {
             {events.length > 0 && (
               <div className="mb-16">
                 <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-8">
-                  Events
+                  Common Events (7/11/25 - 8/11/25)
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {events.map((event) => (
@@ -167,10 +167,15 @@ export default function DepartmentPage() {
                                 </div>
                               )}
                             </div>
-                            <div className="mt-4 flex items-center justify-between">
-                              <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-space">
-                                {event.category}
-                              </span>
+                            <div className="mt-4 flex items-center justify-between gap-2">
+                              <div className="flex gap-2">
+                                <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-space">
+                                  {event.category}
+                                </span>
+                                <span className="text-xs px-3 py-1 rounded-full bg-primary/20 text-primary border border-primary/30 font-audiowide">
+                                  Common Event
+                                </span>
+                              </div>
                               <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
                             </div>
                           </div>
@@ -182,11 +187,11 @@ export default function DepartmentPage() {
               </div>
             )}
 
-            {/* Special Events */}
+            {/* Premium Events */}
             {specialEvents.length > 0 && (
               <div>
                 <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-8">
-                  Special Events
+                  Premium Events (3/11/25 - 6/11/25)
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {specialEvents.map((event) => (
@@ -245,10 +250,15 @@ export default function DepartmentPage() {
                                 </div>
                               )}
                             </div>
-                            <div className="mt-4 flex items-center justify-between">
-                              <span className="text-xs px-3 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20 font-space capitalize">
-                                {event.category}
-                              </span>
+                            <div className="mt-4 flex items-center justify-between gap-2">
+                              <div className="flex gap-2">
+                                <span className="text-xs px-3 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20 font-space capitalize">
+                                  {event.category}
+                                </span>
+                                <span className="text-xs px-3 py-1 rounded-full bg-secondary/20 text-secondary border border-secondary/30 font-audiowide">
+                                  Premium Event
+                                </span>
+                              </div>
                               <ArrowRight className="w-5 h-5 text-secondary group-hover:translate-x-1 transition-transform" />
                             </div>
                           </div>

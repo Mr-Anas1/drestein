@@ -2,7 +2,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { DollarSign, Users, MapPin, Calendar, Clock } from "lucide-react";
+import Link from "next/link";
+import { DollarSign, Users, MapPin, Calendar, Clock, ArrowRight } from "lucide-react";
 
 const SpecialEventBox = React.memo(({ event }) => {
   const router = useRouter();
@@ -30,80 +31,72 @@ const SpecialEventBox = React.memo(({ event }) => {
   })();
 
   return (
-    <div className="group relative bg-background-soft border border-border rounded-3xl p-6 w-[280px] md:w-[320px] h-[450px] flex flex-col overflow-hidden hover:border-primary transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
-      {/* Gradient Background Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-      {/* Floating Glow Effect */}
-      <div className="absolute -top-2 -right-2 w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
-
-
-      {/* Image Container */}
-      <div className="relative w-full h-48 mb-6 rounded-2xl overflow-hidden bg-gradient-to-br from-background to-background-soft flex-shrink-0">
-        <div className="absolute inset-2">
-          <Image
-            src={img || "/images/default-event.jpg"}
-            fill
-            style={{ objectFit: "cover" }}
-            className="rounded-xl group-hover:scale-110 transition-transform duration-500"
-            alt={title}
-            loading="lazy"
-            sizes="(max-width: 768px) 280px, 320px"
-          />
-        </div>
-        {/* Image Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        {isExpired && (
-          <div className="absolute top-3 left-3 z-10 bg-red-500/90 text-white px-3 py-1 rounded-full text-xs font-audiowide">
-            Registration Closed
+    <Link href={`/special-events/${id}`} className="group">
+      <div className="rounded-2xl p-[1px] bg-gradient-to-r from-secondary/30 to-primary/30 hover:from-secondary/60 hover:to-primary/60 transition-all duration-300 hover:-translate-y-1 h-full">
+        <div className="rounded-2xl bg-background-soft border border-border/60 overflow-hidden h-full flex flex-col">
+          {img && (
+            <div className="relative w-full h-48 overflow-hidden">
+              <Image
+                src={img}
+                alt={title}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+          )}
+          <div className="p-6 flex flex-col flex-1">
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="font-audiowide text-xl text-white group-hover:text-secondary transition-colors flex-1">
+                {title}
+              </h3>
+              <span className="text-primary font-audiowide text-lg ml-2">
+                ₹{price}
+              </span>
+            </div>
+            <p className="text-muted-text font-space text-sm mb-4 line-clamp-2 flex-1">
+              {description}
+            </p>
+            <div className="space-y-2 text-sm">
+              {event?.date && (
+                <div className="flex items-center gap-2 text-muted-text">
+                  <Calendar className="w-4 h-4 text-secondary" />
+                  <span className="font-space">{event.date}</span>
+                </div>
+              )}
+              {event?.time && (
+                <div className="flex items-center gap-2 text-muted-text">
+                  <Clock className="w-4 h-4 text-secondary" />
+                  <span className="font-space">{event.time}</span>
+                </div>
+              )}
+              {event?.venue && (
+                <div className="flex items-center gap-2 text-muted-text">
+                  <MapPin className="w-4 h-4 text-secondary" />
+                  <span className="font-space">{event.venue}</span>
+                </div>
+              )}
+              {event?.type && (
+                <div className="flex items-center gap-2 text-muted-text">
+                  <Users className="w-4 h-4 text-secondary" />
+                  <span className="font-space capitalize">{event.type}</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <div className="flex gap-2">
+                <span className="text-xs px-3 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20 font-space capitalize">
+                  {category}
+                </span>
+                <span className="text-xs px-3 py-1 rounded-full bg-secondary/20 text-secondary border border-secondary/30 font-audiowide">
+                  Premium Event
+                </span>
+              </div>
+              <ArrowRight className="w-5 h-5 text-secondary group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* Content Container */}
-      <div className="relative z-10 flex flex-col flex-1 justify-between min-h-0">
-        <div className="space-y-3 flex-shrink overflow-hidden">
-          <h2 
-            className="font-audiowide text-xl md:text-2xl bg-gradient-to-r from-white to-muted-text bg-clip-text text-transparent group-hover:from-primary group-hover:to-secondary transition-all duration-300 line-clamp-2"
-            title={title}
-          >
-            {title}
-          </h2>
-          
-          {/* Date and Time Info */}
-          <div className="space-y-2">
-            {event?.isMultiDay && event?.startDate && event?.endDate ? (
-              <div className="flex items-center gap-2 text-xs text-muted-text bg-background/50 px-3 py-1.5 rounded w-fit">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-              </div>
-            ) : event?.date ? (
-              <div className="flex items-center gap-2 text-xs text-muted-text bg-background/50 px-3 py-1.5 rounded w-fit">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
-            ) : null}
-            
-            {event?.time && (
-              <div className="flex items-center gap-2 text-xs text-muted-text bg-background/50 px-3 py-1.5 rounded w-fit">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{event.time}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="mt-4 flex-shrink-0">
-          <button
-            className="w-full bg-background-soft border border-border text-white font-audiowide text-sm py-2 px-4 rounded-xl hover:bg-background transition-all duration-300"
-            onClick={() => router.push(`/special-events/${id}`)}
-          >
-            View Details
-          </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 });
 
