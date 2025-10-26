@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { Ticket, Users, DollarSign, CheckCircle, XCircle, Clock, Eye, Filter, ArrowLeft } from 'lucide-react';
+import { auth } from '@/lib/firebase';
+import { Ticket, Users, DollarSign, CheckCircle, XCircle, Clock, Eye, Filter, ArrowLeft, Search } from 'lucide-react';
 import { CUSTOM_PASS_EVENTS } from '@/constants/customPassEvents';
 
 const AdminPassesPage = () => {
@@ -12,6 +13,7 @@ const AdminPassesPage = () => {
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, general, custom, pending, verified
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedPass, setSelectedPass] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
@@ -38,10 +40,23 @@ const AdminPassesPage = () => {
   const fetchPasses = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/passes');
+      const { auth } = await import('@/lib/firebase');
+      const token = await auth.currentUser?.getIdToken?.();
+      if (!token) {
+        console.error('No auth token available');
+        setLoading(false);
+        return;
+      }
+      const response = await fetch('/api/admin/passes', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
       if (response.ok) {
         setPasses(data.passes || []);
+      } else {
+        console.error('Failed to fetch passes:', data.error);
       }
     } catch (error) {
       console.error('Error fetching passes:', error);
@@ -51,12 +66,25 @@ const AdminPassesPage = () => {
   };
 
   const filteredPasses = passes.filter(pass => {
-    if (filter === 'all') return true;
-    if (filter === 'general') return pass.passType === 'general';
-    if (filter === 'custom') return pass.passType === 'custom';
-    if (filter === 'pending') return !pass.paymentVerified;
-    if (filter === 'verified') return pass.paymentVerified;
-    return true;
+    // Apply filter
+    let passesFilter = true;
+    if (filter === 'all') passesFilter = true;
+    else if (filter === 'general') passesFilter = pass.passType === 'general';
+    else if (filter === 'custom') passesFilter = pass.passType === 'custom';
+    else if (filter === 'pending') passesFilter = !pass.paymentVerified;
+    else if (filter === 'verified') passesFilter = pass.paymentVerified;
+
+    // Apply search query
+    if (!searchQuery.trim()) return passesFilter;
+    
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = 
+      (pass.userEmail && pass.userEmail.toLowerCase().includes(query)) ||
+      (pass.userUid && pass.userUid.toLowerCase().includes(query)) ||
+      (pass.passName && pass.passName.toLowerCase().includes(query)) ||
+      (pass.passType && pass.passType.toLowerCase().includes(query));
+    
+    return passesFilter && matchesSearch;
   });
 
   const stats = {
@@ -142,23 +170,45 @@ const AdminPassesPage = () => {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="mb-6 flex items-center gap-4">
-          <Filter className="w-5 h-5 text-muted-text" />
-          <div className="flex gap-2 flex-wrap">
-            {['all', 'general', 'custom', 'verified', 'pending'].map((f) => (
+        {/* Search and Filters */}
+        <div className="mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by email, user ID, or pass name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-background-soft border border-border text-white placeholder-muted-text focus:outline-none focus:border-primary transition-colors duration-300 font-space"
+            />
+            {searchQuery && (
               <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-lg font-audiowide text-sm transition-all duration-300 ${
-                  filter === f
-                    ? 'bg-gradient-to-r from-primary to-secondary text-white'
-                    : 'bg-background-soft border border-border text-muted-text hover:border-primary'
-                }`}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-white transition-colors"
               >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
+                ✕
               </button>
-            ))}
+            )}
+          </div>
+
+          {/* Filters */}
+          <div className="flex items-center gap-4">
+            <Filter className="w-5 h-5 text-muted-text" />
+            <div className="flex gap-2 flex-wrap">
+              {['all', 'general', 'custom', 'verified', 'pending'].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-4 py-2 rounded-lg font-audiowide text-sm transition-all duration-300 ${
+                    filter === f
+                      ? 'bg-gradient-to-r from-primary to-secondary text-white'
+                      : 'bg-background-soft border border-border text-muted-text hover:border-primary'
+                  }`}
+                >
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -169,7 +219,13 @@ const AdminPassesPage = () => {
               <thead className="bg-background border-b border-border">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
-                    User
+                    Pass ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
+                    User Email
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
+                    Roll No
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
                     Pass Type
@@ -191,15 +247,36 @@ const AdminPassesPage = () => {
               <tbody className="divide-y divide-border">
                 {filteredPasses.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-muted-text font-space">
-                      No passes found
+                    <td colSpan="8" className="px-6 py-8 text-center text-muted-text font-space">
+                      {searchQuery ? 'No passes match your search' : 'No passes found'}
                     </td>
                   </tr>
                 ) : (
-                  filteredPasses.map((pass) => (
+                  filteredPasses.map((pass) => {
+                    let purchasedDate = null;
+                    if (pass.purchasedAt) {
+                      if (typeof pass.purchasedAt.toDate === 'function') {
+                        purchasedDate = pass.purchasedAt.toDate();
+                      } else if (pass.purchasedAt instanceof Date) {
+                        purchasedDate = pass.purchasedAt;
+                      } else if (pass.purchasedAt._seconds) {
+                        // Handle Firestore Timestamp object with _seconds and _nanoseconds
+                        purchasedDate = new Date(pass.purchasedAt._seconds * 1000);
+                      } else if (pass.purchasedAt.seconds) {
+                        // Handle alternative Firestore Timestamp format
+                        purchasedDate = new Date(pass.purchasedAt.seconds * 1000);
+                      }
+                    }
+                    return (
                     <tr key={pass.id} className="hover:bg-background transition-colors">
                       <td className="px-6 py-4">
+                        <div className="text-white font-mono text-xs">{pass.id?.substring(0, 8)}...</div>
+                      </td>
+                      <td className="px-6 py-4">
                         <div className="text-white font-space text-sm">{pass.userEmail || pass.userUid}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-white font-space text-sm">{pass.rollNo || 'N/A'}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -230,7 +307,7 @@ const AdminPassesPage = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-muted-text font-space text-sm">
-                          {pass.purchasedAt?.toDate?.()?.toLocaleDateString() || 'N/A'}
+                          {purchasedDate ? purchasedDate.toLocaleDateString() : 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -242,7 +319,8 @@ const AdminPassesPage = () => {
                         </button>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -263,8 +341,25 @@ const AdminPassesPage = () => {
 
             <div className="space-y-4">
               <div className="bg-background-soft border border-border rounded-lg p-4">
+                <p className="text-muted-text text-sm mb-1">Pass ID</p>
+                <p className="text-white font-mono text-sm">{selectedPass.id}</p>
+              </div>
+
+              <div className="bg-background-soft border border-border rounded-lg p-4">
                 <p className="text-muted-text text-sm mb-1">User ID</p>
                 <p className="text-white font-space">{selectedPass.userUid}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-background-soft border border-border rounded-lg p-4">
+                  <p className="text-muted-text text-sm mb-1">Email</p>
+                  <p className="text-white font-space text-sm">{selectedPass.userEmail || 'N/A'}</p>
+                </div>
+
+                <div className="bg-background-soft border border-border rounded-lg p-4">
+                  <p className="text-muted-text text-sm mb-1">Roll No</p>
+                  <p className="text-white font-space text-sm">{selectedPass.rollNo || 'N/A'}</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -317,7 +412,23 @@ const AdminPassesPage = () => {
               <div className="bg-background-soft border border-border rounded-lg p-4">
                 <p className="text-muted-text text-sm mb-1">Purchased At</p>
                 <p className="text-white font-space">
-                  {selectedPass.purchasedAt?.toDate?.()?.toLocaleString() || 'N/A'}
+                  {(() => {
+                    let date = null;
+                    if (selectedPass.purchasedAt) {
+                      if (typeof selectedPass.purchasedAt.toDate === 'function') {
+                        date = selectedPass.purchasedAt.toDate();
+                      } else if (selectedPass.purchasedAt instanceof Date) {
+                        date = selectedPass.purchasedAt;
+                      } else if (selectedPass.purchasedAt._seconds) {
+                        // Handle Firestore Timestamp object with _seconds and _nanoseconds
+                        date = new Date(selectedPass.purchasedAt._seconds * 1000);
+                      } else if (selectedPass.purchasedAt.seconds) {
+                        // Handle alternative Firestore Timestamp format
+                        date = new Date(selectedPass.purchasedAt.seconds * 1000);
+                      }
+                    }
+                    return date ? date.toLocaleString() : 'N/A';
+                  })()}
                 </p>
               </div>
             </div>

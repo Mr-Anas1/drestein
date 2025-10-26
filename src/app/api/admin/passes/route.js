@@ -61,22 +61,25 @@ export async function GET(request) {
     }
 
     const db = getAdminDB();
-    const passesSnapshot = await db.collection("passes").orderBy("purchasedAt", "desc").get();
+    const passesSnapshot = await db.collection("passes").get();
 
     const passes = [];
     for (const doc of passesSnapshot.docs) {
       const passData = doc.data();
       
-      // Try to get user email
+      // Try to get user email and roll number
       let userEmail = null;
+      let rollNo = null;
       if (passData.userUid) {
         try {
           const studentDoc = await db.collection("students").doc(passData.userUid).get();
           if (studentDoc.exists) {
-            userEmail = studentDoc.data().email;
+            const studentData = studentDoc.data();
+            userEmail = studentData.email;
+            rollNo = studentData.rollNo;
           }
         } catch (e) {
-          console.error("Error fetching user email:", e);
+          console.error(`[ADMIN PASSES] Error fetching user data for ${passData.userUid}:`, e);
         }
       }
 
@@ -84,14 +87,24 @@ export async function GET(request) {
         id: doc.id,
         ...passData,
         userEmail,
+        rollNo,
       });
     }
+
+    // Sort by purchasedAt in memory (descending order - newest first)
+    passes.sort((a, b) => {
+      const aTime = a.purchasedAt?.toMillis?.() || 0;
+      const bTime = b.purchasedAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
 
     return NextResponse.json({ passes });
   } catch (e) {
     console.error("[ADMIN PASSES GET] Error:", e);
+    console.error("[ADMIN PASSES GET] Error code:", e?.code);
+    console.error("[ADMIN PASSES GET] Error message:", e?.message);
     return NextResponse.json(
-      { error: e?.message || "Failed to fetch passes" },
+      { error: e?.message || "Failed to fetch passes", code: e?.code },
       { status: 500 }
     );
   }
