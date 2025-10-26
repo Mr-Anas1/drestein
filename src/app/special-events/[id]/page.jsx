@@ -33,37 +33,50 @@ const SpecialEventDetailPage = () => {
   const [error, setError] = useState(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        setLoading(true);
+useEffect(() => {
+  const fetchEvent = async () => {
+    try {
+      setLoading(true);
+      
+      // Check if event data was passed via URL state
+      if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        const eventDataParam = searchParams.get('eventData');
         
-        // Use cached fetch method - reduces reads by 94%
-        const data = await fetchSpecialEvents();
-        
-        // Handle new API response format with pagination
-        const eventsArray = data?.events || data || [];
-        
-        // Find the event with matching ID
-        const foundEvent = eventsArray.find(e => e.id === params.id);
-        
-        if (!foundEvent) {
-          throw new Error("Event not found");
+        if (eventDataParam) {
+          try {
+            const passedEvent = JSON.parse(eventDataParam);
+            setEvent(passedEvent);
+            setLoading(false);
+            return;
+          } catch (e) {
+            console.warn('Failed to parse passed event data, fetching from API');
+          }
         }
-        
-        setEvent(foundEvent);
-      } catch (err) {
-        console.error("Error fetching event:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (params.id) {
-      fetchEvent();
+      
+      // Fallback: fetch from API if no data passed
+      const data = await fetchSpecialEvents();
+      const eventsArray = data?.events || data || [];
+      const foundEvent = eventsArray.find(e => e.id === params.id);
+      
+      if (!foundEvent) {
+        throw new Error("Event not found");
+      }
+      
+      setEvent(foundEvent);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching event:", err);
+      setError(err.message);
+      setLoading(false);
     }
-  }, [params.id, fetchSpecialEvents]);
+  };
+
+  if (params.id) {
+    fetchEvent();
+  }
+}, [params.id, fetchSpecialEvents]);
 
   const isExpired = (() => {
     const raw = event?.expiryDate;

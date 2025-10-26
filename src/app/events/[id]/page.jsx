@@ -29,32 +29,51 @@ const EventDetailPage = () => {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
 
   // Fetch event data from Firestore
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!params.id) return;
+useEffect(() => {
+  const fetchEvent = async () => {
+    if (!params.id) return;
 
-      try {
-        setLoading(true);
-        const eventDoc = doc(db, "events", params.id);
-        const eventSnapshot = await getDoc(eventDoc);
-
-        if (eventSnapshot.exists()) {
-          const eventData = { id: eventSnapshot.id, ...eventSnapshot.data() };
-          setEvent(eventData);
-        } else {
-          console.log("No event found with this ID");
-          setEvent(null);
+    try {
+      setLoading(true);
+      
+      // Check if event data was passed via URL state
+      if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        const eventDataParam = searchParams.get('eventData');
+        
+        if (eventDataParam) {
+          try {
+            const passedEvent = JSON.parse(eventDataParam);
+            setEvent(passedEvent);
+            setLoading(false);
+            return;
+          } catch (e) {
+            console.warn('Failed to parse passed event data, fetching from Firestore');
+          }
         }
-      } catch (error) {
-        console.error("Error fetching event:", error);
-        setEvent(null);
-      } finally {
-        setLoading(false);
       }
-    };
+      
+      // Fallback: fetch from Firestore if no data passed
+      const eventDoc = doc(db, "events", params.id);
+      const eventSnapshot = await getDoc(eventDoc);
 
-    fetchEvent();
-  }, [params.id]);
+      if (eventSnapshot.exists()) {
+        const eventData = { id: eventSnapshot.id, ...eventSnapshot.data() };
+        setEvent(eventData);
+      } else {
+        console.log("No event found with this ID");
+        setEvent(null);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      setEvent(null);
+      setLoading(false);
+    }
+  };
+
+  fetchEvent();
+}, [params.id]);
 
   // Handle registration
   // const handleRegistration = async () => {
