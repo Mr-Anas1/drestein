@@ -24,14 +24,6 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata = {
   title: "DRESTEIN",
   description: "DRESTEIN",
-  icons: {
-    icon: [
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon.ico", type: "image/x-icon" },
-    ],
-    shortcut: ["/favicon.ico"],
-  },
 };
 
 export default function RootLayout({ children }) {

@@ -9,17 +9,19 @@ const About = () => {
             name: "Dr. G. Nagappan",
             role: "Associate Dean (SCOFT)",
             department: "Professor & Head - CSE",
-            email: "nagappan@saveetha.ac.in",
+            email: "hod.cse@saveetha.ac.in",
             image: "/nagappan-sir.jpeg",
-            linkedin: "https://linkedin.com/in/nagappan"
+            linkedin: "https://linkedin.com/in/nagappan",
+            profile: "https://saveetha.ac.in/wp-content/uploads/2025/01/Dr.-G.-Nagappan-Profile.pdf"
         },
         {
             name: "Dr. Jyothi P",
             role: "Associate Professor - MBA",
             department: "MBA",
-            email: "jyothi.p@saveetha.ac.in",
+            email: "jyothip@saveetha.ac.in",
             image: "/jyothi-mam.jpeg",
-            linkedin: "https://linkedin.com/in/jyothi-p"
+            linkedin: "https://linkedin.com/in/jyothi-p",
+            profile: "https://saveetha.ac.in/wp-content/uploads/2025/01/Faculty-Profile-Dr.P.Jyothi.pdf"
         },
 
     ]
@@ -174,6 +176,13 @@ const About = () => {
                                             <span>🔗</span> LinkedIn
                                         </a>
                                     )} */}
+                                    {
+                                        coordinator.profile && (
+                                            <a href={coordinator.profile} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-white transition-colors duration-300 font-space text-xs">
+                                                Profile
+                                            </a>
+                                        ) 
+                                    }
                                 </div>
                             </div>
                         ))}
@@ -261,22 +270,22 @@ const About = () => {
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {[
-                            { dept: "AI-DS", name: "SANTHIYA R", contact: "212223230192" },
-                            { dept: "AI-ML", name: "Anu Varshini M B", contact: "9933247477" },
-                            { dept: "AGRI", name: "Ms. Sanjana", contact: "9600037887" },
-                            { dept: "BIO-MED", name: "Ms. Sherena", contact: "9566533465" },
-                            { dept: "CHEM", name: "Mr. Harishankar E", contact: "8807051192"},
-                            { dept: "CIVIL", name: "Mr. K. Arun Kumar", contact: "8072582553" },
+                            { dept: "AI-DS", name: "SANTHIYA R", contact: "9566694699" },
+                            { dept: "AI-ML", name: "POZHILAN", contact: "9043693955" },
+                            { dept: "AGRI", name: "SANJANA", contact: "9600037887" },
+                            { dept: "BIO-MED", name: "SHERENA", contact: "9566533465" },
+                            { dept: "CHEM", name: "HARISANKAR", contact: "8807051192"},
+                            { dept: "CIVIL", name: "ARUN KUMAR", contact: "8072582553" },
                             { dept: "CSE", name: "GOKUL SHARAN R", contact: "9791486718" },
                             { dept: "CYB SEC", name: "RAGUL RAAJAN T", contact: "9488001452" },
-                            { dept: "ECE", name: "Mr. Abhinandhan G", contact: "6383796369" },
-                            { dept: "EEE", name: "Mr. Visvanth P.S.", contact: "9840928549"},
-                            { dept: "EIE", name: "Jeginthan", contact: "6374470752"},
-                            { dept: "IoT", name: "BHAVYASHREE R", contact: "9345850687" },
+                            { dept: "ECE", name: "ABINANDHAN G", contact: "6383796369" },
+                            { dept: "EEE", name: "VISVANTH", contact: "9840928549"},
+                            { dept: "EIE", name: "JEGINTHAN", contact: "6374470752"},
+                            { dept: "IoT", name: "RAJALAKSHMI R", contact: "9488610743" },
                             { dept: "MECH", name: "VISAKAN G", contact: "7094998410"},
-                            { dept: "MED ELE", name: "Madhumitha. E. M", contact: "9629934867" },
-                            { dept: "IT", name: "Lakshmi Priya.V", contact: "6381478448" },
-                            { dept: "S&H", name: "Jothikrishnaa V", contact: "9042162885" },
+                            { dept: "MED ELE", name: "MADHUMITHA E. M", contact: "9629934867" },
+                            { dept: "IT", name: "LAKSHMI PRIYA V", contact: "6381478448" },
+                            { dept: "S&H", name: "JOTHIKRISHNAA V", contact: "9042162885" },
                         ].map((coord, index) => (
                             <div key={index} className="bg-background-soft border border-border rounded-lg p-4 hover:border-primary transition-all duration-300 hover:transform hover:scale-105 w-full">
                                 <div className="flex items-center gap-3 mb-2">
