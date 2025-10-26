@@ -45,7 +45,7 @@ const Stats = ({ value, title }) => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && \!hasAnimated) {
+          if (entry.isIntersecting && !hasAnimated) {
             setHasAnimated(true);
             animateCount();
           }

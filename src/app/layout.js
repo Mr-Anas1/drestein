@@ -8,7 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProfileGuard from "@/components/ProfileGuard";
 import PageLoader from "@/components/PageLoader";
 import { Suspense } from "react";
-import { Analytics } from '@vercel/analytics/next';
+import { Analytics } from "@vercel/analytics/react";
 
 const audiowide = Audiowide({
   weight: "400",
@@ -29,9 +29,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-    >
+    <html lang="en" className={`${audiowide.variable} ${spaceGrotesk.variable}`}>
       <body>
         <AuthProvider>
           <ProfileGuard>
@@ -42,8 +40,8 @@ export default function RootLayout({ children }) {
             <AnimatedBackground />
             <FloatingShapes />
             <CursorEffect />
-            <Analytics />
             {children}
+            <Analytics /> 
           </ProfileGuard>
         </AuthProvider>
       </body>
