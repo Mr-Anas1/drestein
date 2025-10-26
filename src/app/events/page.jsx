@@ -13,23 +13,36 @@ const page = () => {
     const [specialEvents, setSpecialEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState('all');
 
     useEffect(() => {
         const fetchEvents = async () => {
             try {
                 setLoading(true);
-                const [eventsRes, specialRes] = await Promise.all([
-                    fetch('/api/events'),
-                    fetch('/api/special-events')
+                setError(null);
+                setIsQuotaExceeded(false);
+                
+                // Add timeout to prevent endless loading
+                const timeout = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Request timeout')), 15000)
+                );
+                
+                const [eventsRes, specialRes] = await Promise.race([
+                    Promise.all([
+                        fetch('/api/events'),
+                        fetch('/api/special-events')
+                    ]),
+                    timeout
                 ]);
 
-                if (!eventsRes.ok) {
-                    throw new Error(`HTTP error! status: ${eventsRes.status}`);
-                }
-
-                const eventsData = await eventsRes.json();
+                const eventsData = eventsRes.ok ? await eventsRes.json() : [];
                 const specialData = specialRes.ok ? await specialRes.json() : [];
+                
+                // Check if API returned an error object
+                if (eventsData.error) {
+                    throw new Error(eventsData.error);
+                }
                 
                 console.log("Fetched events from Firestore:", eventsData);
                 console.log("Fetched special events:", specialData);
@@ -38,7 +51,16 @@ const page = () => {
                 setSpecialEvents(specialData);
             } catch (err) {
                 console.error("Error fetching events:", err);
-                setError(err.message);
+                // Check if it's a quota exceeded error or timeout (likely quota issue)
+                const errorMsg = err.message || '';
+                if (errorMsg.includes('RESOURCE_EXHAUSTED') || 
+                    errorMsg.includes('Quota exceeded') || 
+                    errorMsg.includes('quota') || 
+                    errorMsg.includes('timeout')) {
+                    setIsQuotaExceeded(true);
+                } else {
+                    setError(err.message);
+                }
             } finally {
                 setLoading(false);
             }
@@ -130,13 +152,34 @@ const page = () => {
                     </div>
                 )}
 
+                {isQuotaExceeded && (
+                    <div className="max-w-2xl mx-auto bg-background-soft border border-border rounded-2xl p-12 text-center">
+                        <div className="inline-block p-6 bg-secondary/10 rounded-full mb-6">
+                            <span className="text-5xl">🎉</span>
+                        </div>
+                        <h2 className="text-3xl font-audiowide mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Stay Tuned!</h2>
+                        <p className="text-muted-text font-space mb-4 text-lg">
+                            We're experiencing high traffic right now. Events are loading soon!
+                        </p>
+                        <p className="text-muted-text font-space mb-8">
+                            Please try again in a few moments. We're working hard to bring you the best experience!
+                        </p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide px-8 py-3 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
                 {error && (
                     <div className="flex justify-center items-center py-20">
                         <div className="text-red-500 text-lg">Error: {error}</div>
                     </div>
                 )}
 
-                {!loading && !error && (
+                {!loading && !error && !isQuotaExceeded && (
                     <div className="w-full pt-10 space-y-16">
                         {filteredDepartments.map((dept) => {
                             const deptCommonEvents = events.filter(e => e.department === dept.id);

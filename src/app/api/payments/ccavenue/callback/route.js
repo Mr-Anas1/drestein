@@ -148,22 +148,23 @@ async function updatePassAndStudent(db, passRef, passId, passData, success, orde
   console.log(`[CCA CALLBACK] Pass data:`, JSON.stringify(passData, null, 2));
 
   // Update student's hasEventPass flag if payment successful
-  // ✅ Use userUid from pass data or fallback to merchant_param2
   const userUid = passData.userUid || passData.merchant_param2;
   
   if (success && userUid) {
     try {
-      console.log(`[CCA CALLBACK] ✅ Payment successful, updating student ${userUid}...`);
       const studentRef = db.collection("students").doc(userUid);
-      
-      // Check if student document exists
       const studentDoc = await studentRef.get();
-      console.log(`[CCA CALLBACK] Student document exists:`, studentDoc.exists);
+      const studentData = studentDoc.data() || {};
       
-      if (!studentDoc.exists) {
-        console.warn(`[CCA CALLBACK] ⚠️ Student document does not exist for ${userUid}, creating it...`);
-      }
+      // Store user email and roll number in pass document (avoid N+1 queries later)
+      const passUpdateData = {
+        userEmail: studentData.email || null,
+        rollNo: studentData.rollNo || null,
+      };
       
+      await passRef.update(passUpdateData);
+      
+      // Update student's hasEventPass flag
       await studentRef.set(
         {
           hasEventPass: true,
@@ -172,23 +173,13 @@ async function updatePassAndStudent(db, passRef, passId, passData, success, orde
         },
         { merge: true }
       );
-      console.log(`[CCA CALLBACK] ✅ Student ${userUid} hasEventPass set to true`);
-      
-      // Verify the update
-      const updatedDoc = await studentRef.get();
-      const updatedData = updatedDoc.data();
-      console.log(`[CCA CALLBACK] ✅ Verified - hasEventPass is now:`, updatedData?.hasEventPass);
 
-      // ✅ Auto-register for special events if this is a custom pass
+      // Auto-register for special events if this is a custom pass
       if (passData.passType === "custom" && passData.customEvents) {
-        console.log(`[CCA CALLBACK] 🎯 Custom pass detected, auto-registering special events...`);
         await autoRegisterSpecialEvents(db, userUid, passData.customEvents, passId);
       }
     } catch (studentErr) {
-      console.error("[CCA CALLBACK] ❌ Failed to update student:", studentErr);
-      console.error("[CCA CALLBACK] Error code:", studentErr.code);
-      console.error("[CCA CALLBACK] Error message:", studentErr.message);
-      console.error("[CCA CALLBACK] Stack trace:", studentErr.stack);
+      console.error("[CCA CALLBACK] Error updating student:", studentErr);
     }
   } else {
     console.log(`[CCA CALLBACK] ⚠️ Skipping student update - success: ${success}, userUid: ${userUid || 'MISSING'}`);

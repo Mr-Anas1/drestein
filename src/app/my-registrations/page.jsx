@@ -10,6 +10,7 @@ export default function MyRegistrationsPage() {
     const { isAuthenticated, user, studentProfile, loginWithGoogleStudent, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
     const [registrations, setRegistrations] = useState([]);
     const [eventsMap, setEventsMap] = useState({});
     const [specialEventsMap, setSpecialEventsMap] = useState({});
@@ -52,7 +53,12 @@ export default function MyRegistrationsPage() {
                 }
             } catch (e) {
                 console.error(e);
-                setError('Failed to load your registrations. Please try again later.');
+                // Check if it's a quota exceeded error
+                if (e.message.includes('RESOURCE_EXHAUSTED') || e.message.includes('quota')) {
+                    setIsQuotaExceeded(true);
+                } else {
+                    setError('Failed to load your registrations. Please try again later.');
+                }
             } finally {
                 setLoading(false);
             }
@@ -113,13 +119,34 @@ export default function MyRegistrationsPage() {
                     </div>
                 </div>
 
+                {isQuotaExceeded && (
+                    <div className="mb-6 bg-background-soft border border-border rounded-lg p-8 text-center">
+                        <div className="inline-block p-4 bg-secondary/10 rounded-full mb-4">
+                            <span className="text-3xl">🎉</span>
+                        </div>
+                        <h2 className="text-2xl font-audiowide mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Stay Tuned!</h2>
+                        <p className="text-muted-text font-space mb-2">
+                            We're experiencing high traffic right now. Your registrations are safe and secure.
+                        </p>
+                        <p className="text-muted-text font-space mb-4">
+                            Please try again in a few moments. We're working hard to bring you the best experience!
+                        </p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide px-6 py-2 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
                 {error && (
                     <div className="mb-4 p-3 border border-red-500/30 bg-red-500/10 text-red-300 rounded-lg text-sm">
                         {error}
                     </div>
                 )}
 
-                {registrations.length === 0 ? (
+                {!isQuotaExceeded && registrations.length === 0 ? (
                     <div className="bg-background-soft border border-border rounded-lg p-6 text-center">
                         <div className="font-audiowide text-lg mb-2">No registrations found</div>
                         <div className="text-muted-text text-sm">Explore upcoming events and register to see them here.</div>

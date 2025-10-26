@@ -14,6 +14,7 @@ export default function MyPassesPage() {
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
   const [specialEventsMap, setSpecialEventsMap] = useState({});
 
   useEffect(() => {
@@ -63,7 +64,12 @@ export default function MyPassesPage() {
       }
     } catch (err) {
       console.error('Error fetching passes:', err);
-      setError(err.message);
+      // Check if it's a quota exceeded error
+      if (err.message.includes('RESOURCE_EXHAUSTED') || err.message.includes('quota')) {
+        setIsQuotaExceeded(true);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -186,6 +192,28 @@ export default function MyPassesPage() {
           </p>
         </div>
 
+        {/* Quota Exceeded State */}
+        {isQuotaExceeded && (
+          <div className="bg-background-soft border border-border rounded-2xl p-12 text-center">
+            <div className="inline-block p-6 bg-secondary/10 rounded-full mb-6">
+              <Ticket className="w-16 h-16 text-secondary" />
+            </div>
+            <h2 className="text-3xl font-audiowide mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Stay Tuned! 🎉</h2>
+            <p className="text-muted-text font-space mb-4 max-w-md mx-auto text-lg">
+              We're experiencing high traffic right now. Your passes are safe and secure.
+            </p>
+            <p className="text-muted-text font-space mb-8 max-w-md mx-auto">
+              Please try again in a few moments. We're working hard to bring you the best experience!
+            </p>
+            <button
+              onClick={() => fetchPasses()}
+              className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide px-8 py-3 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Error State */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 mb-8 flex items-start gap-3">
@@ -198,7 +226,7 @@ export default function MyPassesPage() {
         )}
 
         {/* No Passes State */}
-        {!error && passes.length === 0 && (
+        {!error && !isQuotaExceeded && passes.length === 0 && (
           <div className="bg-background-soft border border-border rounded-2xl p-12 text-center">
             <div className="inline-block p-6 bg-primary/10 rounded-full mb-6">
               <Ticket className="w-16 h-16 text-primary" />
