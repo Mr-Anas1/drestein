@@ -17,17 +17,37 @@ export default function DepartmentPage() {
   const [events, setEvents] = useState([]);
   const [specialEvents, setSpecialEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        // Fetch regular events
-        const eventsRes = await fetch("/api/events");
-        const eventsData = await eventsRes.json();
+        setLoading(true);
+        setError(null);
+        setIsQuotaExceeded(false);
         
-        // Fetch special events
-        const specialRes = await fetch("/api/special-events");
-        const specialData = await specialRes.json();
+        // Add timeout to prevent endless loading
+        const timeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout')), 15000)
+        );
+        
+        // Fetch regular events and special events
+        const [eventsRes, specialRes] = await Promise.race([
+          Promise.all([
+            fetch("/api/events"),
+            fetch("/api/special-events")
+          ]),
+          timeout
+        ]);
+        
+        const eventsData = eventsRes.ok ? await eventsRes.json() : [];
+        const specialData = specialRes.ok ? await specialRes.json() : [];
+        
+        // Check if API returned an error object
+        if (eventsData.error) {
+          throw new Error(eventsData.error);
+        }
 
         // Filter by department
         const filteredEvents = eventsData.filter(
@@ -39,8 +59,18 @@ export default function DepartmentPage() {
 
         setEvents(filteredEvents);
         setSpecialEvents(filteredSpecialEvents);
-      } catch (error) {
-        console.error("Error fetching events:", error);
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        // Check if it's a quota exceeded error or timeout (likely quota issue)
+        const errorMsg = err.message || '';
+        if (errorMsg.includes('RESOURCE_EXHAUSTED') || 
+            errorMsg.includes('Quota exceeded') || 
+            errorMsg.includes('quota') || 
+            errorMsg.includes('timeout')) {
+          setIsQuotaExceeded(true);
+        } else {
+          setError(err.message);
+        }
       } finally {
         setLoading(false);
       }
@@ -112,6 +142,30 @@ export default function DepartmentPage() {
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-text font-space">Loading events...</p>
+          </div>
+        ) : isQuotaExceeded ? (
+          <div className="max-w-2xl mx-auto bg-background-soft border border-border rounded-2xl p-12 text-center">
+            <div className="inline-block p-6 bg-secondary/10 rounded-full mb-6">
+              <span className="text-5xl">🎉</span>
+            </div>
+            <h2 className="text-3xl font-audiowide mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Stay Tuned!</h2>
+            <p className="text-muted-text font-space mb-4 text-lg">
+              We're experiencing high traffic right now. Events are loading soon!
+            </p>
+            <p className="text-muted-text font-space mb-8">
+              Please try again in a few moments. We're working hard to bring you the best experience!
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide px-8 py-3 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+            >
+              Retry
+            </button>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="text-red-500 text-lg mb-4">Error loading events</div>
+            <p className="text-muted-text font-space">{error}</p>
           </div>
         ) : (
           <>
