@@ -57,6 +57,9 @@ export async function GET(request) {
     const db = getAdminDB();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const category = searchParams.get("category");
+    const limit = parseInt(searchParams.get("limit") || "100", 10);
+    const offset = parseInt(searchParams.get("offset") || "0", 10);
 
     // Get single special event by ID
     if (id) {
@@ -70,21 +73,40 @@ export async function GET(request) {
       return NextResponse.json({ id: doc.id, ...doc.data() });
     }
 
-    // Get all special events
-    const snapshot = await db
-      .collection("specialEvents")
-      .orderBy("createdAt", "desc")
-      .get();
+    // Build query with filters
+    let query = db.collection("specialEvents");
+    if (category) {
+      query = query.where("category", "==", category);
+    }
+    query = query.orderBy("createdAt", "desc");
+
+    // Get total count for pagination
+    const countSnapshot = await query.get();
+    const totalCount = countSnapshot.size;
+
+    // Apply pagination
+    const snapshot = await query.offset(offset).limit(limit).get();
     const specialEvents = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
 
-    return NextResponse.json(specialEvents, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+    return NextResponse.json(
+      {
+        events: specialEvents,
+        pagination: {
+          total: totalCount,
+          offset,
+          limit,
+          hasMore: offset + limit < totalCount,
+        },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching special events:", error);
     return NextResponse.json(

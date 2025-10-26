@@ -240,7 +240,7 @@ const About = () => {
                                     <div className="w-20 h-20 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                         <span className="text-white font-audiowide text-lg">K</span>
                                     </div>
-                                    <h4 className="font-audiowide text-lg text-white mb-1 group-hover:text-accent transition-colors duration-300">KEERTHIVASAN</h4>
+                                    <h4 className="font-audiowide text-lg text-white mb-1 group-hover:text-accent transition-colors duration-300">KEERTHIVASAN M</h4>
                                     <p className="text-accent font-space text-sm">Security & Testing</p>
                                     <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
                                 </a>
@@ -274,7 +274,7 @@ const About = () => {
                             { dept: "AI-ML", name: "POZHILAN", contact: "9043693955" },
                             { dept: "AGRI", name: "SANJANA", contact: "9600037887" },
                             { dept: "BIO-MED", name: "SHERENA", contact: "9566533465" },
-                            { dept: "CHEM", name: "HARISANKAR", contact: "8807051192"},
+                            { dept: "CHEM", name: "HARISHANKAR E", contact: "8807051192"},
                             { dept: "CIVIL", name: "ARUN KUMAR", contact: "8072582553" },
                             { dept: "CSE", name: "GOKUL SHARAN R", contact: "9791486718" },
                             { dept: "CYB SEC", name: "RAGUL RAAJAN T", contact: "9488001452" },

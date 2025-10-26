@@ -25,20 +25,59 @@ function getAdminDB() {
   return getFirestore();
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const department = searchParams.get("department");
+    const limit = parseInt(searchParams.get("limit") || "100", 10);
+    const offset = parseInt(searchParams.get("offset") || "0", 10);
+    const id = searchParams.get("id");
+
     const db = getAdminDB();
-    const snapshot = await db
-      .collection("events")
-      .orderBy("createdAt", "desc")
-      .get();
+
+    // Get single event by ID
+    if (id) {
+      const doc = await db.collection("events").doc(id).get();
+      if (!doc.exists) {
+        return NextResponse.json(
+          { error: "Event not found" },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({ id: doc.id, ...doc.data() });
+    }
+
+    // Build query with filters
+    let query = db.collection("events");
+    if (department) {
+      query = query.where("department", "==", department);
+    }
+    query = query.orderBy("createdAt", "desc");
+
+    // Get total count for pagination
+    const countSnapshot = await query.get();
+    const totalCount = countSnapshot.size;
+
+    // Apply pagination
+    const snapshot = await query.offset(offset).limit(limit).get();
     const events = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-    return NextResponse.json(events, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+    return NextResponse.json(
+      {
+        events,
+        pagination: {
+          total: totalCount,
+          offset,
+          limit,
+          hasMore: offset + limit < totalCount,
+        },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        },
+      }
+    );
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
