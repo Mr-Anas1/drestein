@@ -30,14 +30,23 @@ const SpecialEventsPage = () => {
             timeout
         ]);
 
-        const data = response.ok ? await response.json() : [];
+        const data = await response.json();
         
         // Check if API returned an error object
         if (data.error) {
           throw new Error(data.error);
         }
+        
+        // Handle new API response format with pagination
+        const eventsArray = data?.events || data || [];
+        
+        // Ensure it's an array
+        if (!Array.isArray(eventsArray)) {
+          throw new Error('Invalid events format');
+        }
+        
         // Filter only competition category events
-        const competitionEvents = data.filter(event => event.category === 'competition');
+        const competitionEvents = eventsArray.filter(event => event.category === 'competition');
         console.log("Fetched premium competition events:", competitionEvents);
         setPremiumEvents(competitionEvents);
       } catch (err) {

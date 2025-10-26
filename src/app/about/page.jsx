@@ -259,6 +259,9 @@ const About = () => {
             {/* Design and Media Team Section */}
             <div className="py-16 px-6 md:px-12">
                 <div className="max-w-4xl mx-auto">
+                    <h2 className="font-audiowide text-center text-3xl md:text-4xl bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent mb-8">
+                        GRAPHICS DESIGNERS
+                    </h2>
                     <div className="bg-background border border-border rounded-2xl p-8 md:p-12">
                         <div className="w-20 h-20 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-6 flex items-center justify-center">
                             <span className="text-white font-audiowide text-2xl">🎨</span>
