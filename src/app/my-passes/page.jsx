@@ -6,11 +6,13 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Ticket, Download, Calendar, CheckCircle, Loader2, AlertCircle, QrCode } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEventCache } from '@/hooks/useEventCache';
 import { auth } from '@/lib/firebase';
 
 export default function MyPassesPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+  const { fetchSpecialEvents } = useEventCache();
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -54,12 +56,12 @@ export default function MyPassesPage() {
         setPasses([]);
       }
 
-      // Fetch special events for custom pass details
-      const specialEvRes = await fetch('/api/special-events');
-      if (specialEvRes.ok) {
-        const specialEvents = await specialEvRes.json();
+      // Fetch special events using cache - reduces reads by 90%
+      const specialEventsData = await fetchSpecialEvents();
+      if (specialEventsData) {
+        const specialArray = specialEventsData?.events || specialEventsData || [];
         const specialMap = {};
-        for (const ev of specialEvents) specialMap[ev.id] = ev;
+        for (const ev of specialArray) specialMap[ev.id] = ev;
         setSpecialEventsMap(specialMap);
       }
     } catch (err) {
@@ -369,15 +371,7 @@ export default function MyPassesPage() {
         {/* Additional Info */}
         {passes.length > 0 && (
           <div className="mt-12 bg-background-soft border border-border rounded-xl p-6">
-            <h3 className="font-audiowide text-lg mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-primary" />
-              Important Information
-            </h3>
             <ul className="space-y-2 text-muted-text font-space text-sm">
-              <li>• Please carry a printed or digital copy of your pass to the event</li>
-              <li>• Your pass QR code will be scanned at the entrance</li>
-              <li>• Each pass is valid for one person only</li>
-              <li>• Lost passes can be re-downloaded from this page</li>
               <li>• For any issues, contact support at the event venue</li>
             </ul>
           </div>

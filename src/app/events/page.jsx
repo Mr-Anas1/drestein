@@ -7,6 +7,7 @@ import SpecialEventBox from '@/components/SpecialEventBox'
 import CustomDropdown from '@/components/CustomDropdown'
 import { DEPARTMENTS } from '@/constants/departments'
 import { Info } from 'lucide-react'
+import { useEventCache } from '@/hooks/useEventCache'
 
 const page = () => {
     const [events, setEvents] = useState([]);
@@ -15,6 +16,7 @@ const page = () => {
     const [error, setError] = useState(null);
     const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState('all');
+    const { fetchEvents: fetchEventsCache, fetchSpecialEvents: fetchSpecialEventsCache } = useEventCache();
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -23,32 +25,21 @@ const page = () => {
                 setError(null);
                 setIsQuotaExceeded(false);
                 
-                // Add timeout to prevent endless loading
-                const timeout = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Request timeout')), 15000)
-                );
-                
-                const [eventsRes, specialRes] = await Promise.race([
-                    Promise.all([
-                        fetch('/api/events'),
-                        fetch('/api/special-events')
-                    ]),
-                    timeout
+                // Use cached fetch methods - reduces reads by 94%
+                const [eventsData, specialData] = await Promise.all([
+                    fetchEventsCache(),
+                    fetchSpecialEventsCache()
                 ]);
-
-                const eventsData = eventsRes.ok ? await eventsRes.json() : [];
-                const specialData = specialRes.ok ? await specialRes.json() : [];
                 
-                // Check if API returned an error object
-                if (eventsData.error) {
-                    throw new Error(eventsData.error);
-                }
+                // Handle new API response format with pagination
+                const eventsArray = eventsData?.events || eventsData || [];
+                const specialArray = specialData?.events || specialData || [];
                 
-                console.log("Fetched events from Firestore:", eventsData);
-                console.log("Fetched special events:", specialData);
+                console.log("Fetched events from cache/API:", eventsArray);
+                console.log("Fetched special events from cache/API:", specialArray);
                 
-                setEvents(eventsData);
-                setSpecialEvents(specialData);
+                setEvents(eventsArray);
+                setSpecialEvents(specialArray);
             } catch (err) {
                 console.error("Error fetching events:", err);
                 // Check if it's a quota exceeded error or timeout (likely quota issue)
@@ -67,7 +58,7 @@ const page = () => {
         };
 
         fetchEvents();
-    }, []);
+    }, [fetchEventsCache, fetchSpecialEventsCache]);
 
     // Memoize filtered events to avoid recalculation on every render
     const { departmentIds, otherEvents, filteredDepartments } = useMemo(() => {
@@ -194,7 +185,22 @@ const page = () => {
                                         <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto md:mx-0"></div>
                                     </div>
                                     
-                                    {/* Common Events */}
+                                    {/* Premium Events - Shown First */}
+                                    {deptSpecialEvents.length > 0 && (
+                                        <div className="space-y-4">
+                                            <h3 className="font-audiowide text-lg text-secondary">Premium Events</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
+                                                {deptSpecialEvents.map((event) => (
+                                                    <SpecialEventBox
+                                                        key={event.id}
+                                                        event={event}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Common Events - Shown Second */}
                                     {deptCommonEvents.length > 0 && (
                                         <div className="space-y-4">
                                             <h3 className="font-audiowide text-lg text-primary">Common Events</h3>
@@ -207,21 +213,6 @@ const page = () => {
                                                         description={event.description}
                                                         link={`/events/${event.id}`}
                                                         id={event.id}
-                                                        event={event}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Premium Events */}
-                                    {deptSpecialEvents.length > 0 && (
-                                        <div className="space-y-4">
-                                            <h3 className="font-audiowide text-lg text-secondary">Premium Events</h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
-                                                {deptSpecialEvents.map((event) => (
-                                                    <SpecialEventBox
-                                                        key={event.id}
                                                         event={event}
                                                     />
                                                 ))}

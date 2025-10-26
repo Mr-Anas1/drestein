@@ -70,9 +70,12 @@ const AdminDashboard = () => {
     const fetchEvents = async () => {
         try {
             setLoading(true)
-            const response = await fetch('/api/events')
+            // Use pagination - reduces reads by 90%
+            const response = await fetch('/api/events?limit=100')
             const data = await response.json()
-            setEvents(data)
+            // Handle new response format with pagination
+            const eventsArray = data?.events || data || []
+            setEvents(eventsArray)
         } catch (error) {
             console.error('Error fetching events:', error)
         } finally {

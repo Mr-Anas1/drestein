@@ -220,7 +220,7 @@ const About = () => {
 
                         <div className="border-t border-border pt-6">
                             <div className="grid md:grid-cols-3 gap-6 mb-6">
-                                <a href="#" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                <a href="https://www.linkedin.com/in/md-anas1/" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
                                     <div className="w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                         <span className="text-white font-audiowide text-lg">MA</span>
                                     </div>
@@ -228,7 +228,7 @@ const About = () => {
                                     <p className="text-primary font-space text-sm">React Developer</p>
                                     <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
                                 </a>
-                                <a href="#" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                <a href="https://www.linkedin.com/in/mohamed-farook-s-2aa0352b2/" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
                                     <div className="w-20 h-20 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                         <span className="text-white font-audiowide text-lg">MF</span>
                                     </div>
@@ -236,7 +236,7 @@ const About = () => {
                                     <p className="text-secondary font-space text-sm">UI/UX Designer</p>
                                     <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
                                 </a>
-                                <a href="#" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                <a href="https://www.linkedin.com/in/keerthivasan-m-877a182b9/" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
                                     <div className="w-20 h-20 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                         <span className="text-white font-audiowide text-lg">K</span>
                                     </div>
@@ -256,6 +256,56 @@ const About = () => {
                 </div>
             </div>
 
+            {/* Design and Media Team Section */}
+            <div className="py-16 px-6 md:px-12">
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-background border border-border rounded-2xl p-8 md:p-12">
+                        <div className="w-20 h-20 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-6 flex items-center justify-center">
+                            <span className="text-white font-audiowide text-2xl">🎨</span>
+                        </div>
+
+                        <h3 className="font-audiowide text-center text-2xl text-white mb-4">
+                            CRAFTED WITH CREATIVITY
+                        </h3>
+
+                        <p className="text-muted-text text-center font-space text-lg leading-relaxed mb-6">
+                            This design has been thoughtfully envisioned and brought to life to capture the essence and vibrance of DRESTEIN.
+                            Created using modern design principles and tools like Adobe Illustrator, Photoshop, and Figma, it stands as a reflection of our dedication to artistry, precision, and visual excellence.
+                        </p>
+
+                        <div className="flex flex-wrap justify-center gap-4 mb-8">
+                            <span className="px-4 py-2 bg-secondary/20 text-secondary rounded-full font-space text-sm">Adobe Photoshop</span>
+                            <span className="px-4 py-2 bg-accent/20 text-accent rounded-full font-space text-sm">Adobe Illustrator</span>
+                            <span className="px-4 py-2 bg-secondary/20 text-secondary rounded-full font-space text-sm">Figma</span>
+                        </div>
+
+                        <div className="border-t border-border pt-6">
+                            <div className="grid md:grid-cols-2 gap-6 mb-6">
+                                <a href="https://www.linkedin.com/in/priyan-v-43496332a?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <span className="text-white font-audiowide text-sm">PV</span>
+                                    </div>
+                                    <h4 className="font-audiowide text-base text-white mb-1 group-hover:text-secondary transition-colors duration-300">PRIYAN V</h4>
+                                    <p className="text-secondary font-space text-xs">Designer</p>
+                                    <p className="text-accent font-space text-xs mt-1">AI&DS</p>
+                                    <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
+                                </a>
+                                <a href="https://www.linkedin.com/in/jayaganapathi?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-accent to-secondary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <span className="text-white font-audiowide text-sm">JS</span>
+                                    </div>
+                                    <h4 className="font-audiowide text-base text-white mb-1 group-hover:text-accent transition-colors duration-300">JAYAGANAPATHI S</h4>
+                                    <p className="text-accent font-space text-xs">Designer</p>
+                                    <p className="text-secondary font-space text-xs mt-1">CSE</p>
+                                    <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
+                                </a>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* DSC Coordinators Section */}
             <div className="py-16 px-6 md:px-12">
                 <div className="max-w-7xl mx-auto">
@@ -270,22 +320,22 @@ const About = () => {
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {[
-                            { dept: "AI-DS", name: "SANTHIYA R", contact: "9566694699" },
-                            { dept: "AI-ML", name: "POZHILAN", contact: "9043693955" },
-                            { dept: "AGRI", name: "SANJANA", contact: "9600037887" },
-                            { dept: "BIO-MED", name: "SHERENA", contact: "9566533465" },
-                            { dept: "CHEM", name: "HARISHANKAR E", contact: "8807051192"},
-                            { dept: "CIVIL", name: "ARUN KUMAR", contact: "8072582553" },
-                            { dept: "CSE", name: "GOKUL SHARAN R", contact: "9791486718" },
-                            { dept: "CYB SEC", name: "RAGUL RAAJAN T", contact: "9488001452" },
-                            { dept: "ECE", name: "ABINANDHAN G", contact: "6383796369" },
-                            { dept: "EEE", name: "VISVANTH", contact: "9840928549"},
-                            { dept: "EIE", name: "JEGINTHAN", contact: "6374470752"},
-                            { dept: "IoT", name: "RAJALAKSHMI R", contact: "9488610743" },
-                            { dept: "MECH", name: "VISAKAN G", contact: "7094998410"},
-                            { dept: "MED ELE", name: "MADHUMITHA E. M", contact: "9629934867" },
-                            { dept: "IT", name: "LAKSHMI PRIYA V", contact: "6381478448" },
-                            { dept: "S&H", name: "JOTHIKRISHNAA V", contact: "9042162885" },
+                            { dept: "AI&DS", name: "Mrs. SANTHIYA R", contact: "9566694699" },
+                            { dept: "AI&ML", name: "Mr. POZHILAN", contact: "9043693955" },
+                            { dept: "AGRI", name: "Mrs. SANJANA", contact: "9600037887" },
+                            { dept: "BIO-MED", name: "Mrs. SHERENA", contact: "9566533465" },
+                            { dept: "CHEM", name: "Mr. HARISHANKAR E", contact: "8807051192"},
+                            { dept: "CIVIL", name: "Mr. ARUN KUMAR", contact: "8072582553" },
+                            { dept: "CSE", name: "Mr. GOKUL SHARAN R", contact: "9791486718" },
+                            { dept: "CYB SEC", name: "Mr. RAGUL RAAJAN T", contact: "9488001452" },
+                            { dept: "ECE", name: "Mr. ABINANDHAN G", contact: "6383796369" },
+                            { dept: "EEE", name: "Mr. VISVANTH", contact: "9840928549"},
+                            { dept: "EIE", name: "Mr. JEGINTHAN", contact: "6374470752"},
+                            { dept: "IoT", name: "Mrs. RAJALAKSHMI R", contact: "9488610743" },
+                            { dept: "MECH", name: "Mr. VISAKAN G", contact: "7094998410"},
+                            { dept: "MED ELE", name: "Mrs. MADHUMITHA E. M", contact: "9629934867" },
+                            { dept: "IT", name: "Mrs. LAKSHMI PRIYA V", contact: "6381478448" },
+                            { dept: "S&H", name: "Mr. JOTHIKRISHNAA V", contact: "9042162885" },
                         ].map((coord, index) => (
                             <div key={index} className="bg-background-soft border border-border rounded-lg p-4 hover:border-primary transition-all duration-300 hover:transform hover:scale-105 w-full">
                                 <div className="flex items-center gap-3 mb-2">
@@ -324,7 +374,7 @@ const About = () => {
                             </div>
                             <div className="space-y-2 mt-2 pt-2 border-t border-border">
                                 <div>
-                                    <h3 className="font-space text-sm text-white">Mr. Aakash</h3>
+                                    <h3 className="font-space text-sm text-white">Mr. AAKASH</h3>
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className="text-accent text-xs">📞</span>
                                         <a href="tel:7305323223" className="text-muted-text hover:text-accent transition-colors duration-300 font-space text-xs">
@@ -333,7 +383,7 @@ const About = () => {
                                     </div>
                                 </div>
                                 <div className="pt-2 border-t border-border/50">
-                                    <h3 className="font-space text-sm text-white">Mr. Harivignesh</h3>
+                                    <h3 className="font-space text-sm text-white">Mr. HARIVIGNESH</h3>
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className="text-accent text-xs">📞</span>
                                         <a href="tel:9445946319" className="text-muted-text hover:text-accent transition-colors duration-300 font-space text-xs">

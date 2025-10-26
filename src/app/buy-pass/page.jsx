@@ -110,7 +110,7 @@ export default function BuyPassPage() {
   const removeGeneralPassFromCart = async () => {
     try {
       const token = await auth.currentUser?.getIdToken?.();
-      // Find the general pass cart item
+      // OPTIMIZED: Fetch cart once to find general pass item
       const response = await fetch(`/api/special-events/register?userUid=${user.uid}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -124,7 +124,9 @@ export default function BuyPassPage() {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
           });
-          fetchCart(); // Refresh cart
+          // Update state directly to avoid another fetch
+          setGeneralPassInCart(false);
+          setCartTotal(cart.reduce((sum, item) => sum + (item.eventPrice || 0), 0));
         }
       }
     } catch (error) {

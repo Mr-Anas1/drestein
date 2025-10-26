@@ -1,6 +1,6 @@
 "use client";
 
-import { AlignJustify, X, Ticket, ShoppingCart } from "lucide-react";
+import { AlignJustify, X, Ticket, ShoppingCart, CheckCircle } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -163,8 +163,9 @@ const Header = () => {
                   </div>
                   <button
                     onClick={() => { setAccountOpen(false); router.push('/my-registrations'); }}
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm"
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm flex items-center gap-2"
                   >
+                    <CheckCircle size={16} />
                     My Registrations
                   </button>
                   <button

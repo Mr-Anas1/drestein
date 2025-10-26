@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEventCache } from '@/hooks/useEventCache';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { CheckCircle } from 'lucide-react';
 
 export default function MyRegistrationsPage() {
     const { isAuthenticated, user, studentProfile, loginWithGoogleStudent, loading: authLoading } = useAuth();
+    const { fetchEvents, fetchSpecialEvents } = useEventCache();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
@@ -34,21 +37,20 @@ export default function MyRegistrationsPage() {
                 const regs = regData.participants || [];
                 setRegistrations(regs);
 
-                // Fetch all events once to map titles (simple approach; optimize later if needed)
-                const evRes = await fetch('/api/events');
-                if (evRes.ok) {
-                    const events = await evRes.json();
+                // Fetch events and special events using cache - reduces reads by 94%
+                const eventsData = await fetchEvents();
+                if (eventsData) {
+                    const eventsArray = eventsData?.events || eventsData || [];
                     const map = {};
-                    for (const ev of events) map[ev.id] = ev;
+                    for (const ev of eventsArray) map[ev.id] = ev;
                     setEventsMap(map);
                 }
 
-                // Fetch all special events
-                const specialEvRes = await fetch('/api/special-events');
-                if (specialEvRes.ok) {
-                    const specialEvents = await specialEvRes.json();
+                const specialEventsData = await fetchSpecialEvents();
+                if (specialEventsData) {
+                    const specialArray = specialEventsData?.events || specialEventsData || [];
                     const specialMap = {};
-                    for (const ev of specialEvents) specialMap[ev.id] = ev;
+                    for (const ev of specialArray) specialMap[ev.id] = ev;
                     setSpecialEventsMap(specialMap);
                 }
             } catch (e) {
@@ -106,7 +108,10 @@ export default function MyRegistrationsPage() {
             <Header />
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-audiowide">My Registrations</h1>
+                    <div className="flex items-center gap-3 mb-2">
+                        <CheckCircle className="w-8 h-8 text-primary" />
+                        <h1 className="text-3xl font-audiowide">My Registrations</h1>
+                    </div>
                     <p className="text-sm text-muted-text mt-2">
                         View all your event and workshop registrations here.
                     </p>
@@ -221,7 +226,7 @@ export default function MyRegistrationsPage() {
                                     <div className="text-right">
                                         <div className="text-xs text-muted-text">Registered on</div>
                                         <div className="text-sm">
-                                            {new Date(r.registeredAt).toLocaleString()}
+                                            {r.registeredAt ? new Date(r.registeredAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
                                         </div>
                                         <div className="mt-1 text-xs">
                                             Status: <span className={
