@@ -466,9 +466,22 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
                   onFileUpload={(url) => setFormData((prev) => ({ ...prev, competitionPptUrl: url }))}
                   currentFile={formData.competitionPptUrl}
                   disabled={loading}
-                  acceptedFormats=".pdf,.ppt,.pptx"
+                  acceptedFormats=".pdf,.ppt,.pptx,.zip"
                   label="Upload Presentation"
                 />
+                <div className="mt-3">
+                  <label className="block text-white font-audiowide text-sm mb-2">
+                    Or paste Cloudinary URL
+                  </label>
+                  <input
+                    type="url"
+                    name="competitionPptUrl"
+                    value={formData.competitionPptUrl}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, competitionPptUrl: e.target.value }))}
+                    placeholder="https://res.cloudinary.com/your-cloud/raw/upload/.../file.zip"
+                    className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-white font-audiowide text-sm mb-2">

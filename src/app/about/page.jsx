@@ -323,10 +323,10 @@ const About = () => {
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {[
-                            { dept: "AI&DS", name: "Mrs. SANTHIYA R", contact: "9566694699" },
+                            { dept: "AI&DS", name: "Ms. SANTHIYA R", contact: "9566694699" },
                             { dept: "AI&ML", name: "Mr. POZHILAN", contact: "9043693955" },
-                            { dept: "AGRI", name: "Mrs. SANJANA", contact: "9600037887" },
-                            { dept: "BIO-MED", name: "Mrs. SHERENA", contact: "9566533465" },
+                            { dept: "AGRI", name: "Ms. SANJANA", contact: "9600037887" },
+                            { dept: "BIO-MED", name: "Ms. SHERENA", contact: "9566533465" },
                             { dept: "CHEM", name: "Mr. HARISHANKAR E", contact: "8807051192"},
                             { dept: "CIVIL", name: "Mr. ARUN KUMAR", contact: "8072582553" },
                             { dept: "CSE", name: "Mr. GOKUL SHARAN R", contact: "9791486718" },
@@ -334,10 +334,10 @@ const About = () => {
                             { dept: "ECE", name: "Mr. ABINANDHAN G", contact: "6383796369" },
                             { dept: "EEE", name: "Mr. VISVANTH", contact: "9840928549"},
                             { dept: "EIE", name: "Mr. JEGINTHAN", contact: "6374470752"},
-                            { dept: "IoT", name: "Mrs. RAJALAKSHMI R", contact: "9488610743" },
+                            { dept: "IoT", name: "Ms. RAJALAKSHMI R", contact: "9488610743" },
                             { dept: "MECH", name: "Mr. VISAKAN G", contact: "7094998410"},
-                            { dept: "MED ELE", name: "Mrs. MADHUMITHA E. M", contact: "9629934867" },
-                            { dept: "IT", name: "Mrs. LAKSHMI PRIYA V", contact: "6381478448" },
+                            { dept: "MED ELE", name: "Ms. MADHUMITHA E. M", contact: "9629934867" },
+                            { dept: "IT", name: "Ms. LAKSHMI PRIYA V", contact: "6381478448" },
                             { dept: "S&H", name: "Mr. JOTHIKRISHNAA V", contact: "9042162885" },
                         ].map((coord, index) => (
                             <div key={index} className="bg-background-soft border border-border rounded-lg p-4 hover:border-primary transition-all duration-300 hover:transform hover:scale-105 w-full">

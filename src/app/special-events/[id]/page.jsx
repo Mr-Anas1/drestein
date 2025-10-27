@@ -134,6 +134,34 @@ useEffect(() => {
     );
   }
 
+  // Build friendly filename and Cloudinary attachment URL for competition file
+  const competitionFileName = (() => {
+    const base = String(event?.title || 'competition-file')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    const url = String(event?.competitionPptUrl || '');
+    const urlExtMatch = url.match(/\.([a-z0-9]{1,6})(?:$|[?#])/i);
+    const ext = urlExtMatch ? `.${urlExtMatch[1].toLowerCase()}` : '';
+    return `${base || 'competition-file'}${ext}`;
+  })();
+
+  const competitionDownloadUrl = (() => {
+    const url = String(event?.competitionPptUrl || '');
+    if (!url) return '';
+    const uploadMarker = '/upload/';
+    const idx = url.indexOf(uploadMarker);
+    if (idx !== -1) {
+      const before = url.slice(0, idx + uploadMarker.length);
+      const after = url.slice(idx + uploadMarker.length);
+      if (!/(^|\/)fl_attachment/.test(after)) {
+        const safeName = encodeURIComponent(competitionFileName);
+        return `${before}fl_attachment:${safeName}/${after}`;
+      }
+    }
+    return url;
+  })();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background">
       <Header />
@@ -255,6 +283,8 @@ useEffect(() => {
               )}
             </div>
 
+            
+
             {/* Register Button */}
             {/* <button
               onClick={() => setShowRegistrationModal(true)}
@@ -276,8 +306,12 @@ useEffect(() => {
               <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
               <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
             </div>
+
+            
           </div>
         </div>
+
+        
 
         {/* Info Box for Special Event Pricing */}
         <div className="mb-8 bg-gradient-to-r from-secondary/10 via-accent/10 to-secondary/10 border-2 border-secondary/30 rounded-2xl p-6 backdrop-blur-sm">
@@ -316,26 +350,23 @@ useEffect(() => {
             <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">
               {event.description || event.fullDescription}
             </p>
+
+            {event.competitionPptUrl && (
+              <div className="pt-2">
+                <a
+                  href={competitionDownloadUrl || event.competitionPptUrl}
+                  className="inline-flex items-center justify-center w-full md:w-auto gap-2 px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-audiowide text-sm md:text-base hover:from-hover-primary hover:to-primary transition-colors duration-300"
+                  download={competitionFileName}
+                >
+                  <FileText className="w-5 h-5" />
+                  Download Requirements
+                </a>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Display competition PPT */}
-        {event.competitionPptUrl && (
-          <div className="bg-background-soft border border-border rounded-2xl p-8 mb-8">
-            <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
-              <FileText className="w-6 h-6 text-primary" />
-              Competition PPT
-            </h2>
-            <a
-              href={event.competitionPptUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-hover-primary font-space"
-            >
-              Download PPT
-            </a>
-          </div>
-        )}
+        {/* Download button moved to top section */}
 
         {/* Display GForm link only for registered users */}
         {isAuthenticated && isRegistered && event.competitionGformLink && (
