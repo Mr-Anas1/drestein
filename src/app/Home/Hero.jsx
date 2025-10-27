@@ -41,7 +41,7 @@ const Hero = () => {
           
           
 
-          <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-audiowide text-white animate-slide-in">
+          <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-azonix text-white animate-slide-in">
             <span className="text-primary animate-glow">DR</span>EAM
             <span className="text-secondary animate-glow"></span> D
             <span className="text-accent animate-glow">ES</span>IGN COMPE
