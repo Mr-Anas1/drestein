@@ -54,20 +54,24 @@ const Header = () => {
   }, [menuDisplay]);
 
   return (
-    <div className="flex justify-between items-center px-4 md:px-6 lg:px-12 h-20 border-b border-gray-600">
+    <div className="flex justify-between items-center px-2 md:px-2 lg:px-4 h-22 border-b border-gray-600">
       <div className="flex items-center gap-2">
         <h1
           className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer"
           onClick={() => router.push("/")}
         >
-          <div className="w-[160px] sm:w-[180px] md:w-[200px] lg:w-[250px]">
-            <img src="/new-logo.png" alt="saveetha-logo" />
+          <div className="w-[160px] sm:w-[180px] md:w-[250px] lg:w-[320px]">
+            <img src="/logo.png" alt="saveetha-logo" />
           </div>
         </h1>
         
         {/* Excellence Logo */}
-        <div className="w-[50px] sm:w-[55px] md:w-[60px] lg:w-[70px] flex-shrink-0">
+        <div className="w-[50px] sm:w-[60px] md:w-[70px] lg:w-[85px] flex-shrink-0">
           <img src="/excellence.png" alt="excellence-logo" className="w-full h-auto object-contain" />
+        </div>
+
+        <div className="w-[50px] sm:w-[60px] md:w-[80px] lg:w-[120px] flex-shrink-0">
+          <img src="/drestein-logo.png" alt="excellence-logo" className="w-full h-auto object-contain" />
         </div>
       </div>
 
