@@ -57,7 +57,7 @@ const page = () => {
                         </div>
                     ))}
 
-                    <div className='group rounded-2xl p-[1px] bg-gradient-to-r from-secondary/30 to-primary/30 hover:from-secondary/60 hover:to-primary/60 transition-all duration-300 hover:-translate-y-0.5'>
+                    {/* <div className='group rounded-2xl p-[1px] bg-gradient-to-r from-secondary/30 to-primary/30 hover:from-secondary/60 hover:to-primary/60 transition-all duration-300 hover:-translate-y-0.5'>
                         <div className='rounded-2xl flex flex-col justify-between bg-background-soft/80 border border-border/60 backdrop-blur-sm p-6 h-full'>
                             <div className='flex items-start gap-4'>
                                 <div className='h-12 w-12  rounded-xl bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center text-xs font-audiowide text-white border border-border/60'>
@@ -79,7 +79,7 @@ const page = () => {
                                 </Link>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
             <Footer />

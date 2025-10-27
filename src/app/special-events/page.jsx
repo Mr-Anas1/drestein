@@ -31,6 +31,7 @@ const SpecialEventsPage = () => {
           throw new Error('Invalid events format');
         }
         
+        console.log('Fetched events:', eventsArray);
         setPremiumEvents(eventsArray);
       } catch (err) {
         console.error("Error fetching premium events:", err);
@@ -52,20 +53,42 @@ const SpecialEventsPage = () => {
   }, []);
 
 
-  // Group events by department
+  // Group events by department (handle both array and string formats)
   const eventsByDepartment = useMemo(() => {
     const grouped = {};
     premiumEvents.forEach(event => {
-      if (!grouped[event.department]) {
-        grouped[event.department] = [];
+      // Handle new departments array format
+      if (Array.isArray(event.departments) && event.departments.length > 0) {
+        event.departments.forEach(dept => {
+          if (!grouped[dept]) {
+            grouped[dept] = [];
+          }
+          grouped[dept].push(event);
+        });
       }
-      grouped[event.department].push(event);
+      // Handle old department string format (backward compatibility)
+      else if (event.department) {
+        if (!grouped[event.department]) {
+          grouped[event.department] = [];
+        }
+        grouped[event.department].push(event);
+      }
+      // Handle events without department info - add to 'COMMON'
+      else {
+        if (!grouped['COMMON']) {
+          grouped['COMMON'] = [];
+        }
+        grouped['COMMON'].push(event);
+      }
     });
     return grouped;
   }, [premiumEvents]);
 
-  // Get departments that have competition events
+  // Get departments that have competition events (including COMMON)
   const departmentsWithEvents = DEPARTMENTS.filter(dept => eventsByDepartment[dept.id]);
+  
+  // Check if there are events without department info
+  const hasCommonEvents = eventsByDepartment['COMMON'] && eventsByDepartment['COMMON'].length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background">
@@ -112,13 +135,13 @@ const SpecialEventsPage = () => {
           </div>
         )}
 
-        {!loading && !error && !isQuotaExceeded && premiumEvents.length === 0 && (
+        {!loading && !error && !isQuotaExceeded && premiumEvents.length === 0 && !hasCommonEvents && (
           <div className="flex justify-center items-center py-20">
             <div className="text-muted-text text-lg font-space">No premium competitions available yet</div>
           </div>
         )}
 
-        {!loading && !error && !isQuotaExceeded && premiumEvents.length > 0 && (
+        {!loading && !error && !isQuotaExceeded && (premiumEvents.length > 0 || hasCommonEvents) && (
           <>
             <div className="space-y-16">
               {departmentsWithEvents.map((dept) => {
@@ -145,6 +168,25 @@ const SpecialEventsPage = () => {
                   </section>
                 );
               })}
+              
+              {hasCommonEvents && (
+                <section className="space-y-6">
+                  <div className="text-center md:text-left">
+                    <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-2">
+                      General Competitions
+                    </h2>
+                    <div className="h-1 w-24 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto md:mx-0"></div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                    {eventsByDepartment['COMMON'].map((event) => (
+                      <SpecialEventBox
+                        key={event.id}
+                        event={event}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
             
           </>

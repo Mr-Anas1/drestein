@@ -151,7 +151,7 @@ export async function GET(request) {
           baseQuery = baseQuery.where("category", "==", category);
         }
         
-        // If department filter is present, filter in-memory by normalized values
+        // If department filter is present, handle both array and string formats
         if (department) {
           const norm = String(department).trim().toUpperCase();
           const acceptable = new Set([norm]);
@@ -161,7 +161,12 @@ export async function GET(request) {
 
           const snapshotAll = await baseQuery.get();
           let docs = snapshotAll.docs.filter((d) => {
-            const dep = String(d.data()?.department || '').trim().toUpperCase();
+            const data = d.data();
+            // Support both new array format and old string format
+            if (Array.isArray(data?.departments)) {
+              return data.departments.some(dep => acceptable.has(String(dep).trim().toUpperCase()));
+            }
+            const dep = String(data?.department || '').trim().toUpperCase();
             return acceptable.has(dep);
           });
           docs = docs.sort((a, b) => {
@@ -237,6 +242,7 @@ export async function POST(request) {
       price,
       category,
       department,
+      departments,
       type,
       maxTeamSize,
       mode,
@@ -256,6 +262,15 @@ export async function POST(request) {
     if (!title || !description || !price || !category) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate departments array
+    const deptArray = Array.isArray(departments) ? departments : (department ? [department] : []);
+    if (deptArray.length === 0) {
+      return NextResponse.json(
+        { error: "At least one department must be selected" },
         { status: 400 }
       );
     }
@@ -293,7 +308,7 @@ export async function POST(request) {
       description,
       price: parseFloat(price),
       category, // competition, workshop, event
-      department: department || "",
+      departments: deptArray, // Array of departments
       type: type || "individual", // individual, team
       maxTeamSize: maxTeamSize ? parseInt(maxTeamSize) : null,
       mode: mode || "offline", // online, offline, hybrid
@@ -390,6 +405,19 @@ export async function PUT(request) {
     const updateData = { ...data };
     if (data.price) updateData.price = parseFloat(data.price);
     if (data.maxTeamSize) updateData.maxTeamSize = parseInt(data.maxTeamSize);
+    
+    // Handle departments array
+    if (data.departments) {
+      const deptArray = Array.isArray(data.departments) ? data.departments : (data.department ? [data.department] : []);
+      if (deptArray.length === 0) {
+        return NextResponse.json(
+          { error: "At least one department must be selected" },
+          { status: 400 }
+        );
+      }
+      updateData.departments = deptArray;
+    }
+    
     updateData.updatedAt = FieldValue.serverTimestamp();
 
     await docRef.update(updateData);

@@ -1,5 +1,5 @@
 export const DEPARTMENTS = [
-        { id: 'COMMON', name: 'Common Across Departments', short: 'COMMON', code: 'COMMON', image: '/common.jpg' },
+        // { id: 'COMMON', name: 'Common Across Departments', short: 'COMMON', code: 'COMMON', image: '/common.jpg' },
 
     { id: 'AI-DS', name: 'Artificial Intelligence and Data Science', short: 'AI-DS', code: 'AI-DS', image: '/aids.jpeg' },
     { id: 'AI-ML', name: 'Artificial Intelligence and Machine Learning', short: 'AI-ML', code: 'AI-ML', image: '/aiml.jpeg' },

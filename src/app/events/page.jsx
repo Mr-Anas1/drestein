@@ -69,11 +69,13 @@ const page = () => {
                 const normalizedEvents = eventsArray.map(e => ({
                     ...e,
                     department: normalizeDept(e.department),
+                    departments: Array.isArray(e.departments) ? e.departments.map(normalizeDept) : undefined,
                     isExpired: isEventExpired(e),
                 }));
                 const normalizedSpecial = specialArray.map(e => ({
                     ...e,
                     department: normalizeDept(e.department),
+                    departments: Array.isArray(e.departments) ? e.departments.map(normalizeDept) : undefined,
                     isExpired: isEventExpired(e),
                 }));
 
@@ -104,11 +106,21 @@ const page = () => {
         const deptIds = new Set(DEPARTMENTS.map(d => d.id));
         const others = events.filter(e => !e?.department || !deptIds.has(e.department));
         
+        // Helper to check if event belongs to department
+        const eventBelongsToDept = (event, deptId) => {
+            // Check new departments array format
+            if (Array.isArray(event.departments)) {
+                return event.departments.includes(deptId);
+            }
+            // Check old department string format
+            return event.department === deptId;
+        };
+        
         // Pre-filter departments that have events or special events
         const filtered = DEPARTMENTS.filter(dept => {
             if (selectedDepartment !== 'all' && dept.id !== selectedDepartment) return false;
-            const hasCommonEvents = events.some(e => e.department === dept.id);
-            const hasSpecialEvents = specialEvents.some(e => e.department === dept.id);
+            const hasCommonEvents = events.some(e => eventBelongsToDept(e, dept.id));
+            const hasSpecialEvents = specialEvents.some(e => eventBelongsToDept(e, dept.id));
             return hasCommonEvents || hasSpecialEvents;
         });
         
@@ -212,8 +224,17 @@ const page = () => {
                 {!loading && !error && !isQuotaExceeded && (
                     <div className="w-full pt-10 space-y-16">
                         {filteredDepartments.map((dept) => {
-                            const deptCommonEvents = events.filter(e => e.department === dept.id);
-                            const deptSpecialEvents = specialEvents.filter(e => e.department === dept.id);
+                            // Helper to filter events by department (handles both array and string formats)
+                            const filterByDept = (eventList, deptId) => {
+                                return eventList.filter(e => {
+                                    if (Array.isArray(e.departments)) {
+                                        return e.departments.includes(deptId);
+                                    }
+                                    return e.department === deptId;
+                                });
+                            };
+                            const deptCommonEvents = filterByDept(events, dept.id);
+                            const deptSpecialEvents = filterByDept(specialEvents, dept.id);
                             return (
                                 <section key={dept.id} id={`dept-${dept.id}`} className="space-y-6">
                                     {/* Department Header */}

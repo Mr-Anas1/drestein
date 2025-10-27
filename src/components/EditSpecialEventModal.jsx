@@ -10,7 +10,7 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
     description: "",
     price: "",
     category: "competition",
-    department: "AI-DS",
+    departments: ["AI-DS"],
     type: "individual",
     maxTeamSize: "",
     mode: "offline",
@@ -40,7 +40,7 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
         description: event.description || "",
         price: event.price || "",
         category: event.category || "competition",
-        department: event.department || "AI-DS",
+        departments: event.departments || (event.department ? [event.department] : ["AI-DS"]),
         type: event.type || "individual",
         maxTeamSize: event.maxTeamSize || "",
         mode: event.mode || "offline",
@@ -87,6 +87,23 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
     }));
+  };
+
+  const handleDepartmentToggle = (deptId) => {
+    setFormData((prev) => {
+      const currentDepts = prev.departments || [];
+      if (currentDepts.includes(deptId)) {
+        return {
+          ...prev,
+          departments: currentDepts.filter((d) => d !== deptId),
+        };
+      } else {
+        return {
+          ...prev,
+          departments: [...currentDepts, deptId],
+        };
+      }
+    });
   };
 
   const addStudentCoordinator = () => {
@@ -244,7 +261,7 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
             />
           </div>
 
-          {/* Category, Department & Type */}
+          {/* Category, Departments & Type */}
           <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">
@@ -262,35 +279,47 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
               </select>
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-white font-audiowide text-sm mb-2">
-                Department *
+                Departments * (Select multiple)
               </label>
-              <select
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-              >
-                <option value="AI-DS">AI-DS - Artificial Intelligence and Data Science</option>
-                <option value="AI-ML">AI-ML - Artificial Intelligence and Machine Learning</option>
-                <option value="AGRI">AGRI - Agricultural Engineering</option>
-                <option value="BIO-MED">BIO-MED - Biomedical Engineering</option>
-                <option value="CHEM">CHEM - Chemical Engineering</option>
-                <option value="CIVIL">CIVIL - Civil Engineering</option>
-                <option value="CSE">CSE - Computer Science and Engineering</option>
-                <option value="CSE-CYB">CSE-CYB - Computer Science and Engineering (Cyber Security)</option>
-                <option value="CSE-IOT">CSE-IOT - Computer Science and Engineering (Internet of Things)</option>
-                <option value="IT">IT - Information Technology</option>
-                <option value="ECE">ECE - Electronics and Communication Engineering</option>
-                <option value="EEE">EEE - Electrical and Electronics Engineering</option>
-                <option value="EIE">EIE - Electronics and Instrumentation Engineering</option>
-                <option value="MECH">MECH - Mechanical Engineering</option>
-                <option value="MED-ELE">MED-ELE - Medical Electronics Engineering</option>
-                <option value="MBA">MBA - Master of Business Administration</option>
-                <option value="S&H">S&H - Science and Humanities</option>
-                <option value="COMMON">COMMON - Common Across Departments</option>
-              </select>
+              <div className="bg-background-soft border border-border rounded-lg p-3 max-h-48 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "AI-DS", name: "AI-DS" },
+                    { id: "AI-ML", name: "AI-ML" },
+                    { id: "AGRI", name: "AGRI" },
+                    { id: "BIO-MED", name: "BIO-MED" },
+                    { id: "CHEM", name: "CHEM" },
+                    { id: "CIVIL", name: "CIVIL" },
+                    { id: "CSE", name: "CSE" },
+                    { id: "CSE-CYB", name: "CSE-CYB" },
+                    { id: "CSE-IOT", name: "CSE-IOT" },
+                    { id: "IT", name: "IT" },
+                    { id: "ECE", name: "ECE" },
+                    { id: "EEE", name: "EEE" },
+                    { id: "EIE", name: "EIE" },
+                    { id: "MECH", name: "MECH" },
+                    { id: "MED-ELE", name: "MED-ELE" },
+                    { id: "MBA", name: "MBA" },
+                    { id: "S&H", name: "S&H" },
+                    { id: "COMMON", name: "COMMON" },
+                  ].map((dept) => (
+                    <label key={dept.id} className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.departments?.includes(dept.id) || false}
+                        onChange={() => handleDepartmentToggle(dept.id)}
+                        className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
+                      />
+                      <span className="ml-2 text-white font-space text-sm">{dept.id}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {formData.departments?.length === 0 && (
+                <p className="text-red-500 text-xs mt-1">Select at least one department</p>
+              )}
             </div>
 
             <div>
