@@ -19,6 +19,8 @@ const AdminSpecialEventsPage = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [participantsEvent, setParticipantsEvent] = useState(null);
+  const [pagination, setPagination] = useState({ total: 0, offset: 0, limit: 20, hasMore: false });
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -35,21 +37,37 @@ const AdminSpecialEventsPage = () => {
 
   useEffect(() => {
     if (user && (isSuperAdmin || isDepartmentAdmin)) {
-      fetchSpecialEvents();
+      fetchSpecialEvents({ offset: 0, append: false, limit: pagination.limit });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isSuperAdmin, isDepartmentAdmin]);
 
-  const fetchSpecialEvents = async () => {
+  const fetchSpecialEvents = async ({ offset = 0, append = false, limit = 20 } = {}) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/special-events');
+      if (append) setLoadingMore(true); else setLoading(true);
+      const response = await fetch(`/api/special-events?limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`);
       const data = await response.json();
       const events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
-      setSpecialEvents(events);
+
+      if (append) {
+        setSpecialEvents((prev) => [...prev, ...events]);
+      } else {
+        setSpecialEvents(events);
+      }
+
+      const apiPag = data?.pagination || {};
+      const total = typeof apiPag.total === 'number' ? apiPag.total : (append ? (specialEvents.length + events.length) : events.length);
+      const hasMore = typeof apiPag.hasMore === 'boolean' ? apiPag.hasMore : (offset + limit < total);
+      setPagination({
+        total,
+        offset,
+        limit,
+        hasMore,
+      });
     } catch (error) {
       console.error('Error fetching special events:', error);
     } finally {
-      setLoading(false);
+      if (append) setLoadingMore(false); else setLoading(false);
     }
   };
 
@@ -232,6 +250,18 @@ const AdminSpecialEventsPage = () => {
             </table>
           </div>
         </div>
+
+        {pagination.hasMore && (
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={() => fetchSpecialEvents({ offset: pagination.offset + pagination.limit, append: true, limit: pagination.limit })}
+              disabled={loadingMore}
+              className="px-6 py-3 rounded-lg font-audiowide bg-background-soft border border-border text-white hover:bg-background transition-colors disabled:opacity-60"
+            >
+              {loadingMore ? 'Loading...' : 'Load more'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Add Modal */}
@@ -240,7 +270,7 @@ const AdminSpecialEventsPage = () => {
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             setShowAddModal(false);
-            fetchSpecialEvents();
+            fetchSpecialEvents({ offset: 0, append: false, limit: pagination.limit });
           }}
         />
       )}
@@ -256,7 +286,7 @@ const AdminSpecialEventsPage = () => {
           onSuccess={() => {
             setShowEditModal(false);
             setSelectedEvent(null);
-            fetchSpecialEvents();
+            fetchSpecialEvents({ offset: 0, append: false, limit: pagination.limit });
           }}
         />
       )}
