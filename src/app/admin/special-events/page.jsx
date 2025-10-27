@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import { DEPARTMENTS } from '@/constants/departments';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, Trash2, Eye, Users, ArrowLeft } from 'lucide-react';
 import AddSpecialEventModal from '@/components/AddSpecialEventModal';
@@ -12,6 +13,7 @@ const AdminSpecialEventsPage = () => {
   const { user, userRole, loading: authLoading, isSuperAdmin, isDepartmentAdmin } = useAuth();
   const router = useRouter();
   const [specialEvents, setSpecialEvents] = useState([]);
+  const [filteredSpecialEvents, setFilteredSpecialEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -21,6 +23,8 @@ const AdminSpecialEventsPage = () => {
   const [participantsEvent, setParticipantsEvent] = useState(null);
   const [pagination, setPagination] = useState({ total: 0, offset: 0, limit: 20, hasMore: false });
   const [loadingMore, setLoadingMore] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Authentication check
   useEffect(() => {
@@ -37,15 +41,39 @@ const AdminSpecialEventsPage = () => {
 
   useEffect(() => {
     if (user && (isSuperAdmin || isDepartmentAdmin)) {
+      // reset pagination on role/department change
+      setPagination((prev) => ({ ...prev, offset: 0 }));
       fetchSpecialEvents({ offset: 0, append: false, limit: pagination.limit });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isSuperAdmin, isDepartmentAdmin]);
+  }, [user, isSuperAdmin, isDepartmentAdmin, userRole, selectedDepartment]);
+
+  // Apply client-side search filtering
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setFilteredSpecialEvents(specialEvents);
+      return;
+    }
+    const filtered = specialEvents.filter(ev => {
+      const title = String(ev.title || '').toLowerCase();
+      const venue = String(ev.venue || '').toLowerCase();
+      const category = String(ev.category || '').toLowerCase();
+      return title.includes(q) || venue.includes(q) || category.includes(q);
+    });
+    setFilteredSpecialEvents(filtered);
+  }, [specialEvents, searchQuery]);
 
   const fetchSpecialEvents = async ({ offset = 0, append = false, limit = 20 } = {}) => {
     try {
       if (append) setLoadingMore(true); else setLoading(true);
-      const response = await fetch(`/api/special-events?limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`);
+      const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+      if (isDepartmentAdmin && userRole?.department) {
+        params.set('department', userRole.department);
+      } else if (isSuperAdmin && selectedDepartment && selectedDepartment !== 'all') {
+        params.set('department', selectedDepartment);
+      }
+      const response = await fetch(`/api/special-events?${params.toString()}`);
       const data = await response.json();
       const events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
 
@@ -127,6 +155,8 @@ const AdminSpecialEventsPage = () => {
             </p>
           </div>
 
+          
+
           {/* Only super admins can add special events */}
           {isSuperAdmin && (
             <button
@@ -139,25 +169,55 @@ const AdminSpecialEventsPage = () => {
           )}
         </div>
 
+{/* Department Filter for Super Admin */}
+          {isSuperAdmin && (
+            <div className="mb-6">
+              <label className="block text-white font-audiowide text-sm mb-2">Filter by Department</label>
+              <select
+                value={selectedDepartment}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                className="bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+              >
+                <option value="all">All Departments</option>
+                {DEPARTMENTS.map(dept => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        {/* Search */}
+        <div className="mb-6">
+          <label className="block text-white font-audiowide text-sm mb-2">Search</label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title, venue, or category"
+            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+          />
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-background-soft border border-border rounded-xl p-6">
-            <div className="text-3xl font-audiowide text-white mb-2">{specialEvents.length}</div>
+            <div className="text-3xl font-audiowide text-white mb-2">{filteredSpecialEvents.length}</div>
             <p className="text-muted-text font-space text-sm">Total Special Events</p>
           </div>
           <div className="bg-background-soft border border-border rounded-xl p-6">
             <div className="text-3xl font-audiowide text-white mb-2">
-              {specialEvents.filter(e => e.category === 'competition').length}
+              {filteredSpecialEvents.filter(e => e.category === 'competition').length}
             </div>
             <p className="text-muted-text font-space text-sm">Competitions</p>
           </div>
           <div className="bg-background-soft border border-border rounded-xl p-6">
             <div className="text-3xl font-audiowide text-white mb-2">
-              {specialEvents.filter(e => e.category === 'workshop').length}
+              {filteredSpecialEvents.filter(e => e.category === 'workshop').length}
             </div>
             <p className="text-muted-text font-space text-sm">Workshops</p>
           </div>
         </div>
+
+        
 
         {/* Events Table */}
         <div className="bg-background-soft border border-border rounded-xl overflow-hidden">
@@ -173,14 +233,14 @@ const AdminSpecialEventsPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {specialEvents.length === 0 ? (
+                {filteredSpecialEvents.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center text-muted-text font-space">
                       No special events yet. Click "Add Special Event" to create one.
                     </td>
                   </tr>
                 ) : (
-                  specialEvents.map((event) => (
+                  filteredSpecialEvents.map((event) => (
                     <tr key={event.id} className="hover:bg-background transition-colors">
                       <td className="px-6 py-4">
                         <div className="text-white font-space">{event.title}</div>

@@ -60,17 +60,17 @@ const Header = () => {
           className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer"
           onClick={() => router.push("/")}
         >
-          <div className="w-[160px] sm:w-[180px] md:w-[250px] lg:w-[300px]">
+          <div className="w-[160px] sm:w-[180px] md:w-[200px] lg:w-[250px]">
             <img src="/logo.png" alt="saveetha-logo" />
           </div>
         </h1>
         
         {/* Excellence Logo */}
-        <div className="w-[50px] sm:w-[60px] md:w-[70px] lg:w-[80px] flex-shrink-0">
+        <div className="w-[40px] sm:w-[50px] md:w-[60px] lg:w-[80px] flex-shrink-0">
           <img src="/excellence.png" alt="excellence-logo" className="w-full h-auto object-contain" />
         </div>
 
-        <div className="w-[50px] sm:w-[60px] md:w-[80px] lg:w-[110px] flex-shrink-0">
+        <div className="w-[50px] sm:w-[60px] md:w-[70px] lg:w-[90px] flex-shrink-0">
           <img src="/drestein-logo.png" alt="excellence-logo" className="w-full h-auto object-contain" />
         </div>
       </div>
@@ -79,33 +79,33 @@ const Header = () => {
         <div className="hidden items-center gap-3 xl:gap-4 xl:flex">
           <a
             onClick={() => router.push("/")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s  xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             Home
           </a>
           <a
             onClick={() => router.push("/departments")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s  xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             Departments
           </a>
           <a
             onClick={() => router.push("/events")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             Events
           </a>
 
           <a
             onClick={() => router.push("/special-events")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             Special Events
           </a>
 
           <a
             onClick={() => router.push("/about")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             About
           </a>

@@ -62,7 +62,7 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
                                 <td className="p-4">
                                     <div className="flex items-center gap-3">
                                         <Image
-                                            src={event.img}
+                                            src={event.img || "/square.png"}
                                             alt={event.title}
                                             width={48}
                                             height={48}

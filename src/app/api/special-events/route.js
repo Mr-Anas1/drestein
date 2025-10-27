@@ -51,6 +51,14 @@ async function checkAdminRole(uid) {
   );
 }
 
+async function checkIsSuperAdmin(uid) {
+  const db = getAdminDB();
+  const userDoc = await db.collection("users").doc(uid).get();
+  if (!userDoc.exists) return false;
+  const userData = userDoc.data();
+  return userData.role === "super_admin";
+}
+
 // GET - Fetch all special events
 export async function GET(request) {
   try {
@@ -58,6 +66,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     const category = searchParams.get("category");
+    const department = searchParams.get("department");
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
@@ -74,22 +83,55 @@ export async function GET(request) {
     }
 
     // Build query with filters
-    let query = db.collection("specialEvents");
+    let baseQuery = db.collection("specialEvents");
     if (category) {
-      query = query.where("category", "==", category);
+      baseQuery = baseQuery.where("category", "==", category);
     }
-    query = query.orderBy("createdAt", "desc");
+    
+    // If department filter is present, avoid orderBy and filter in-memory by normalized values
+    if (department) {
+      const norm = String(department).trim().toUpperCase();
+      const acceptable = new Set([norm]);
+      // Map a few common code aliases
+      // Example: allow matching 'CYB' for 'CSE-CYB', and 'IOT' for 'CSE-IOT'
+      if (norm === 'CSE-CYB') acceptable.add('CYB');
+      if (norm === 'CSE-IOT') acceptable.add('IOT');
+      if (norm === 'MED-ELE') acceptable.add('MED');
 
-    // Get total count for pagination
-    const countSnapshot = await query.get();
+      const snapshotAll = await baseQuery.get();
+      let docs = snapshotAll.docs.filter((d) => {
+        const dep = String(d.data()?.department || '').trim().toUpperCase();
+        return acceptable.has(dep);
+      });
+      // Sort in-memory by createdAt desc
+      docs = docs.sort((a, b) => {
+        const aTime = a.data().createdAt?.toDate?.() || new Date(0);
+        const bTime = b.data().createdAt?.toDate?.() || new Date(0);
+        return bTime - aTime;
+      });
+      const totalCount = docs.length;
+      const paginatedDocs = docs.slice(offset, offset + limit);
+      const specialEvents = paginatedDocs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      return NextResponse.json(
+        {
+          events: specialEvents,
+          pagination: {
+            total: totalCount,
+            offset,
+            limit,
+            hasMore: offset + limit < totalCount,
+          },
+        },
+        { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } }
+      );
+    }
+
+    // No department filter; safe to orderBy createdAt
+    baseQuery = baseQuery.orderBy("createdAt", "desc");
+    const countSnapshot = await baseQuery.get();
     const totalCount = countSnapshot.size;
-
-    // Apply pagination
-    const snapshot = await query.offset(offset).limit(limit).get();
-    const specialEvents = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const snapshot = await baseQuery.offset(offset).limit(limit).get();
+    const specialEvents = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
     return NextResponse.json(
       {
@@ -124,10 +166,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "Auth required" }, { status: 401 });
     }
 
-    const isAdmin = await checkAdminRole(decoded.uid);
-    if (!isAdmin) {
+    const isSuper = await checkIsSuperAdmin(decoded.uid);
+    if (!isSuper) {
       return NextResponse.json(
-        { error: "Admin access required" },
+        { error: "Super admin access required" },
         { status: 403 }
       );
     }

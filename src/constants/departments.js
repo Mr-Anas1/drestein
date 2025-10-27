@@ -21,7 +21,17 @@ export const DEPARTMENTS = [
 ];
 
 export const getDepartmentById = (id) => {
-    return DEPARTMENTS.find(dept => dept.id === id);
+    if (!id) return undefined;
+    const norm = String(id).trim();
+    // Try exact id match
+    let match = DEPARTMENTS.find(dept => dept.id === norm);
+    if (match) return match;
+    // Try case-insensitive id match
+    match = DEPARTMENTS.find(dept => dept.id.toUpperCase() === norm.toUpperCase());
+    if (match) return match;
+    // Try matching by code (short code)
+    match = DEPARTMENTS.find(dept => String(dept.code || '').toUpperCase() === norm.toUpperCase());
+    return match;
 };
 
 export const getDepartmentName = (id) => {
