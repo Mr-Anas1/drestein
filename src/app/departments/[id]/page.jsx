@@ -30,7 +30,7 @@ export default function DepartmentPage() {
         // OPTIMIZED: Use department filter in API query - reduces reads by 98%
         const [eventsRes, specialRes] = await Promise.all([
           fetch(`/api/events?department=${deptId}&limit=50`),
-          fetch(`/api/special-events?limit=50`)
+          fetch(`/api/special-events?department=${deptId}&limit=50`)
         ]);
         
         if (!eventsRes.ok || !specialRes.ok) {
@@ -60,13 +60,8 @@ export default function DepartmentPage() {
           throw new Error('Invalid special events format');
         }
         
-        // Filter special events by department (special events might not have indexed department field)
-        const filteredSpecialEvents = specialArray.filter(
-          (event) => event.department === deptId
-        );
-
         setEvents(eventsArray);
-        setSpecialEvents(filteredSpecialEvents);
+        setSpecialEvents(specialArray);
       } catch (err) {
         console.error("Error fetching events:", err);
         // Check if it's a quota exceeded error or timeout (likely quota issue)

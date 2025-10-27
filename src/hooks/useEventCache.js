@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const STORAGE_KEY_EVENTS = 'drestein_cache_events';
-const STORAGE_KEY_SPECIAL_EVENTS = 'drestein_cache_special_events';
+const CACHE_VERSION = '2'; // Increment to invalidate old cache
+const STORAGE_KEY_EVENTS = `drestein_cache_events_v${CACHE_VERSION}`;
+const STORAGE_KEY_SPECIAL_EVENTS = `drestein_cache_special_events_v${CACHE_VERSION}`;
 
 export const useEventCache = () => {
   const [events, setEvents] = useState(null);
@@ -18,6 +19,14 @@ export const useEventCache = () => {
     if (typeof window === 'undefined') return;
     
     try {
+      // Clear old cache versions
+      Object.keys(localStorage).forEach(key => {
+        if ((key.startsWith('drestein_cache_events') || key.startsWith('drestein_cache_special_events')) 
+            && key !== STORAGE_KEY_EVENTS && key !== STORAGE_KEY_SPECIAL_EVENTS) {
+          localStorage.removeItem(key);
+        }
+      });
+      
       const cachedEvents = localStorage.getItem(STORAGE_KEY_EVENTS);
       const cachedSpecialEvents = localStorage.getItem(STORAGE_KEY_SPECIAL_EVENTS);
       

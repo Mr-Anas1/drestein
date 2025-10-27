@@ -38,8 +38,38 @@ const page = () => {
                 console.log("Fetched events from cache/API:", eventsArray);
                 console.log("Fetched special events from cache/API:", specialArray);
                 
-                setEvents(eventsArray);
-                setSpecialEvents(specialArray);
+                // Normalize department ids to canonical DEPARTMENTS ids
+                const normalizeDept = (val) => {
+                    const raw = String(val || '').trim();
+                    if (!raw) return raw;
+                    const upper = raw.toUpperCase();
+                    // alias map for common variants from data
+                    const alias = {
+                        CYB: 'CSE-CYB',
+                        IOT: 'CSE-IOT',
+                        MED: 'MED-ELE',
+                        BME: 'BIO-MED',
+                        SH: 'S&H',
+                        'S & H': 'S&H',
+                    };
+                    const aliasMapped = alias[upper] || upper;
+                    const match = DEPARTMENTS.find(
+                        d => d.id === aliasMapped || String(d.code || '').toUpperCase() === aliasMapped
+                    );
+                    return match ? match.id : aliasMapped;
+                };
+
+                const normalizedEvents = eventsArray.map(e => ({
+                    ...e,
+                    department: normalizeDept(e.department),
+                }));
+                const normalizedSpecial = specialArray.map(e => ({
+                    ...e,
+                    department: normalizeDept(e.department),
+                }));
+
+                setEvents(normalizedEvents);
+                setSpecialEvents(normalizedSpecial);
             } catch (err) {
                 console.error("Error fetching events:", err);
                 // Check if it's a quota exceeded error or timeout (likely quota issue)

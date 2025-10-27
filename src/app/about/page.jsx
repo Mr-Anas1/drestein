@@ -19,7 +19,7 @@ const About = () => {
             role: "Associate Professor - MBA",
             department: "MBA",
             email: "jyothip@saveetha.ac.in",
-            image: "/jyothi-mam.jpeg",
+            image: "/jyothi-mam.png",
             linkedin: "https://linkedin.com/in/jyothi-p",
             profile: "https://saveetha.ac.in/wp-content/uploads/2025/01/Faculty-Profile-Dr.P.Jyothi.pdf"
         },
@@ -236,7 +236,7 @@ const About = () => {
                                     <p className="text-secondary font-space text-sm">UI/UX Designer</p>
                                     <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
                                 </a>
-                                <a href="https://www.linkedin.com/in/keerthivasan-m-877a182b9/" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                <a href="https://www.linkedin.com/in/rdxkeerthi" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
                                     <div className="w-20 h-20 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                         <span className="text-white font-audiowide text-lg">K</span>
                                     </div>
