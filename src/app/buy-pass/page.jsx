@@ -183,7 +183,7 @@ export default function BuyPassPage() {
   };
 
   // Set to false to show Coming Soon, true to show pass purchase
-  const showPassPurchase = true;
+  const showPassPurchase = false;
 
   return (
     <div className="min-h-screen bg-background text-white">
