@@ -151,6 +151,8 @@ export async function POST(request) {
       contactEmail,
       contactPhone,
       expiryDate,
+      competitionPptUrl,
+      competitionGformLink,
     } = data;
 
     if (!title || !description || !price || !category) {
@@ -212,6 +214,8 @@ export async function POST(request) {
       studentCoordinators: data.studentCoordinators || [],
       facultyCoordinators: data.facultyCoordinators || [],
       expiryDate: normalizedExpiry,
+      competitionPptUrl: competitionPptUrl || "",
+      competitionGformLink: competitionGformLink || "",
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });

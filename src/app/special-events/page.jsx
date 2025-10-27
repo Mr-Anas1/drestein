@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 const SpecialEventsPage = () => {
-  const { fetchSpecialEvents } = useEventCache();
+  const { fetchSpecialEvents, clearCache } = useEventCache();
   const [premiumEvents, setPremiumEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,9 +38,9 @@ const SpecialEventsPage = () => {
           throw new Error('Invalid events format');
         }
         
-        // Filter only competition category events
-        const competitionEvents = eventsArray.filter(event => event.category === 'competition');
-        console.log("Fetched premium competition events (from cache):", competitionEvents);
+        // Only show competitions on the Special Events page
+        const competitionEvents = (Array.isArray(eventsArray) ? eventsArray : []).filter(e => e.category === 'competition');
+        console.log("Fetched competition events (from cache):", competitionEvents);
         setPremiumEvents(competitionEvents);
       } catch (err) {
         console.error("Error fetching premium events:", err);
@@ -59,6 +59,8 @@ const SpecialEventsPage = () => {
       }
     };
 
+    // Invalidate cache so page reflects the latest additions
+    clearCache();
     fetchPremiumEvents();
   }, []);
 

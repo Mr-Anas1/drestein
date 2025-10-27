@@ -44,7 +44,8 @@ const AdminSpecialEventsPage = () => {
       setLoading(true);
       const response = await fetch('/api/special-events');
       const data = await response.json();
-      setSpecialEvents(data);
+      const events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
+      setSpecialEvents(events);
     } catch (error) {
       console.error('Error fetching special events:', error);
     } finally {

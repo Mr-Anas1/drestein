@@ -32,6 +32,7 @@ const SpecialEventDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
 useEffect(() => {
   const fetchEvent = async () => {
@@ -77,6 +78,24 @@ useEffect(() => {
     fetchEvent();
   }
 }, [params.id, fetchSpecialEvents]);
+
+useEffect(() => {
+  const checkRegistration = async () => {
+    try {
+      if (!user || !event?.id) return;
+      const res = await fetch(`/api/registrations?userUid=${encodeURIComponent(user.uid)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = Array.isArray(data?.participants) ? data.participants : [];
+      const match = list.find((r) => r.eventId === event.id || r.eventId === params.id);
+      setIsRegistered(!!match);
+    } catch (_e) {
+      setIsRegistered(false);
+    }
+  };
+
+  checkRegistration();
+}, [user, event?.id, params.id]);
 
   const isExpired = (() => {
     const raw = event?.expiryDate;
@@ -159,7 +178,7 @@ useEffect(() => {
                 </span>
                 {event.department && (
                   <span className="bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-audiowide uppercase">
-                    {getDepartmentName(event.department)}
+                    {getDepartmentName(event.department) || event.department}
                   </span>
                 )}
               </div>
@@ -196,11 +215,36 @@ useEffect(() => {
                 </div>
               )}
 
-              {event.date && (
-                <div className="flex items-center gap-3 text-muted-text font-space">
-                  <Calendar className="w-5 h-5 text-primary" />
-                  <span>{event.date}</span>
-                </div>
+              {event.isMultiDay ? (
+                <>
+                  {event.startDate && (
+                    <div className="flex items-center gap-3 text-muted-text font-space">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      <span>Start: {event.startDate}</span>
+                    </div>
+                  )}
+                  {event.endDate && (
+                    <div className="flex items-center gap-3 text-muted-text font-space">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      <span>End: {event.endDate}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                event.date && (
+                  <>
+                    <div className="flex items-center gap-3 text-muted-text font-space">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      <span>{event.date}</span>
+                    </div>
+                    {event.endDate && event.endDate !== event.date && (
+                      <div className="flex items-center gap-3 text-muted-text font-space">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        <span>End: {event.endDate}</span>
+                      </div>
+                    )}
+                  </>
+                )
               )}
 
               {event.time && (
@@ -275,6 +319,42 @@ useEffect(() => {
           </div>
         )}
 
+        {/* Display competition PPT */}
+        {event.competitionPptUrl && (
+          <div className="bg-background-soft border border-border rounded-2xl p-8 mb-8">
+            <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-primary" />
+              Competition PPT
+            </h2>
+            <a
+              href={event.competitionPptUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-hover-primary font-space"
+            >
+              Download PPT
+            </a>
+          </div>
+        )}
+
+        {/* Display GForm link only for registered users */}
+        {isAuthenticated && isRegistered && event.competitionGformLink && (
+          <div className="bg-background-soft border border-border rounded-2xl p-8 mb-8">
+            <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-primary" />
+              Google Form Link
+            </h2>
+            <a
+              href={event.competitionGformLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-hover-primary font-space"
+            >
+              Access Form
+            </a>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-8">
           {/* Rules */}
           {event.rules && event.rules.length > 0 && (
@@ -322,22 +402,29 @@ useEffect(() => {
         </div>
 
         {/* Contact Info */}
-        {((event.studentCoordinators && event.studentCoordinators.length > 0) || 
-          (event.facultyCoordinator && event.facultyCoordinator.name) || 
-          event.contactEmail || event.contactPhone) && (
+        {(() => {
+          const filteredStudent = (event.studentCoordinators || []).filter(c =>
+            (c?.name || '').trim() || (c?.phone || '').trim() || (c?.email || '').trim()
+          );
+          const filteredFaculty = (event.facultyCoordinators || []).filter(c =>
+            (c?.name || '').trim() || (c?.phone || '').trim() || (c?.email || '').trim()
+          );
+          const hasAny = filteredStudent.length > 0 || filteredFaculty.length > 0 || (event.facultyCoordinator && event.facultyCoordinator.name) || event.contactEmail || event.contactPhone;
+          if (!hasAny) return null;
+          return (
           <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
             <h2 className="font-audiowide text-2xl text-white mb-6">
               Contact Information
             </h2>
             <div className="space-y-6">
               {/* Student Coordinators */}
-              {event.studentCoordinators && event.studentCoordinators.length > 0 && (
+              {filteredStudent.length > 0 && (
                 <div>
                   <p className="font-audiowide text-sm text-primary mb-3">
                     Student Coordinators
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {event.studentCoordinators.map((coordinator, index) => (
+                    {filteredStudent.map((coordinator, index) => (
                       <div key={index} className="bg-background rounded-lg p-4 space-y-2">
                         <p className="text-white font-space font-semibold">{coordinator.name}</p>
                         <div className="space-y-1">
@@ -367,13 +454,13 @@ useEffect(() => {
               )}
 
               {/* Faculty Coordinators */}
-              {event.facultyCoordinators && event.facultyCoordinators.length > 0 && (
+              {filteredFaculty.length > 0 && (
                 <div>
                   <p className="font-audiowide text-sm text-secondary mb-3">
                     Faculty Coordinators
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {event.facultyCoordinators.map((coordinator, index) => (
+                    {filteredFaculty.map((coordinator, index) => (
                       <div key={index} className="bg-background rounded-lg p-4 space-y-2">
                         <p className="text-white font-space font-semibold">{coordinator.name}</p>
                         <div className="space-y-1">
@@ -461,7 +548,8 @@ useEffect(() => {
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
 
       <Footer />

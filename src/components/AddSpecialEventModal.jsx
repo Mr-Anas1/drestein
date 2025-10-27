@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
+import FileUpload from "./FileUpload";
 
 const AddSpecialEventModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -26,6 +27,8 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
     prizes: [""],
     studentCoordinators: [{ name: "", phone: "", email: "" }],
     facultyCoordinators: [{ name: "", phone: "", email: "" }],
+    competitionPptUrl: "",
+    competitionGformLink: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -121,6 +124,12 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
           ...formData,
           rules: formData.rules.filter((r) => r.trim()),
           prizes: formData.prizes.filter((p) => p.trim()),
+          studentCoordinators: (formData.studentCoordinators || []).filter((c) =>
+            (c?.name || '').trim() || (c?.phone || '').trim() || (c?.email || '').trim()
+          ),
+          facultyCoordinators: (formData.facultyCoordinators || []).filter((c) =>
+            (c?.name || '').trim() || (c?.phone || '').trim() || (c?.email || '').trim()
+          ),
         }),
       });
 
@@ -250,6 +259,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
                 <option value="MED-ELE">MED-ELE - Medical Electronics Engineering</option>
                 <option value="MBA">MBA - Master of Business Administration</option>
                 <option value="S&H">S&H - Science and Humanities</option>
+                <option value="COMMON">COMMON - Common Across Departments</option>
               </select>
             </div>
 
@@ -270,9 +280,8 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
           </div>
 
           {/* Max Team Size */}
-          <div className="grid md:grid-cols-3 gap-4">
-
-            {formData.type === "team" && (
+          {formData.type === "team" && (
+            <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-white font-audiowide text-sm mb-2">
                   Max Team Size
@@ -286,8 +295,8 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
                   className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Event Details */}
           <div className="grid md:grid-cols-2 gap-4">
@@ -340,18 +349,32 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
 
           <div className="grid md:grid-cols-2 gap-4">
             {!formData.isMultiDay ? (
-              <div>
-                <label className="block text-white font-audiowide text-sm mb-2">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-white font-audiowide text-sm mb-2">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleChange}
+                    className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white font-audiowide text-sm mb-2">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </>
             ) : (
               <>
                 <div>
@@ -430,6 +453,38 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             currentImage={formData.img}
             disabled={loading}
           />
+
+          {/* Competition specific fields */}
+          {formData.category === 'competition' && (
+            <div className="p-4 border border-dashed border-primary/50 rounded-lg space-y-4">
+              <h4 className="font-audiowide text-primary">Competition Fields</h4>
+              <div>
+                <label className="block text-white font-audiowide text-sm mb-2">
+                  Competition PPT/PDF
+                </label>
+                <FileUpload
+                  onFileUpload={(url) => setFormData((prev) => ({ ...prev, competitionPptUrl: url }))}
+                  currentFile={formData.competitionPptUrl}
+                  disabled={loading}
+                  acceptedFormats=".pdf,.ppt,.pptx"
+                  label="Upload Presentation"
+                />
+              </div>
+              <div>
+                <label className="block text-white font-audiowide text-sm mb-2">
+                  Registration Google Form Link
+                </label>
+                <input
+                  type="url"
+                  name="competitionGformLink"
+                  value={formData.competitionGformLink}
+                  onChange={handleChange}
+                  placeholder="https://forms.gle/example"
+                  className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Rules */}
           <div>

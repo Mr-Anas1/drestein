@@ -16,6 +16,7 @@ export const DEPARTMENTS = [
     { id: 'MED-ELE', name: 'Medical Electronics Engineering', short: 'MED-ELE', code: 'MED', image: '/med-ele.jpeg' },
     { id: 'MBA', name: 'Master of Business Administration', short: 'MBA', code: 'MBA', image: '/mba.jpg' },
     { id: 'S&H', name: 'Science and Humanities', short: 'S&H', code: 'S&H', image: '/s&h.jpg' },
+    { id: 'COMMON', name: 'Common Across Departments', short: 'COMMON', code: 'COMMON', image: '/common.jpg' },
 ];
 
 export const getDepartmentById = (id) => {
