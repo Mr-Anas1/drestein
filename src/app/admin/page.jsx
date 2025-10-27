@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { DEPARTMENTS, getDepartmentName } from '@/constants/departments'
 import { Plus, LogOut, Users, Ticket } from 'lucide-react'
+import { useEventCache } from '@/hooks/useEventCache'
 
 // Import extracted components
 import AddEventModal from '@/components/AddEventModal'
@@ -15,6 +16,7 @@ import StatsCards from '@/components/StatsCards'
 
 const AdminDashboard = () => {
     const { user, userRole, loading: authLoading, logout, isSuperAdmin, isDepartmentAdmin, userDepartment } = useAuth()
+    const { fetchEvents: fetchEventsCache } = useEventCache()
     const router = useRouter()
     const [events, setEvents] = useState([])
     const [filteredEvents, setFilteredEvents] = useState([])
@@ -82,16 +84,19 @@ const AdminDashboard = () => {
     const fetchEvents = async () => {
         try {
             setLoading(true)
-            // Use department filter for department admins to limit scope
-            const params = new URLSearchParams({ limit: '100' })
-            if (isDepartmentAdmin && userDepartment) {
-                params.set('department', userDepartment)
-            }
-            const response = await fetch(`/api/events?${params.toString()}`)
-            const data = await response.json()
+            // Use cached fetch for better performance
+            const data = await fetchEventsCache(0, 100)
+            
             // Handle new response format with pagination
             const eventsArray = data?.events || data || []
-            setEvents(eventsArray)
+            
+            // Filter by department for department admins
+            if (isDepartmentAdmin && userDepartment) {
+                const filtered = eventsArray.filter(event => event.department === userDepartment)
+                setEvents(filtered)
+            } else {
+                setEvents(eventsArray)
+            }
         } catch (error) {
             console.error('Error fetching events:', error)
         } finally {

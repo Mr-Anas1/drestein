@@ -12,8 +12,10 @@ const SpecialEventsPage = () => {
   const { fetchSpecialEvents, clearCache } = useEventCache();
   const [premiumEvents, setPremiumEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
+  const [pagination, setPagination] = useState({ hasMore: false, offset: 0, total: 0 });
 
   useEffect(() => {
     const fetchPremiumEvents = async () => {
@@ -22,16 +24,21 @@ const SpecialEventsPage = () => {
         setError(null);
         setIsQuotaExceeded(false);
         
-        // Use cached fetch method - reduces reads by 94%
-        const data = await fetchSpecialEvents();
+        // Use cached fetch method with pagination
+        const data = await fetchSpecialEvents(0, 50);
         
         // Check if API returned an error object
-        if (data.error) {
+        if (data?.error) {
           throw new Error(data.error);
         }
         
         // Handle new API response format with pagination
         const eventsArray = data?.events || data || [];
+        
+        // Store pagination info
+        if (data?.pagination) {
+          setPagination(data.pagination);
+        }
         
         // Ensure it's an array
         if (!Array.isArray(eventsArray)) {
@@ -63,6 +70,34 @@ const SpecialEventsPage = () => {
     clearCache();
     fetchPremiumEvents();
   }, []);
+
+  const loadMoreEvents = async () => {
+    if (!pagination.hasMore || loadingMore) return;
+    
+    try {
+      setLoadingMore(true);
+      const nextOffset = premiumEvents.length;
+      
+      const data = await fetchSpecialEvents(nextOffset, 50);
+      
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      
+      const eventsArray = data?.events || [];
+      const competitionEvents = eventsArray.filter(e => e.category === 'competition');
+      
+      setPremiumEvents(prev => [...prev, ...competitionEvents]);
+      
+      if (data?.pagination) {
+        setPagination(data.pagination);
+      }
+    } catch (err) {
+      console.error("Error loading more events:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // Group events by department
   const eventsByDepartment = useMemo(() => {
@@ -131,32 +166,59 @@ const SpecialEventsPage = () => {
         )}
 
         {!loading && !error && !isQuotaExceeded && premiumEvents.length > 0 && (
-          <div className="space-y-16">
-            {departmentsWithEvents.map((dept) => {
-              const deptEvents = eventsByDepartment[dept.id];
-              return (
-                <section key={dept.id} className="space-y-6">
-                  {/* Department Header */}
-                  <div className="text-center md:text-left">
-                    <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-2">
-                      {dept.name}
-                    </h2>
-                    <div className="h-1 w-24 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto md:mx-0"></div>
-                  </div>
-                  
-                  {/* Events Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
-                    {deptEvents.map((event) => (
-                      <SpecialEventBox
-                        key={event.id}
-                        event={event}
-                      />
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
+          <>
+            <div className="space-y-16">
+              {departmentsWithEvents.map((dept) => {
+                const deptEvents = eventsByDepartment[dept.id];
+                return (
+                  <section key={dept.id} className="space-y-6">
+                    {/* Department Header */}
+                    <div className="text-center md:text-left">
+                      <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-2">
+                        {dept.name}
+                      </h2>
+                      <div className="h-1 w-24 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto md:mx-0"></div>
+                    </div>
+                    
+                    {/* Events Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                      {deptEvents.map((event) => (
+                        <SpecialEventBox
+                          key={event.id}
+                          event={event}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+            
+            {/* Load More Button */}
+            {pagination.hasMore && (
+              <div className="flex justify-center mt-12 pb-8">
+                <button
+                  onClick={loadMoreEvents}
+                  disabled={loadingMore}
+                  className="bg-gradient-to-r from-secondary to-primary text-white font-audiowide px-8 py-4 rounded-lg hover:from-hover-primary hover:to-secondary transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      Load More Competitions
+                      <span className="text-sm opacity-80">
+                        ({premiumEvents.length} of {pagination.total})
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
       <Footer />

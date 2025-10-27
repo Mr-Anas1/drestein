@@ -13,9 +13,12 @@ const page = () => {
     const [events, setEvents] = useState([]);
     const [specialEvents, setSpecialEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState(null);
     const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState('all');
+    const [pagination, setPagination] = useState({ hasMore: false, offset: 0, total: 0 });
+    const [specialPagination, setSpecialPagination] = useState({ hasMore: false, offset: 0, total: 0 });
     const { fetchEvents: fetchEventsCache, fetchSpecialEvents: fetchSpecialEventsCache } = useEventCache();
 
     useEffect(() => {
@@ -25,15 +28,23 @@ const page = () => {
                 setError(null);
                 setIsQuotaExceeded(false);
                 
-                // Use cached fetch methods - reduces reads by 94%
+                // Use cached fetch methods with pagination
                 const [eventsData, specialData] = await Promise.all([
-                    fetchEventsCache(),
-                    fetchSpecialEventsCache()
+                    fetchEventsCache(0, 50),
+                    fetchSpecialEventsCache(0, 50)
                 ]);
                 
                 // Handle new API response format with pagination
                 const eventsArray = eventsData?.events || eventsData || [];
                 const specialArray = specialData?.events || specialData || [];
+                
+                // Store pagination info
+                if (eventsData?.pagination) {
+                    setPagination(eventsData.pagination);
+                }
+                if (specialData?.pagination) {
+                    setSpecialPagination(specialData.pagination);
+                }
                 
                 console.log("Fetched events from cache/API:", eventsArray);
                 console.log("Fetched special events from cache/API:", specialArray);
@@ -89,6 +100,67 @@ const page = () => {
 
         fetchEvents();
     }, [fetchEventsCache, fetchSpecialEventsCache]);
+
+    const loadMoreEvents = async () => {
+        if (!pagination.hasMore && !specialPagination.hasMore) return;
+        
+        try {
+            setLoadingMore(true);
+            const nextOffset = events.length;
+            const nextSpecialOffset = specialEvents.length;
+            
+            const [eventsData, specialData] = await Promise.all([
+                pagination.hasMore ? fetchEventsCache(nextOffset, 50) : Promise.resolve({ events: [] }),
+                specialPagination.hasMore ? fetchSpecialEventsCache(nextSpecialOffset, 50) : Promise.resolve({ events: [] })
+            ]);
+            
+            const eventsArray = eventsData?.events || [];
+            const specialArray = specialData?.events || [];
+            
+            // Normalize department ids
+            const normalizeDept = (val) => {
+                const raw = String(val || '').trim();
+                if (!raw) return raw;
+                const upper = raw.toUpperCase();
+                const alias = {
+                    CYB: 'CSE-CYB',
+                    IOT: 'CSE-IOT',
+                    MED: 'MED-ELE',
+                    BME: 'BIO-MED',
+                    SH: 'S&H',
+                    'S & H': 'S&H',
+                };
+                const aliasMapped = alias[upper] || upper;
+                const match = DEPARTMENTS.find(
+                    d => d.id === aliasMapped || String(d.code || '').toUpperCase() === aliasMapped
+                );
+                return match ? match.id : aliasMapped;
+            };
+            
+            const normalizedEvents = eventsArray.map(e => ({
+                ...e,
+                department: normalizeDept(e.department),
+            }));
+            const normalizedSpecial = specialArray.map(e => ({
+                ...e,
+                department: normalizeDept(e.department),
+            }));
+            
+            setEvents(prev => [...prev, ...normalizedEvents]);
+            setSpecialEvents(prev => [...prev, ...normalizedSpecial]);
+            
+            if (eventsData?.pagination) {
+                setPagination(eventsData.pagination);
+            }
+            if (specialData?.pagination) {
+                setSpecialPagination(specialData.pagination);
+            }
+        } catch (err) {
+            console.error("Error loading more events:", err);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     // Memoize filtered events to avoid recalculation on every render
     const { departmentIds, otherEvents, filteredDepartments } = useMemo(() => {
@@ -279,6 +351,29 @@ const page = () => {
                                 </div>
                             </section>
                         )}
+                    </div>
+                )}
+
+                {/* Load More Button */}
+                {!loading && !error && !isQuotaExceeded && (pagination.hasMore || specialPagination.hasMore) && (
+                    <div className="flex justify-center mt-12 pb-8">
+                        <button
+                            onClick={loadMoreEvents}
+                            disabled={loadingMore}
+                            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide px-8 py-4 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+                        >
+                            {loadingMore ? (
+                                <>
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Loading...
+                                </>
+                            ) : (
+                                <>
+                                    Load More Events
+                                    
+                                </>
+                            )}
+                        </button>
                     </div>
                 )}
 

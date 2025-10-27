@@ -57,7 +57,7 @@ export default function MyPassesPage() {
       }
 
       // Fetch special events using cache - reduces reads by 90%
-      const specialEventsData = await fetchSpecialEvents();
+      const specialEventsData = await fetchSpecialEvents(0, 50);
       if (specialEventsData) {
         const specialArray = specialEventsData?.events || specialEventsData || [];
         const specialMap = {};

@@ -38,7 +38,7 @@ export default function MyRegistrationsPage() {
                 setRegistrations(regs);
 
                 // Fetch events and special events using cache - reduces reads by 94%
-                const eventsData = await fetchEvents();
+                const eventsData = await fetchEvents(0, 50);
                 if (eventsData) {
                     const eventsArray = eventsData?.events || eventsData || [];
                     const map = {};
@@ -46,7 +46,7 @@ export default function MyRegistrationsPage() {
                     setEventsMap(map);
                 }
 
-                const specialEventsData = await fetchSpecialEvents();
+                const specialEventsData = await fetchSpecialEvents(0, 50);
                 if (specialEventsData) {
                     const specialArray = specialEventsData?.events || specialEventsData || [];
                     const specialMap = {};

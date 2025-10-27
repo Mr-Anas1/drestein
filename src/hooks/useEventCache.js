@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const CACHE_VERSION = '2'; // Increment to invalidate old cache
+const CACHE_VERSION = '4'; // Increment to invalidate old cache (v4: request deduplication + admin optimization)
 const STORAGE_KEY_EVENTS = `drestein_cache_events_v${CACHE_VERSION}`;
 const STORAGE_KEY_SPECIAL_EVENTS = `drestein_cache_special_events_v${CACHE_VERSION}`;
 
@@ -12,6 +12,10 @@ export const useEventCache = () => {
   const cacheRef = useRef({
     events: { data: null, timestamp: null },
     specialEvents: { data: null, timestamp: null },
+  });
+  const pendingRequests = useRef({
+    events: new Map(),
+    specialEvents: new Map(),
   });
 
   // Initialize cache from localStorage on mount
@@ -60,52 +64,86 @@ export const useEventCache = () => {
     return Date.now() - cache.timestamp < CACHE_DURATION;
   };
 
-  const fetchEvents = useCallback(async () => {
-    if (isCacheValid('events')) {
+  const fetchEvents = useCallback(async (offset = 0, limit = 50) => {
+    // Only use cache for first page (offset = 0)
+    if (offset === 0 && isCacheValid('events')) {
       setEvents(cacheRef.current.events.data);
       return cacheRef.current.events.data;
     }
 
-    try {
-      setLoading(true);
-      const res = await fetch('/api/events');
-      if (!res.ok) throw new Error('Failed to fetch events');
-      const data = await res.json();
-      
-      cacheRef.current.events = { data, timestamp: Date.now() };
-      saveToLocalStorage('events', data);
-      setEvents(data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      return null;
-    } finally {
-      setLoading(false);
+    // Request deduplication - check if same request is already pending
+    const requestKey = `${offset}-${limit}`;
+    if (pendingRequests.current.events.has(requestKey)) {
+      return pendingRequests.current.events.get(requestKey);
     }
+
+    const requestPromise = (async () => {
+      try {
+        setLoading(true);
+        const url = `/api/events?limit=${limit}&offset=${offset}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch events');
+        const data = await res.json();
+        
+        // Only cache first page
+        if (offset === 0) {
+          cacheRef.current.events = { data, timestamp: Date.now() };
+          saveToLocalStorage('events', data);
+        }
+        setEvents(data);
+        return data;
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        return null;
+      } finally {
+        setLoading(false);
+        pendingRequests.current.events.delete(requestKey);
+      }
+    })();
+
+    pendingRequests.current.events.set(requestKey, requestPromise);
+    return requestPromise;
   }, []);
 
-  const fetchSpecialEvents = useCallback(async () => {
-    if (isCacheValid('specialEvents')) {
+  const fetchSpecialEvents = useCallback(async (offset = 0, limit = 50) => {
+    // Only use cache for first page (offset = 0)
+    if (offset === 0 && isCacheValid('specialEvents')) {
       setSpecialEvents(cacheRef.current.specialEvents.data);
       return cacheRef.current.specialEvents.data;
     }
 
-    try {
-      setLoading(true);
-      const res = await fetch('/api/special-events');
-      if (!res.ok) throw new Error('Failed to fetch special events');
-      const data = await res.json();
-      
-      cacheRef.current.specialEvents = { data, timestamp: Date.now() };
-      saveToLocalStorage('specialEvents', data);
-      setSpecialEvents(data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching special events:', error);
-      return null;
-    } finally {
-      setLoading(false);
+    // Request deduplication - check if same request is already pending
+    const requestKey = `${offset}-${limit}`;
+    if (pendingRequests.current.specialEvents.has(requestKey)) {
+      return pendingRequests.current.specialEvents.get(requestKey);
     }
+
+    const requestPromise = (async () => {
+      try {
+        setLoading(true);
+        const url = `/api/special-events?limit=${limit}&offset=${offset}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch special events');
+        const data = await res.json();
+        
+        // Only cache first page
+        if (offset === 0) {
+          cacheRef.current.specialEvents = { data, timestamp: Date.now() };
+          saveToLocalStorage('specialEvents', data);
+        }
+        setSpecialEvents(data);
+        return data;
+      } catch (error) {
+        console.error('Error fetching special events:', error);
+        return null;
+      } finally {
+        setLoading(false);
+        pendingRequests.current.specialEvents.delete(requestKey);
+      }
+    })();
+
+    pendingRequests.current.specialEvents.set(requestKey, requestPromise);
+    return requestPromise;
   }, []);
 
   const clearCache = () => {
@@ -113,6 +151,9 @@ export const useEventCache = () => {
       events: { data: null, timestamp: null },
       specialEvents: { data: null, timestamp: null },
     };
+    // Clear pending requests
+    pendingRequests.current.events.clear();
+    pendingRequests.current.specialEvents.clear();
     setEvents(null);
     setSpecialEvents(null);
     if (typeof window !== 'undefined') {

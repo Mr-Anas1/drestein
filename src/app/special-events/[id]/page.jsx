@@ -57,7 +57,7 @@ useEffect(() => {
       }
       
       // Fallback: fetch from API if no data passed
-      const data = await fetchSpecialEvents();
+      const data = await fetchSpecialEvents(0, 50);
       const eventsArray = data?.events || data || [];
       const foundEvent = eventsArray.find(e => e.id === params.id);
       

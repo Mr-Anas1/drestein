@@ -7,12 +7,14 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import { getDepartmentById } from "@/constants/departments";
+import { useEventCache } from "@/hooks/useEventCache";
 import { Calendar, MapPin, Users, Clock, ArrowRight } from "lucide-react";
 
 export default function DepartmentPage() {
   const params = useParams();
   const deptId = params.id?.toUpperCase();
   const department = getDepartmentById(deptId);
+  const { fetchEvents: fetchEventsCache, fetchSpecialEvents: fetchSpecialEventsCache } = useEventCache();
 
   const [events, setEvents] = useState([]);
   const [specialEvents, setSpecialEvents] = useState([]);
@@ -27,26 +29,11 @@ export default function DepartmentPage() {
         setError(null);
         setIsQuotaExceeded(false);
         
-        // OPTIMIZED: Use department filter in API query - reduces reads by 98%
-        const [eventsRes, specialRes] = await Promise.all([
-          fetch(`/api/events?department=${deptId}&limit=50`),
-          fetch(`/api/special-events?department=${deptId}&limit=50`)
+        // Use cached fetch methods for better performance
+        const [eventsData, specialData] = await Promise.all([
+          fetchEventsCache(0, 100),
+          fetchSpecialEventsCache(0, 100)
         ]);
-        
-        if (!eventsRes.ok || !specialRes.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        
-        const eventsData = await eventsRes.json();
-        const specialData = await specialRes.json();
-        
-        // Check for API errors
-        if (eventsData.error) {
-          throw new Error(eventsData.error);
-        }
-        if (specialData.error) {
-          throw new Error(specialData.error);
-        }
         
         // Handle new API response format with pagination
         const eventsArray = eventsData?.events || eventsData || [];
@@ -60,8 +47,12 @@ export default function DepartmentPage() {
           throw new Error('Invalid special events format');
         }
         
-        setEvents(eventsArray);
-        setSpecialEvents(specialArray);
+        // Filter by department client-side
+        const deptEvents = eventsArray.filter(event => event.department === deptId);
+        const deptSpecialEvents = specialArray.filter(event => event.department === deptId);
+        
+        setEvents(deptEvents);
+        setSpecialEvents(deptSpecialEvents);
       } catch (err) {
         console.error("Error fetching events:", err);
         // Check if it's a quota exceeded error or timeout (likely quota issue)

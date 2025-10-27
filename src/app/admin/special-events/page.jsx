@@ -5,12 +5,14 @@ import Header from '@/components/Header';
 import { DEPARTMENTS } from '@/constants/departments';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, Trash2, Eye, Users, ArrowLeft } from 'lucide-react';
+import { useEventCache } from '@/hooks/useEventCache';
 import AddSpecialEventModal from '@/components/AddSpecialEventModal';
 import EditSpecialEventModal from '@/components/EditSpecialEventModal';
 import SpecialEventParticipantsModal from '@/components/SpecialEventParticipantsModal';
 
 const AdminSpecialEventsPage = () => {
   const { user, userRole, loading: authLoading, isSuperAdmin, isDepartmentAdmin } = useAuth();
+  const { fetchSpecialEvents: fetchSpecialEventsCache } = useEventCache();
   const router = useRouter();
   const [specialEvents, setSpecialEvents] = useState([]);
   const [filteredSpecialEvents, setFilteredSpecialEvents] = useState([]);
@@ -64,18 +66,20 @@ const AdminSpecialEventsPage = () => {
     setFilteredSpecialEvents(filtered);
   }, [specialEvents, searchQuery]);
 
-  const fetchSpecialEvents = async ({ offset = 0, append = false, limit = 20 } = {}) => {
+  const fetchSpecialEvents = async ({ offset = 0, append = false, limit = 50 } = {}) => {
     try {
       if (append) setLoadingMore(true); else setLoading(true);
-      const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+      
+      // Use cached fetch for better performance
+      const data = await fetchSpecialEventsCache(offset, limit);
+      let events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
+      
+      // Apply department filtering client-side
       if (isDepartmentAdmin && userRole?.department) {
-        params.set('department', userRole.department);
+        events = events.filter(event => event.department === userRole.department);
       } else if (isSuperAdmin && selectedDepartment && selectedDepartment !== 'all') {
-        params.set('department', selectedDepartment);
+        events = events.filter(event => event.department === selectedDepartment);
       }
-      const response = await fetch(`/api/special-events?${params.toString()}`);
-      const data = await response.json();
-      const events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
 
       if (append) {
         setSpecialEvents((prev) => [...prev, ...events]);

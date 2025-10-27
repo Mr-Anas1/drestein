@@ -67,7 +67,7 @@ export async function GET(request) {
     const id = searchParams.get("id");
     const category = searchParams.get("category");
     const department = searchParams.get("department");
-    const limit = parseInt(searchParams.get("limit") || "1000", 10);
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
     // Get single special event by ID
