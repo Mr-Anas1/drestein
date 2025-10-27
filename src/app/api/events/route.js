@@ -4,6 +4,28 @@ import { NextResponse } from "next/server";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
+// In-memory cache with request deduplication
+const cache = {
+  events: { data: null, timestamp: null },
+  eventsByDept: new Map(), // dept -> { data, timestamp }
+  pendingRequests: new Map(), // key -> Promise
+};
+
+const CACHE_DURATION = 30 * 1000; // 30 seconds
+
+function isCacheValid(type, key = null) {
+  if (type === 'events') {
+    if (!cache.events.data) return false;
+    return Date.now() - cache.events.timestamp < CACHE_DURATION;
+  }
+  if (type === 'eventsByDept' && key) {
+    const cached = cache.eventsByDept.get(key);
+    if (!cached) return false;
+    return Date.now() - cached.timestamp < CACHE_DURATION;
+  }
+  return false;
+}
+
 function getAdminDB() {
   if (!getApps().length) {
     const projectId =
@@ -29,13 +51,11 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const department = searchParams.get("department");
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
-    const offset = parseInt(searchParams.get("offset") || "0", 10);
     const id = searchParams.get("id");
 
     const db = getAdminDB();
 
-    // Get single event by ID
+    // Get single event by ID (never cache)
     if (id) {
       const doc = await db.collection("events").doc(id).get();
       if (!doc.exists) {
@@ -47,45 +67,63 @@ export async function GET(request) {
       return NextResponse.json({ id: doc.id, ...doc.data() });
     }
 
-    // Build query with filters
-    let query = db.collection("events");
-    if (department) {
-      query = query.where("department", "==", department);
+    // Request deduplication - check if same request is pending
+    const cacheKey = department ? `dept-${department}` : 'all';
+    if (cache.pendingRequests.has(cacheKey)) {
+      return cache.pendingRequests.get(cacheKey);
     }
 
-    // Get all docs (no orderBy to avoid index requirement)
-    const countSnapshot = await query.get();
-    let docs = countSnapshot.docs;
-    
-    // Sort in-memory by createdAt desc
-    docs = docs.sort((a, b) => {
-      const aTime = a.data().createdAt?.toDate?.() || new Date(0);
-      const bTime = b.data().createdAt?.toDate?.() || new Date(0);
-      return bTime - aTime; // descending order
-    });
-    
-    const totalCount = docs.length;
+    // Check cache validity
+    if (department && isCacheValid('eventsByDept', department)) {
+      return NextResponse.json(
+        { events: cache.eventsByDept.get(department).data },
+        { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+      );
+    }
+    if (!department && isCacheValid('events')) {
+      return NextResponse.json(
+        { events: cache.events.data },
+        { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+      );
+    }
 
-    // Apply pagination
-    const paginatedDocs = docs.slice(offset, offset + limit);
-    const events = paginatedDocs.map((d) => ({ id: d.id, ...d.data() }));
+    // Create promise for this request
+    const requestPromise = (async () => {
+      try {
+        let query = db.collection("events");
+        if (department) {
+          query = query.where("department", "==", department);
+        }
 
-    return NextResponse.json(
-      {
-        events,
-        pagination: {
-          total: totalCount,
-          offset,
-          limit,
-          hasMore: offset + limit < totalCount,
-        },
-      },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-        },
+        const countSnapshot = await query.get();
+        let docs = countSnapshot.docs;
+        
+        docs = docs.sort((a, b) => {
+          const aTime = a.data().createdAt?.toDate?.() || new Date(0);
+          const bTime = b.data().createdAt?.toDate?.() || new Date(0);
+          return bTime - aTime;
+        });
+        
+        const events = docs.map((d) => ({ id: d.id, ...d.data() }));
+
+        // Cache the result
+        if (department) {
+          cache.eventsByDept.set(department, { data: events, timestamp: Date.now() });
+        } else {
+          cache.events = { data: events, timestamp: Date.now() };
+        }
+
+        return NextResponse.json(
+          { events },
+          { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+        );
+      } finally {
+        cache.pendingRequests.delete(cacheKey);
       }
-    );
+    })();
+
+    cache.pendingRequests.set(cacheKey, requestPromise);
+    return requestPromise;
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

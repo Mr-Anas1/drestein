@@ -4,18 +4,14 @@ import Footer from '@/components/Footer';
 import SpecialEventBox from '@/components/SpecialEventBox';
 import { useEffect, useState, useMemo } from 'react';
 import { DEPARTMENTS } from '@/constants/departments';
-import { useEventCache } from '@/hooks/useEventCache';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 const SpecialEventsPage = () => {
-  const { fetchSpecialEvents, clearCache } = useEventCache();
   const [premiumEvents, setPremiumEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
-  const [pagination, setPagination] = useState({ hasMore: false, offset: 0, total: 0 });
 
   useEffect(() => {
     const fetchPremiumEvents = async () => {
@@ -24,34 +20,20 @@ const SpecialEventsPage = () => {
         setError(null);
         setIsQuotaExceeded(false);
         
-        // Use cached fetch method with pagination
-        const data = await fetchSpecialEvents(0, 50);
+        // Simple direct API call
+        const res = await fetch('/api/special-events?category=competition');
+        if (!res.ok) throw new Error('Failed to fetch special events');
         
-        // Check if API returned an error object
-        if (data?.error) {
-          throw new Error(data.error);
-        }
-        
-        // Handle new API response format with pagination
+        const data = await res.json();
         const eventsArray = data?.events || data || [];
         
-        // Store pagination info
-        if (data?.pagination) {
-          setPagination(data.pagination);
-        }
-        
-        // Ensure it's an array
         if (!Array.isArray(eventsArray)) {
           throw new Error('Invalid events format');
         }
         
-        // Only show competitions on the Special Events page
-        const competitionEvents = (Array.isArray(eventsArray) ? eventsArray : []).filter(e => e.category === 'competition');
-        console.log("Fetched competition events (from cache):", competitionEvents);
-        setPremiumEvents(competitionEvents);
+        setPremiumEvents(eventsArray);
       } catch (err) {
         console.error("Error fetching premium events:", err);
-        // Check if it's a quota exceeded error or timeout (likely quota issue)
         const errorMsg = err.message || '';
         if (errorMsg.includes('RESOURCE_EXHAUSTED') || 
             errorMsg.includes('Quota exceeded') || 
@@ -66,38 +48,9 @@ const SpecialEventsPage = () => {
       }
     };
 
-    // Invalidate cache so page reflects the latest additions
-    clearCache();
     fetchPremiumEvents();
   }, []);
 
-  const loadMoreEvents = async () => {
-    if (!pagination.hasMore || loadingMore) return;
-    
-    try {
-      setLoadingMore(true);
-      const nextOffset = premiumEvents.length;
-      
-      const data = await fetchSpecialEvents(nextOffset, 50);
-      
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-      
-      const eventsArray = data?.events || [];
-      const competitionEvents = eventsArray.filter(e => e.category === 'competition');
-      
-      setPremiumEvents(prev => [...prev, ...competitionEvents]);
-      
-      if (data?.pagination) {
-        setPagination(data.pagination);
-      }
-    } catch (err) {
-      console.error("Error loading more events:", err);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
 
   // Group events by department
   const eventsByDepartment = useMemo(() => {
@@ -194,30 +147,6 @@ const SpecialEventsPage = () => {
               })}
             </div>
             
-            {/* Load More Button */}
-            {pagination.hasMore && (
-              <div className="flex justify-center mt-12 pb-8">
-                <button
-                  onClick={loadMoreEvents}
-                  disabled={loadingMore}
-                  className="bg-gradient-to-r from-secondary to-primary text-white font-audiowide px-8 py-4 rounded-lg hover:from-hover-primary hover:to-secondary transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
-                >
-                  {loadingMore ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      Load More Competitions
-                      <span className="text-sm opacity-80">
-                        ({premiumEvents.length} of {pagination.total})
-                      </span>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
           </>
         )}
       </div>

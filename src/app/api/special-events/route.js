@@ -4,6 +4,50 @@ import { NextResponse } from "next/server";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
+// In-memory cache with request deduplication
+const cache = {
+  allEvents: { data: null, timestamp: null },
+  byCategory: new Map(), // category -> { data, timestamp }
+  byDept: new Map(), // dept -> { data, timestamp }
+  byCategoryAndDept: new Map(), // "category-dept" -> { data, timestamp }
+  pendingRequests: new Map(), // key -> Promise
+};
+
+const CACHE_DURATION = 30 * 1000; // 30 seconds
+
+function getCacheKey(category, department) {
+  if (category && department) return `${category}-${department}`;
+  if (category) return `cat-${category}`;
+  if (department) return `dept-${department}`;
+  return 'all';
+}
+
+function isCacheValid(key) {
+  let cached = null;
+  if (key === 'all') cached = cache.allEvents;
+  else if (key.startsWith('cat-')) cached = cache.byCategory.get(key.slice(4));
+  else if (key.startsWith('dept-')) cached = cache.byDept.get(key.slice(5));
+  else cached = cache.byCategoryAndDept.get(key);
+  
+  if (!cached || !cached.data) return false;
+  return Date.now() - cached.timestamp < CACHE_DURATION;
+}
+
+function getFromCache(key) {
+  if (key === 'all') return cache.allEvents.data;
+  if (key.startsWith('cat-')) return cache.byCategory.get(key.slice(4))?.data;
+  if (key.startsWith('dept-')) return cache.byDept.get(key.slice(5))?.data;
+  return cache.byCategoryAndDept.get(key)?.data;
+}
+
+function setCache(key, data) {
+  const entry = { data, timestamp: Date.now() };
+  if (key === 'all') cache.allEvents = entry;
+  else if (key.startsWith('cat-')) cache.byCategory.set(key.slice(4), entry);
+  else if (key.startsWith('dept-')) cache.byDept.set(key.slice(5), entry);
+  else cache.byCategoryAndDept.set(key, entry);
+}
+
 function getAdminDB() {
   if (!getApps().length) {
     const projectId =
@@ -67,10 +111,8 @@ export async function GET(request) {
     const id = searchParams.get("id");
     const category = searchParams.get("category");
     const department = searchParams.get("department");
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
-    const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    // Get single special event by ID
+    // Get single special event by ID (never cache)
     if (id) {
       const doc = await db.collection("specialEvents").doc(id).get();
       if (!doc.exists) {
@@ -82,73 +124,89 @@ export async function GET(request) {
       return NextResponse.json({ id: doc.id, ...doc.data() });
     }
 
-    // Build query with filters
-    let baseQuery = db.collection("specialEvents");
-    if (category) {
-      baseQuery = baseQuery.where("category", "==", category);
+    // Request deduplication
+    const cacheKey = getCacheKey(category, department);
+    if (cache.pendingRequests.has(cacheKey)) {
+      return cache.pendingRequests.get(cacheKey);
     }
-    
-    // If department filter is present, avoid orderBy and filter in-memory by normalized values
-    if (department) {
-      const norm = String(department).trim().toUpperCase();
-      const acceptable = new Set([norm]);
-      // Map a few common code aliases
-      // Example: allow matching 'CYB' for 'CSE-CYB', and 'IOT' for 'CSE-IOT'
-      if (norm === 'CSE-CYB') acceptable.add('CYB');
-      if (norm === 'CSE-IOT') acceptable.add('IOT');
-      if (norm === 'MED-ELE') acceptable.add('MED');
 
-      const snapshotAll = await baseQuery.get();
-      let docs = snapshotAll.docs.filter((d) => {
-        const dep = String(d.data()?.department || '').trim().toUpperCase();
-        return acceptable.has(dep);
-      });
-      // Sort in-memory by createdAt desc
-      docs = docs.sort((a, b) => {
-        const aTime = a.data().createdAt?.toDate?.() || new Date(0);
-        const bTime = b.data().createdAt?.toDate?.() || new Date(0);
-        return bTime - aTime;
-      });
-      const totalCount = docs.length;
-      const paginatedDocs = docs.slice(offset, offset + limit);
-      const specialEvents = paginatedDocs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    // Check cache validity
+    if (isCacheValid(cacheKey)) {
+      const data = getFromCache(cacheKey);
       return NextResponse.json(
-        {
-          events: specialEvents,
-          pagination: {
-            total: totalCount,
-            offset,
-            limit,
-            hasMore: offset + limit < totalCount,
-          },
-        },
-        { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } }
+        { events: data },
+        { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
       );
     }
 
-    // No department filter; safe to orderBy createdAt
-    baseQuery = baseQuery.orderBy("createdAt", "desc");
-    const countSnapshot = await baseQuery.get();
-    const totalCount = countSnapshot.size;
-    const snapshot = await baseQuery.offset(offset).limit(limit).get();
-    const specialEvents = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    // Create promise for this request
+    const requestPromise = (async () => {
+      try {
+        let baseQuery = db.collection("specialEvents");
+        if (category) {
+          baseQuery = baseQuery.where("category", "==", category);
+        }
+        
+        // If department filter is present, filter in-memory by normalized values
+        if (department) {
+          const norm = String(department).trim().toUpperCase();
+          const acceptable = new Set([norm]);
+          if (norm === 'CSE-CYB') acceptable.add('CYB');
+          if (norm === 'CSE-IOT') acceptable.add('IOT');
+          if (norm === 'MED-ELE') acceptable.add('MED');
 
-    return NextResponse.json(
-      {
-        events: specialEvents,
-        pagination: {
-          total: totalCount,
-          offset,
-          limit,
-          hasMore: offset + limit < totalCount,
-        },
-      },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-        },
+          const snapshotAll = await baseQuery.get();
+          let docs = snapshotAll.docs.filter((d) => {
+            const dep = String(d.data()?.department || '').trim().toUpperCase();
+            return acceptable.has(dep);
+          });
+          docs = docs.sort((a, b) => {
+            const aTime = a.data().createdAt?.toDate?.() || new Date(0);
+            const bTime = b.data().createdAt?.toDate?.() || new Date(0);
+            return bTime - aTime;
+          });
+          const specialEvents = docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          setCache(cacheKey, specialEvents);
+          return NextResponse.json(
+            { events: specialEvents },
+            { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } }
+          );
+        }
+
+        // If category filter is present (without department), fetch all and sort in-memory
+        if (category) {
+          const snapshot = await baseQuery.get();
+          let docs = snapshot.docs;
+          docs = docs.sort((a, b) => {
+            const aTime = a.data().createdAt?.toDate?.() || new Date(0);
+            const bTime = b.data().createdAt?.toDate?.() || new Date(0);
+            return bTime - aTime;
+          });
+          const specialEvents = docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          setCache(cacheKey, specialEvents);
+          return NextResponse.json(
+            { events: specialEvents },
+            { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+          );
+        }
+
+        // No filters; safe to orderBy createdAt
+        baseQuery = baseQuery.orderBy("createdAt", "desc");
+        const snapshot = await baseQuery.get();
+        const specialEvents = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setCache(cacheKey, specialEvents);
+
+        return NextResponse.json(
+          { events: specialEvents },
+          { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+        );
+      } finally {
+        cache.pendingRequests.delete(cacheKey);
       }
-    );
+    })();
+
+    cache.pendingRequests.set(cacheKey, requestPromise);
+    return requestPromise;
   } catch (error) {
     console.error("Error fetching special events:", error);
     return NextResponse.json(

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const CACHE_VERSION = '4'; // Increment to invalidate old cache (v4: request deduplication + admin optimization)
+const CACHE_VERSION = '5'; // Increment to invalidate old cache (v5: events page deduplication fix)
 const STORAGE_KEY_EVENTS = `drestein_cache_events_v${CACHE_VERSION}`;
 const STORAGE_KEY_SPECIAL_EVENTS = `drestein_cache_special_events_v${CACHE_VERSION}`;
 
@@ -10,8 +10,8 @@ export const useEventCache = () => {
   const [specialEvents, setSpecialEvents] = useState(null);
   const [loading, setLoading] = useState(false);
   const cacheRef = useRef({
-    events: { data: null, timestamp: null },
-    specialEvents: { data: null, timestamp: null },
+    events: { data: null, timestamp: null, key: '' },
+    specialEvents: { data: null, timestamp: null, key: '' },
   });
   const pendingRequests = useRef({
     events: new Map(),
@@ -36,31 +36,39 @@ export const useEventCache = () => {
       
       if (cachedEvents) {
         const parsed = JSON.parse(cachedEvents);
-        cacheRef.current.events = parsed;
+        cacheRef.current.events = {
+          data: parsed.data ?? null,
+          timestamp: parsed.timestamp ?? null,
+          key: parsed.key ?? '',
+        };
       }
       if (cachedSpecialEvents) {
         const parsed = JSON.parse(cachedSpecialEvents);
-        cacheRef.current.specialEvents = parsed;
+        cacheRef.current.specialEvents = {
+          data: parsed.data ?? null,
+          timestamp: parsed.timestamp ?? null,
+          key: parsed.key ?? '',
+        };
       }
     } catch (error) {
       console.error('Error loading cache from localStorage:', error);
     }
   }, []);
 
-  const saveToLocalStorage = (type, data) => {
+  const saveToLocalStorage = (type, data, key = '') => {
     if (typeof window === 'undefined') return;
     try {
       const key = type === 'events' ? STORAGE_KEY_EVENTS : STORAGE_KEY_SPECIAL_EVENTS;
-      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now(), key }));
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
   };
 
-
-  const isCacheValid = (type) => {
+  const isCacheValid = (type, key = '') => {
     const cache = cacheRef.current[type];
     if (!cache.data) return false;
+    if (key && cache.key && cache.key !== key) return false;
     return Date.now() - cache.timestamp < CACHE_DURATION;
   };
 
@@ -87,8 +95,8 @@ export const useEventCache = () => {
         
         // Only cache first page
         if (offset === 0) {
-          cacheRef.current.events = { data, timestamp: Date.now() };
-          saveToLocalStorage('events', data);
+          cacheRef.current.events = { data, timestamp: Date.now(), key: '' };
+          saveToLocalStorage('events', data, '');
         }
         setEvents(data);
         return data;
@@ -105,15 +113,17 @@ export const useEventCache = () => {
     return requestPromise;
   }, []);
 
-  const fetchSpecialEvents = useCallback(async (offset = 0, limit = 50) => {
-    // Only use cache for first page (offset = 0)
-    if (offset === 0 && isCacheValid('specialEvents')) {
+  const fetchSpecialEvents = useCallback(async (offset = 0, limit = 50, params = {}) => {
+    const paramsKey = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
+
+    // Only use cache for first page (offset = 0) when params match
+    if (offset === 0 && isCacheValid('specialEvents', paramsKey)) {
       setSpecialEvents(cacheRef.current.specialEvents.data);
       return cacheRef.current.specialEvents.data;
     }
 
     // Request deduplication - check if same request is already pending
-    const requestKey = `${offset}-${limit}`;
+    const requestKey = `${offset}-${limit}${paramsKey ? `?${paramsKey}` : ''}`;
     if (pendingRequests.current.specialEvents.has(requestKey)) {
       return pendingRequests.current.specialEvents.get(requestKey);
     }
@@ -121,15 +131,19 @@ export const useEventCache = () => {
     const requestPromise = (async () => {
       try {
         setLoading(true);
-        const url = `/api/special-events?limit=${limit}&offset=${offset}`;
+        const usp = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+        Object.entries(params || {}).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && String(v).length > 0) usp.set(k, String(v));
+        });
+        const url = `/api/special-events?${usp.toString()}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch special events');
         const data = await res.json();
         
         // Only cache first page
         if (offset === 0) {
-          cacheRef.current.specialEvents = { data, timestamp: Date.now() };
-          saveToLocalStorage('specialEvents', data);
+          cacheRef.current.specialEvents = { data, timestamp: Date.now(), key: paramsKey };
+          saveToLocalStorage('specialEvents', data, paramsKey);
         }
         setSpecialEvents(data);
         return data;
@@ -148,8 +162,8 @@ export const useEventCache = () => {
 
   const clearCache = () => {
     cacheRef.current = {
-      events: { data: null, timestamp: null },
-      specialEvents: { data: null, timestamp: null },
+      events: { data: null, timestamp: null, key: '' },
+      specialEvents: { data: null, timestamp: null, key: '' },
     };
     // Clear pending requests
     pendingRequests.current.events.clear();
