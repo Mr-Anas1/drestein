@@ -52,25 +52,17 @@ export async function GET(request) {
     if (department) {
       query = query.where("department", "==", department);
     }
-    
-    // Only orderBy if no department filter (to avoid index requirement)
-    // If department filter is used, we'll sort in memory
-    if (!department) {
-      query = query.orderBy("createdAt", "desc");
-    }
 
-    // Get total count for pagination
+    // Get all docs (no orderBy to avoid index requirement)
     const countSnapshot = await query.get();
     let docs = countSnapshot.docs;
     
-    // Sort by createdAt if we have a department filter
-    if (department) {
-      docs = docs.sort((a, b) => {
-        const aTime = a.data().createdAt?.toDate?.() || new Date(0);
-        const bTime = b.data().createdAt?.toDate?.() || new Date(0);
-        return bTime - aTime; // descending order
-      });
-    }
+    // Sort in-memory by createdAt desc
+    docs = docs.sort((a, b) => {
+      const aTime = a.data().createdAt?.toDate?.() || new Date(0);
+      const bTime = b.data().createdAt?.toDate?.() || new Date(0);
+      return bTime - aTime; // descending order
+    });
     
     const totalCount = docs.length;
 

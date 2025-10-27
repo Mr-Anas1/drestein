@@ -272,13 +272,15 @@ const AdminSpecialEventsPage = () => {
                           >
                             <Users className="w-5 h-5" />
                           </button>
-                          <button
-                            onClick={() => router.push(`/special-events/${event.id}`)}
-                            className="text-primary hover:text-hover-primary transition-colors"
-                            title="View"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
+                          {isSuperAdmin && (
+                            <button
+                              onClick={() => router.push(`/special-events/${event.id}`)}
+                              className="text-primary hover:text-hover-primary transition-colors"
+                              title="View"
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+                          )}
                           {/* Only super admins can edit/delete special events */}
                           {isSuperAdmin && (
                             <>

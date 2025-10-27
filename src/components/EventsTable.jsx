@@ -116,13 +116,15 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
                                         >
                                             <Users size={16} />
                                         </button>
-                                        <button
-                                            onClick={() => onView(event)}
-                                            className="p-2 text-muted-text hover:text-primary transition-colors duration-300"
-                                            title="View Details"
-                                        >
-                                            <Eye size={16} />
-                                        </button>
+                                        {isSuperAdmin && (
+                                            <button
+                                                onClick={() => onView(event)}
+                                                className="p-2 text-muted-text hover:text-primary transition-colors duration-300"
+                                                title="View Details"
+                                            >
+                                                <Eye size={16} />
+                                            </button>
+                                        )}
                                         {canEditEvent(event) && (
                                             <button
                                                 onClick={() => onEdit(event)}

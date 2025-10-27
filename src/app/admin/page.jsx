@@ -47,7 +47,7 @@ const AdminDashboard = () => {
         if (user && userRole) {
             fetchEvents()
         }
-    }, [user, userRole])
+    }, [user, userRole, isDepartmentAdmin, userDepartment])
 
     // Filter events based on user role, department and search
     useEffect(() => {

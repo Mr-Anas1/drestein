@@ -7,7 +7,7 @@ import { Ticket, Users, DollarSign, CheckCircle, XCircle, Clock, Eye, Filter, Ar
 import { CUSTOM_PASS_EVENTS } from '@/constants/customPassEvents';
 
 const AdminPassesPage = () => {
-  const { user, userRole, loading: authLoading, isSuperAdmin, isDepartmentAdmin } = useAuth();
+  const { user, userRole, loading: authLoading, isSuperAdmin } = useAuth();
   const router = useRouter();
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,23 +22,27 @@ const AdminPassesPage = () => {
         router.push('/admin/login');
       } else if (userRole && userRole.role === 'student') {
         router.push('/');
-      } else if (userRole && !isSuperAdmin && !isDepartmentAdmin) {
+      } else if (userRole && !isSuperAdmin) {
         router.push('/');
       }
     }
-  }, [user, authLoading, userRole, isSuperAdmin, isDepartmentAdmin, router]);
+  }, [user, authLoading, userRole, isSuperAdmin, router]);
 
   // Fetch passes
   useEffect(() => {
-    if (user && (isSuperAdmin || isDepartmentAdmin)) {
+    if (user && isSuperAdmin) {
       fetchPasses();
     }
-  }, [user, isSuperAdmin, isDepartmentAdmin]);
+  }, [user, isSuperAdmin]);
 
   const fetchPasses = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/passes');
+      const { auth } = await import('@/lib/firebase');
+      const token = await auth.currentUser?.getIdToken?.();
+      const response = await fetch('/api/admin/passes', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
       if (response.ok) {
         setPasses(data.passes || []);
@@ -50,14 +54,16 @@ const AdminPassesPage = () => {
     }
   };
 
-  const filteredPasses = passes.filter(pass => {
-    if (filter === 'all') return true;
-    if (filter === 'general') return pass.passType === 'general';
-    if (filter === 'custom') return pass.passType === 'custom';
-    if (filter === 'pending') return !pass.paymentVerified;
-    if (filter === 'verified') return pass.paymentVerified;
-    return true;
-  });
+  // Always show only verified passes in the table
+  const filteredPasses = passes
+    .filter(pass => pass.paymentVerified)
+    .filter(pass => {
+      if (filter === 'all' || filter === 'verified') return true;
+      if (filter === 'general') return pass.passType === 'general';
+      if (filter === 'custom') return pass.passType === 'custom';
+      // pending is intentionally excluded
+      return true;
+    });
 
   const stats = {
     total: passes.length,
@@ -79,7 +85,7 @@ const AdminPassesPage = () => {
     );
   }
 
-  if (!user || !userRole || (!isSuperAdmin && !isDepartmentAdmin)) {
+  if (!user || !userRole || (!isSuperAdmin)) {
     return null;
   }
 
