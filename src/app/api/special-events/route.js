@@ -127,7 +127,11 @@ export async function GET(request) {
     // Request deduplication
     const cacheKey = getCacheKey(category, department);
     if (cache.pendingRequests.has(cacheKey)) {
-      return cache.pendingRequests.get(cacheKey);
+      const cachedData = await cache.pendingRequests.get(cacheKey);
+      return NextResponse.json(
+        { events: cachedData },
+        { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+      );
     }
 
     // Check cache validity
@@ -167,10 +171,7 @@ export async function GET(request) {
           });
           const specialEvents = docs.map((doc) => ({ id: doc.id, ...doc.data() }));
           setCache(cacheKey, specialEvents);
-          return NextResponse.json(
-            { events: specialEvents },
-            { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } }
-          );
+          return specialEvents;
         }
 
         // If category filter is present (without department), fetch all and sort in-memory
@@ -184,10 +185,7 @@ export async function GET(request) {
           });
           const specialEvents = docs.map((doc) => ({ id: doc.id, ...doc.data() }));
           setCache(cacheKey, specialEvents);
-          return NextResponse.json(
-            { events: specialEvents },
-            { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
-          );
+          return specialEvents;
         }
 
         // No filters; safe to orderBy createdAt
@@ -195,18 +193,18 @@ export async function GET(request) {
         const snapshot = await baseQuery.get();
         const specialEvents = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setCache(cacheKey, specialEvents);
-
-        return NextResponse.json(
-          { events: specialEvents },
-          { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
-        );
+        return specialEvents;
       } finally {
         cache.pendingRequests.delete(cacheKey);
       }
     })();
 
     cache.pendingRequests.set(cacheKey, requestPromise);
-    return requestPromise;
+    const specialEvents = await requestPromise;
+    return NextResponse.json(
+      { events: specialEvents },
+      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+    );
   } catch (error) {
     console.error("Error fetching special events:", error);
     return NextResponse.json(

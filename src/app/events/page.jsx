@@ -59,13 +59,22 @@ const page = () => {
                     return match ? match.id : aliasMapped;
                 };
 
+                // Helper to check if event is expired
+                const isEventExpired = (event) => {
+                    if (!event.expiryDate) return false;
+                    const expiryDate = new Date(event.expiryDate);
+                    return expiryDate < new Date();
+                };
+
                 const normalizedEvents = eventsArray.map(e => ({
                     ...e,
                     department: normalizeDept(e.department),
+                    isExpired: isEventExpired(e),
                 }));
                 const normalizedSpecial = specialArray.map(e => ({
                     ...e,
                     department: normalizeDept(e.department),
+                    isExpired: isEventExpired(e),
                 }));
 
                 setEvents(normalizedEvents);

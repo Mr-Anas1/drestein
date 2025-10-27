@@ -70,7 +70,11 @@ export async function GET(request) {
     // Request deduplication - check if same request is pending
     const cacheKey = department ? `dept-${department}` : 'all';
     if (cache.pendingRequests.has(cacheKey)) {
-      return cache.pendingRequests.get(cacheKey);
+      const cachedData = await cache.pendingRequests.get(cacheKey);
+      return NextResponse.json(
+        { events: cachedData },
+        { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+      );
     }
 
     // Check cache validity
@@ -113,17 +117,18 @@ export async function GET(request) {
           cache.events = { data: events, timestamp: Date.now() };
         }
 
-        return NextResponse.json(
-          { events },
-          { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
-        );
+        return events;
       } finally {
         cache.pendingRequests.delete(cacheKey);
       }
     })();
 
     cache.pendingRequests.set(cacheKey, requestPromise);
-    return requestPromise;
+    const events = await requestPromise;
+    return NextResponse.json(
+      { events },
+      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+    );
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
