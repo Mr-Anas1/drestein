@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Users, Mail, User, Calendar, Download } from 'lucide-react';
+import { X, Users, Mail, User, Download } from 'lucide-react';
 
 export default function ParticipantListModal({ event, onClose }) {
     const [participants, setParticipants] = useState([]);
@@ -34,14 +34,13 @@ export default function ParticipantListModal({ event, onClose }) {
     const exportToCSV = () => {
         if (participants.length === 0) return;
 
-        const headers = ['Name', 'Email', 'Transaction ID', 'Registration Date'];
+        const headers = ['Name', 'Email', 'Transaction ID'];
         const csvContent = [
             headers.join(','),
             ...participants.map(p => [
                 `"${p.name}"`,
                 `"${p.email}"`,
-                `"${p.transactionId}"`,
-                `"${new Date(p.registeredAt.seconds * 1000).toLocaleString()}"`
+                `"${p.transactionId}"`
             ].join(','))
         ].join('\n');
 
@@ -54,16 +53,7 @@ export default function ParticipantListModal({ event, onClose }) {
         window.URL.revokeObjectURL(url);
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return 'N/A';
-
-        // Handle Firestore timestamp
-        const date = timestamp.seconds
-            ? new Date(timestamp.seconds * 1000)
-            : new Date(timestamp);
-
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-    };
+    // no date column in UI or CSV
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -127,7 +117,7 @@ export default function ParticipantListModal({ event, onClose }) {
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">#</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Name</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Email</th>
-                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Registration Date</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Transaction ID</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -152,14 +142,6 @@ export default function ParticipantListModal({ event, onClose }) {
                                                     <div className="flex items-center gap-2">
                                                         <Mail size={16} className="text-secondary" />
                                                         <span className="text-white font-space">{participant.transactionId}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar size={16} className="text-accent" />
-                                                        <span className="text-muted-text font-space text-sm">
-                                                            {formatDate(participant.registeredAt)}
-                                                        </span>
                                                     </div>
                                                 </td>
                                             </tr>

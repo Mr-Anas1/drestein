@@ -260,7 +260,7 @@ useEffect(() => {
             
 
             {/* Register Button */}
-            {/* <button
+            <button
               onClick={() => setShowRegistrationModal(true)}
               disabled={isExpired}
               className={`w-full ${
@@ -274,7 +274,7 @@ useEffect(() => {
               {isExpired
                 ? "Registration Closed"
                 : `Register Now - ₹${event.price}`}
-            </button> */}
+            </button>
             
             <div className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center">
               <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>

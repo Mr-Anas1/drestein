@@ -18,6 +18,8 @@ export default function BuyPassPage() {
   const [cartTotal, setCartTotal] = useState(0);
   const [loadingCart, setLoadingCart] = useState(false);
   const [generalPassInCart, setGeneralPassInCart] = useState(false);
+  const [hasEventPass, setHasEventPass] = useState(false);
+  const [loadingPassStatus, setLoadingPassStatus] = useState(false);
 
   const passes = [
     {
@@ -39,6 +41,7 @@ export default function BuyPassPage() {
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchCart();
+      checkUserPass();
     }
   }, [isAuthenticated, user]);
 
@@ -76,9 +79,33 @@ export default function BuyPassPage() {
     }
   };
 
+  const checkUserPass = async () => {
+    if (!user) return;
+    try {
+      setLoadingPassStatus(true);
+      const token = await auth.currentUser?.getIdToken?.();
+      const res = await fetch('/api/user/check-pass', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setHasEventPass(Boolean(data?.hasEventPass));
+      }
+    } catch (e) {
+      console.error('Error checking pass status:', e);
+    } finally {
+      setLoadingPassStatus(false);
+    }
+  };
+
   const addGeneralPassToCart = async () => {
     if (!isAuthenticated) {
       alert('Please login to add items to cart');
+      return;
+    }
+
+    if (hasEventPass) {
+      alert('You have already purchased a pass.');
       return;
     }
 
@@ -151,6 +178,10 @@ export default function BuyPassPage() {
   };
 
   const handleBuyPass = (pass) => {
+    if (pass?.id === 'general' && hasEventPass) {
+      alert('You have already purchased a pass.');
+      return;
+    }
     setSelectedPass(pass);
     setShowModal(true);
   };
@@ -183,7 +214,7 @@ export default function BuyPassPage() {
   };
 
   // Set to false to show Coming Soon, true to show pass purchase
-  const showPassPurchase = false;
+  const showPassPurchase = true;
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -243,7 +274,12 @@ export default function BuyPassPage() {
 
               {isAuthenticated ? (
                 <div className="space-y-3">
-                  {!generalPassInCart ? (
+                  {hasEventPass ? (
+                    <div className="bg-primary/10 border-2 border-primary text-primary font-audiowide py-3.5 rounded-lg text-center flex items-center justify-center gap-2">
+                      <Check size={18} />
+                      Already Purchased
+                    </div>
+                  ) : !generalPassInCart ? (
                     <>
                       <button
                         onClick={addGeneralPassToCart}

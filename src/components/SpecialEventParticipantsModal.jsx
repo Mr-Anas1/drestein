@@ -64,7 +64,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
     const exportToCSV = () => {
         if (participants.length === 0) return;
 
-        const headers = ['Name', 'Email', 'Roll No', 'College', 'Team Members', 'Registration Date', 'Status'];
+        const headers = ['Name', 'Email', 'Roll No', 'College', 'Team Members', 'Status'];
         const csvContent = [
             headers.join(','),
             ...participants.map(p => [
@@ -73,7 +73,6 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                 `"${p.rollNo || 'N/A'}"`,
                 `"${p.college || 'N/A'}"`,
                 `"${p.teamMembers ? p.teamMembers.join('; ') : 'Individual'}"`,
-                `"${formatDate(p.registeredAt)}"`,
                 `"${p.status || 'confirmed'}"`
             ].join(','))
         ].join('\n');
@@ -87,16 +86,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
         window.URL.revokeObjectURL(url);
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return 'N/A';
-
-        // Handle Firestore timestamp
-        const date = timestamp.seconds
-            ? new Date(timestamp.seconds * 1000)
-            : new Date(timestamp);
-
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-    };
+    // no registration date in UI or CSV
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -199,7 +189,6 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Roll No</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">College</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Team Members</th>
-                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Registration Date</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Status</th>
                                         </tr>
                                     </thead>
@@ -246,14 +235,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                                         <span className="text-muted-text font-space text-xs italic">Individual</span>
                                                     )}
                                                 </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar size={16} className="text-accent" />
-                                                        <span className="text-muted-text font-space text-sm">
-                                                            {formatDate(participant.registeredAt)}
-                                                        </span>
-                                                    </div>
-                                                </td>
+                                                
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded-full text-xs font-audiowide ${
                                                         participant.status === 'confirmed' || participant.paymentStatus === 'paid'
