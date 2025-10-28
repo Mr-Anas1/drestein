@@ -204,8 +204,8 @@ useEffect(() => {
                   <Users className="w-5 h-5 text-primary" />
                   <span>
                     {event.type === "team"
-                      ? `Team Event (Max ${event.maxTeamSize || 4} members)`
-                      : "Individual Event"}
+                      ? `Team (Max ${event.maxTeamSize || 4} members)`
+                      : "Individual"}
                   </span>
                 </div>
               )}
@@ -217,42 +217,35 @@ useEffect(() => {
                 </div>
               )}
 
-              {event.isMultiDay ? (
-                <>
-                  {event.startDate && (
-                    <div className="flex items-center gap-3 text-muted-text font-space">
-                      <Calendar className="w-5 h-5 text-primary" />
-                      <span>Start: {event.startDate}</span>
-                    </div>
-                  )}
-                  {event.endDate && (
-                    <div className="flex items-center gap-3 text-muted-text font-space">
-                      <Calendar className="w-5 h-5 text-primary" />
-                      <span>End: {event.endDate}</span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                event.date && (
-                  <>
-                    <div className="flex items-center gap-3 text-muted-text font-space">
-                      <Calendar className="w-5 h-5 text-primary" />
-                      <span>{event.date}</span>
-                    </div>
-                    {event.endDate && event.endDate !== event.date && (
-                      <div className="flex items-center gap-3 text-muted-text font-space">
-                        <Calendar className="w-5 h-5 text-primary" />
-                        <span>End: {event.endDate}</span>
-                      </div>
-                    )}
-                  </>
-                )
+              {(event.startDate || event.date) && (
+                <div className="flex items-center gap-3 text-muted-text font-space">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <span>
+                    {(() => {
+                      const start = String(event.startDate || event.date || '').trim();
+                      const end = String(event.endDate || '').trim();
+                      if (start && end && end !== start) {
+                        return `${start} - ${end}`;
+                      }
+                      return start;
+                    })()}
+                  </span>
+                </div>
               )}
 
-              {event.time && (
+              {(event.time || event.endTime) && (
                 <div className="flex items-center gap-3 text-muted-text font-space">
                   <Clock className="w-5 h-5 text-primary" />
-                  <span>{event.time}</span>
+                  <span>
+                    {(() => {
+                      const start = String(event.time || '').trim();
+                      const end = String(event.endTime || '').trim();
+                      if (start && end && end !== start) {
+                        return `${start} - ${end}`;
+                      }
+                      return start || end;
+                    })()}
+                  </span>
                 </div>
               )}
             </div>

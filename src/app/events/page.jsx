@@ -49,6 +49,7 @@ const page = () => {
                         IOT: 'CSE-IOT',
                         MED: 'MED-ELE',
                         BME: 'BIO-MED',
+                        OTH: 'OTHERS',
                         SH: 'S&H',
                         'S & H': 'S&H',
                     };
@@ -102,9 +103,18 @@ const page = () => {
 
 
     // Memoize filtered events to avoid recalculation on every render
-    const { departmentIds, otherEvents, filteredDepartments } = useMemo(() => {
+    const { departmentIds, otherEvents, otherSpecialEvents, filteredDepartments } = useMemo(() => {
         const deptIds = new Set(DEPARTMENTS.map(d => d.id));
         const others = events.filter(e => !e?.department || !deptIds.has(e.department));
+
+        // Specials categorized as 'other' that don't belong to any known department
+        const specialsOther = specialEvents.filter(e => {
+            const cat = String(e.category || '').toLowerCase();
+            const inArray = Array.isArray(e.departments) ? e.departments.some(d => deptIds.has(d)) : false;
+            const inString = e.department && deptIds.has(e.department);
+            const hasKnownDept = inArray || inString;
+            return cat === 'other' && !hasKnownDept;
+        });
         
         // Helper to check if event belongs to department
         const eventBelongsToDept = (event, deptId) => {
@@ -124,7 +134,7 @@ const page = () => {
             return hasCommonEvents || hasSpecialEvents;
         });
         
-        return { departmentIds: deptIds, otherEvents: others, filteredDepartments: filtered };
+        return { departmentIds: deptIds, otherEvents: others, otherSpecialEvents: specialsOther, filteredDepartments: filtered };
     }, [events, specialEvents, selectedDepartment]);
 
     useEffect(() => {
@@ -240,7 +250,7 @@ const page = () => {
                                     {/* Department Header */}
                                     <div className="text-center md:text-left">
                                         <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-                                            {dept.name}
+                                            {dept.id === 'OTHERS' ? 'Other Events' : dept.name}
                                         </h2>
                                         <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto md:mx-0"></div>
                                     </div>
@@ -283,30 +293,47 @@ const page = () => {
                             );
                         })}
 
-                        {selectedDepartment === 'all' && otherEvents.length > 0 && (
+                        {selectedDepartment === 'all' && (otherEvents.length > 0 || otherSpecialEvents.length > 0) && (
                             <section key="others" id="dept-others" className="space-y-6">
                                 {/* Department Header */}
                                 <div className="text-center md:text-left">
                                     <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-                                        Others
+                                        Other Events
                                     </h2>
                                     <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto md:mx-0"></div>
                                 </div>
                                 
-                                {/* Events Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
-                                    {otherEvents.map((event) => (
-                                        <EventBox
-                                            key={event.id}
-                                            img={event.img}
-                                            title={event.title}
-                                            description={event.description}
-                                            link={`/events/${event.id}`}
-                                            id={event.id}
-                                            event={event}
-                                        />
-                                    ))}
-                                </div>
+                                {/* Premium Events (category: other) */}
+                                {otherSpecialEvents.length > 0 && (
+                                    <div className="space-y-4">
+                                        <h3 className="font-audiowide text-lg text-secondary">Premium Events</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
+                                            {otherSpecialEvents.map((event) => (
+                                                <SpecialEventBox key={event.id} event={event} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Common Events */}
+                                {otherEvents.length > 0 && (
+                                    <div className="space-y-4">
+                                        <h3 className="font-audiowide text-lg text-primary">Common Events</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
+                                            {otherEvents.map((event) => (
+                                                <EventBox
+                                                    key={event.id}
+                                                    img={event.img}
+                                                    title={event.title}
+                                                    description={event.description}
+                                                    link={`/events/${event.id}`}
+                                                    id={event.id}
+                                                    event={event}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </section>
                         )}
                     </div>

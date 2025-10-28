@@ -262,7 +262,7 @@ const About = () => {
             <div className="py-16 px-6 md:px-12">
                 <div className="max-w-4xl mx-auto">
                     <h2 className="font-audiowide text-center text-3xl md:text-4xl bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent mb-8">
-                        GRAPHICS DESIGNERS
+                        GRAPHIC DESIGNERS
                     </h2>
                     <div className="bg-background border border-border rounded-2xl p-8 md:p-12">
                         <div className="w-20 h-20 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-6 flex items-center justify-center">
@@ -328,7 +328,7 @@ const About = () => {
                             { dept: "AI&DS", name: "Ms. SANTHIYA R", contact: "9566694699" },
                             { dept: "AI&ML", name: "Mr. POZHILAN", contact: "9043693955" },
                             { dept: "AGRI", name: "Ms. SANJANA", contact: "9600037887" },
-                            { dept: "BIO-MED", name: "Ms. SHERENA", contact: "9566533465" },
+                            { dept: "BIO-MED", name: "Ms. SHERENA JENICE J", contact: "9566533465" },
                             { dept: "CHEM", name: "Mr. HARISHANKAR E", contact: "8807051192"},
                             { dept: "CIVIL", name: "Mr. ARUN KUMAR", contact: "8072582553" },
                             { dept: "CSE", name: "Mr. GOKUL SHARAN R", contact: "9791486718" },

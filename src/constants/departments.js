@@ -1,6 +1,5 @@
 export const DEPARTMENTS = [
         // { id: 'COMMON', name: 'Common Across Departments', short: 'COMMON', code: 'COMMON', image: '/common.jpg' },
-
     { id: 'AI-DS', name: 'Artificial Intelligence and Data Science', short: 'AI-DS', code: 'AI-DS', image: '/aids.jpeg' },
     { id: 'AI-ML', name: 'Artificial Intelligence and Machine Learning', short: 'AI-ML', code: 'AI-ML', image: '/aiml.jpeg' },
     { id: 'AGRI', name: 'Agricultural Engineering', short: 'AGRI', code: 'AGRI', image: '/agri.jpeg' },
@@ -15,9 +14,10 @@ export const DEPARTMENTS = [
     { id: 'EEE', name: 'Electrical and Electronics Engineering', short: 'EEE', code: 'EEE', image: '/eee.jpeg' },
     { id: 'EIE', name: 'Electronics and Instrumentation Engineering', short: 'EIE', code: 'EIE', image: '/eie.jpeg' },
     { id: 'MECH', name: 'Mechanical Engineering', short: 'MECH', code: 'MECH', image: '/mech.jpeg' },
-    { id: 'MED-ELE', name: 'Medical Electronics Engineering', short: 'MED-ELE', code: 'MED', image: '/med-ele.jpeg' },
+    { id: 'MED-ELE', name: 'Medical Electronics', short: 'MED-ELE', code: 'MED', image: '/med-ele.jpeg' },
     { id: 'MBA', name: 'Master of Business Administration', short: 'MBA', code: 'MBA', image: '/mba.jpg' },
     { id: 'S&H', name: 'Science and Humanities', short: 'S&H', code: 'S&H', image: '/s&h.jpg' },
+    { id: 'OTHERS', name: 'Others', short: 'OTHERS', code: 'OTH', image: '/mba.jpg' },
 ];
 
 export const getDepartmentById = (id) => {

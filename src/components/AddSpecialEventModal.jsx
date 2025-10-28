@@ -278,6 +278,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
                     { id: "MED-ELE", name: "MED-ELE" },
                     { id: "MBA", name: "MBA" },
                     { id: "S&H", name: "S&H" },
+                    { id: "OTHERS", name: "OTHERS" },
                     { id: "COMMON", name: "COMMON" },
                   ].map((dept) => (
                     <label key={dept.id} className="flex items-center cursor-pointer">
