@@ -102,13 +102,7 @@ const SpecialEventBox = React.memo(({ event }) => {
   }
 
   return (
-    <Link 
-  href={{
-    pathname: `/special-events/${id}`,
-    query: { eventData: JSON.stringify(event) }
-  }}
-  className="group"
->
+    <Link href={`/special-events/${id}`} className="group">
       <div className="rounded-2xl p-[1px] bg-gradient-to-r from-secondary/30 to-primary/30 hover:from-secondary/60 hover:to-primary/60 transition-all duration-300 hover:-translate-y-1 h-full">
         <div className="rounded-2xl bg-background-soft border border-border/60 overflow-hidden h-full flex flex-col">
           {img && (

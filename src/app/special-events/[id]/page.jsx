@@ -20,14 +20,12 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import SpecialEventRegistrationModal from "@/components/SpecialEventRegistrationModal";
 import { getDepartmentName } from "@/constants/departments";
-import { useEventCache } from "@/hooks/useEventCache";
 
 const SpecialEventDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   
     const { user, isAuthenticated } = useAuth();
-  const { fetchSpecialEvents } = useEventCache();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,35 +35,12 @@ const SpecialEventDetailPage = () => {
 useEffect(() => {
   const fetchEvent = async () => {
     try {
+      if (!params.id) return;
       setLoading(true);
-      
-      // Check if event data was passed via URL state
-      if (typeof window !== 'undefined') {
-        const searchParams = new URLSearchParams(window.location.search);
-        const eventDataParam = searchParams.get('eventData');
-        
-        if (eventDataParam) {
-          try {
-            const passedEvent = JSON.parse(eventDataParam);
-            setEvent(passedEvent);
-            setLoading(false);
-            return;
-          } catch (e) {
-            console.warn('Failed to parse passed event data, fetching from API');
-          }
-        }
-      }
-      
-      // Fallback: fetch from API if no data passed
-      const data = await fetchSpecialEvents(0, 50);
-      const eventsArray = data?.events || data || [];
-      const foundEvent = eventsArray.find(e => e.id === params.id);
-      
-      if (!foundEvent) {
-        throw new Error("Event not found");
-      }
-      
-      setEvent(foundEvent);
+      const res = await fetch(`/api/special-events?id=${encodeURIComponent(params.id)}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Event not found');
+      const data = await res.json();
+      setEvent(data);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching event:", err);
@@ -74,10 +49,8 @@ useEffect(() => {
     }
   };
 
-  if (params.id) {
-    fetchEvent();
-  }
-}, [params.id, fetchSpecialEvents]);
+  fetchEvent();
+}, [params.id]);
 
 useEffect(() => {
   const checkRegistration = async () => {

@@ -35,25 +35,6 @@ useEffect(() => {
 
     try {
       setLoading(true);
-      
-      // Check if event data was passed via URL state
-      if (typeof window !== 'undefined') {
-        const searchParams = new URLSearchParams(window.location.search);
-        const eventDataParam = searchParams.get('eventData');
-        
-        if (eventDataParam) {
-          try {
-            const passedEvent = JSON.parse(eventDataParam);
-            setEvent(passedEvent);
-            setLoading(false);
-            return;
-          } catch (e) {
-            console.warn('Failed to parse passed event data, fetching from Firestore');
-          }
-        }
-      }
-      
-      // Fallback: fetch from Firestore if no data passed
       const eventDoc = doc(db, "events", params.id);
       const eventSnapshot = await getDoc(eventDoc);
 
