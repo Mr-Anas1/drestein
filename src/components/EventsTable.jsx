@@ -66,6 +66,7 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
                                             alt={event.title}
                                             width={48}
                                             height={48}
+                                            loading="lazy"
                                             className="w-12 h-12 rounded-lg object-cover"
                                         />
                                         <div>

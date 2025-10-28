@@ -184,7 +184,7 @@ useEffect(() => {
               fill
               style={{ objectFit: "cover" }}
               alt={event.title}
-              priority
+              loading="lazy"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>

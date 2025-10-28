@@ -61,18 +61,26 @@ const Header = () => {
           onClick={() => router.push("/")}
         >
           <div className="w-[160px] sm:w-[180px] md:w-[200px] lg:w-[250px]">
-            <img src="/logo.png" alt="saveetha-logo" />
+            <img src="/logo.png" alt="saveetha-logo" loading="lazy" decoding="async" />
           </div>
         </h1>
         
         {/* Excellence Logo */}
         <div className="w-[40px] sm:w-[50px] md:w-[60px] lg:w-[80px] flex-shrink-0">
-          <img src="/excellence.png" alt="excellence-logo" className="w-full h-auto object-contain" />
+          <img src="/excellence.png" alt="excellence-logo" className="w-full h-auto object-contain" loading="lazy" decoding="async" />
         </div>
 
-        <div className="w-[50px] sm:w-[60px] md:w-[70px] lg:w-[90px] flex-shrink-0">
-          <img src="/drestein-logo.png" alt="excellence-logo" className="w-full h-auto object-contain" />
-        </div>
+       <div className="w-[30px] sm:w-[40px] md:w-[50px] lg:w-[60px] flex flex-col items-center justify-center flex-shrink-0">
+        <img
+          src="/drestein-logo.png"
+          alt="drestein-logo"
+          className="w-full h-auto object-contain animate-spin [animation-duration:6s]"
+          loading="lazy" decoding="async"
+        />
+      </div>
+
+        <h2 className="text-white font-azonix text-2xl hidden md:block">DRESTEIN</h2>
+
       </div>
 
       <div className="flex items-center">
@@ -153,6 +161,7 @@ const Header = () => {
                     src={studentProfile?.photoURL || user?.photoURL}
                     alt="avatar"
                     className="w-8 h-8 rounded-full border border-border object-cover"
+                    loading="lazy" decoding="async"
                   />
                 )}
                 {/* <span className="text-white font-space text-sm hidden lg:inline">

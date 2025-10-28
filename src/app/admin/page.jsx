@@ -5,7 +5,7 @@ import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { DEPARTMENTS, getDepartmentName } from '@/constants/departments'
 import { Plus, LogOut, Users, Ticket } from 'lucide-react'
-import { useEventCache } from '@/hooks/useEventCache'
+// Note: Avoid cached hooks on admin to always reflect latest writes
 
 // Import extracted components
 import AddEventModal from '@/components/AddEventModal'
@@ -16,7 +16,6 @@ import StatsCards from '@/components/StatsCards'
 
 const AdminDashboard = () => {
     const { user, userRole, loading: authLoading, logout, isSuperAdmin, isDepartmentAdmin, userDepartment } = useAuth()
-    const { fetchEvents: fetchEventsCache } = useEventCache()
     const router = useRouter()
     const [events, setEvents] = useState([])
     const [filteredEvents, setFilteredEvents] = useState([])
@@ -84,11 +83,11 @@ const AdminDashboard = () => {
     const fetchEvents = async () => {
         try {
             setLoading(true)
-            // Use cached fetch for better performance
-            const data = await fetchEventsCache(0, 100)
-            
-            // Handle new response format with pagination
-            const eventsArray = data?.events || data || []
+            // Fetch fresh from API (no-store) to reflect latest admin writes
+            const res = await fetch(`/api/events?offset=0&limit=200`, { cache: 'no-store' })
+            if (!res.ok) throw new Error('Failed to fetch events')
+            const data = await res.json()
+            const eventsArray = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : [])
             
             // Filter by department for department admins
             if (isDepartmentAdmin && userDepartment) {

@@ -81,6 +81,7 @@ const About = () => {
                                     width={600}
                                     height={400}
                                     className="w-full h-auto object-cover"
+                                    loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent"></div>
                             </div>
@@ -157,6 +158,7 @@ const About = () => {
                                         className="w-full h-full object-cover" 
                                         src={coordinator.image} 
                                         alt={coordinator.name}
+                                        loading="lazy" decoding="async"
                                     />
                                 </div>
                                 <h3 className="font-audiowide text-lg text-white mb-2">{coordinator.name}</h3>

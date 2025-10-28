@@ -41,6 +41,7 @@ const SpecialEventBox = React.memo(({ event }) => {
                   src={img}
                   alt={title}
                   fill
+                  loading="lazy"
                   className="object-cover"
                 />
               </div>
@@ -116,6 +117,7 @@ const SpecialEventBox = React.memo(({ event }) => {
                 src={img}
                 alt={title}
                 fill
+                loading="lazy"
                 className="object-cover group-hover:scale-110 transition-transform duration-300"
               />
             </div>

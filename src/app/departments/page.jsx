@@ -27,6 +27,7 @@ const page = () => {
                                         src={dept.image}
                                         alt={dept.name}
                                         fill
+                                        loading="lazy"
                                         className='object-cover group-hover:scale-110 transition-transform duration-300'
                                     />
                                     <div className='absolute inset-0 bg-gradient-to-t from-background-soft via-background-soft/50 to-transparent'></div>

@@ -39,7 +39,7 @@ const Footer = () => {
               Innovating the future with cutting-edge technology and creative solutions.
             </p>
 
-            <p className="text-muted-text font-space text-sm leading-relaxed">Site Views: <img src="https://hitscounter.dev/api/hit?url=drestein.in&label=&icon=bookmark-star&color=%23ab296a&message=&style=flat&tz=UTC"/></p>
+            <p className="text-muted-text font-space text-sm leading-relaxed">Site Views: <img src="https://hitscounter.dev/api/hit?url=drestein.in&label=&icon=bookmark-star&color=%23ab296a&message=&style=flat&tz=UTC" loading="lazy" decoding="async"/></p>
           </div>
 
           {/* Column 2: Social Links */}

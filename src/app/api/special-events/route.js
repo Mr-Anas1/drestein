@@ -257,6 +257,9 @@ export async function POST(request) {
       expiryDate,
       competitionPptUrl,
       competitionGformLink,
+      competitionCustomHeading,
+      competitionCustomText,
+      competitionCustomSections,
     } = data;
 
     if (!title || !description || !price || !category) {
@@ -303,6 +306,24 @@ export async function POST(request) {
       }
     }
 
+    // Normalize custom sections
+    let normalizedSections = [];
+    if (Array.isArray(competitionCustomSections)) {
+      normalizedSections = competitionCustomSections
+        .filter((s) => s && (String(s.heading||'').trim() || String(s.text||'').trim()))
+        .map((s) => ({
+          heading: String(s.heading||'').trim(),
+          text: String(s.text||'').trim(),
+          afterRegistration: !!s.afterRegistration,
+        }));
+    } else if ((competitionCustomHeading || competitionCustomText)) {
+      normalizedSections = [{
+        heading: String(competitionCustomHeading||'').trim(),
+        text: String(competitionCustomText||'').trim(),
+        afterRegistration: false,
+      }];
+    }
+
     const docRef = await db.collection("specialEvents").add({
       title,
       description,
@@ -329,6 +350,9 @@ export async function POST(request) {
       expiryDate: normalizedExpiry,
       competitionPptUrl: competitionPptUrl || "",
       competitionGformLink: competitionGformLink || "",
+      competitionCustomHeading: competitionCustomHeading || "",
+      competitionCustomText: competitionCustomText || "",
+      competitionCustomSections: normalizedSections,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });

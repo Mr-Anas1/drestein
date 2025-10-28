@@ -106,7 +106,7 @@ export default function DepartmentPage() {
           alt={department.name}
           fill
           className="object-cover"
-          priority
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent"></div>
         
@@ -182,6 +182,7 @@ export default function DepartmentPage() {
                                 src={event.img}
                                 alt={event.title}
                                 fill
+                                loading="lazy"
                                 className="object-cover group-hover:scale-110 transition-transform duration-300"
                               />
                             </div>
@@ -265,6 +266,7 @@ export default function DepartmentPage() {
                                 src={event.img}
                                 alt={event.title}
                                 fill
+                                loading="lazy"
                                 className="object-cover group-hover:scale-110 transition-transform duration-300"
                               />
                             </div>

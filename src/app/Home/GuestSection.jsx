@@ -62,6 +62,7 @@ const GuestSection = () => {
                       src={guest.img}
                       alt={guest.name}
                       className="w-full h-64 object-cover rounded-xl transition duration-300 hover:opacity-90"
+                      loading="lazy" decoding="async"
                     />
                     <h2 className="mt-4 text-xl font-bold transition duration-300 group-hover:text-primary">
                       {guest.name}

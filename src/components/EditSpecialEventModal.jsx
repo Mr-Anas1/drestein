@@ -29,6 +29,11 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
     facultyCoordinators: [{ name: "", phone: "", email: "" }],
     competitionPptUrl: "",
     competitionGformLink: "",
+    competitionCustomHeading: "",
+    competitionCustomText: "",
+    competitionCustomSections: [
+      { heading: "", text: "", afterRegistration: false }
+    ],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -59,6 +64,13 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
         facultyCoordinators: event.facultyCoordinators || [{ name: "", phone: "", email: "" }],
         competitionPptUrl: event.competitionPptUrl || "",
         competitionGformLink: event.competitionGformLink || "",
+        competitionCustomHeading: event.competitionCustomHeading || "",
+        competitionCustomText: event.competitionCustomText || "",
+        competitionCustomSections: Array.isArray(event.competitionCustomSections)
+          ? event.competitionCustomSections
+          : ((event.competitionCustomHeading || event.competitionCustomText)
+              ? [{ heading: event.competitionCustomHeading || "", text: event.competitionCustomText || "", afterRegistration: false }]
+              : [{ heading: "", text: "", afterRegistration: false }]),
       });
     }
   }, [event]);
@@ -554,6 +566,81 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
                   placeholder="https://forms.gle/example"
                   className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
                 />
+              </div>
+              <div>
+                <label className="block text-white font-audiowide text-sm mb-2">Custom Sections</label>
+                <div className="space-y-4">
+                  {(formData.competitionCustomSections || []).map((section, index) => (
+                    <div key={index} className="p-4 bg-background-soft rounded-lg border border-border space-y-3">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-white font-audiowide text-sm mb-2">Heading</label>
+                          <input
+                            type="text"
+                            value={section.heading}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFormData(prev => ({
+                                ...prev,
+                                competitionCustomSections: prev.competitionCustomSections.map((s,i)=> i===index ? { ...s, heading: val } : s)
+                              }));
+                            }}
+                            placeholder="e.g., Additional Instructions"
+                            className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-white font-audiowide text-sm mb-2">Visibility</label>
+                          <label className="flex items-center gap-2 text-sm text-white/80">
+                            <input
+                              type="checkbox"
+                              checked={!!section.afterRegistration}
+                              onChange={(e)=>{
+                                const checked = e.target.checked;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  competitionCustomSections: prev.competitionCustomSections.map((s,i)=> i===index ? { ...s, afterRegistration: checked } : s)
+                                }));
+                              }}
+                              className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
+                            />
+                            <span>Show only to registered users</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Text</label>
+                        <textarea
+                          value={section.text}
+                          onChange={(e)=>{
+                            const val = e.target.value;
+                            setFormData(prev => ({
+                              ...prev,
+                              competitionCustomSections: prev.competitionCustomSections.map((s,i)=> i===index ? { ...s, text: val } : s)
+                            }));
+                          }}
+                          rows="3"
+                          placeholder="Type any custom information to show before/after registration."
+                          className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      {(formData.competitionCustomSections?.length || 0) > 1 && (
+                        <button type="button" onClick={()=>{
+                          setFormData(prev=> ({
+                            ...prev,
+                            competitionCustomSections: prev.competitionCustomSections.filter((_,i)=> i!==index)
+                          }));
+                        }} className="text-red-500 hover:text-red-400 text-sm font-space">Remove Section</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={()=>{
+                  setFormData(prev => ({
+                    ...prev,
+                    competitionCustomSections: [...(prev.competitionCustomSections||[]), { heading: "", text: "", afterRegistration: false }]
+                  }));
+                }} className="text-primary hover:text-hover-primary text-sm font-space mt-2">+ Add Section</button>
               </div>
             </div>
           )}

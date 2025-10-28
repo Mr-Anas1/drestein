@@ -38,8 +38,8 @@ export default function RootLayout({ children }) {
             </Suspense>
             <SmoothFollower />
             <AnimatedBackground />
-            <FloatingShapes />
-            <CursorEffect />
+            {/* <FloatingShapes /> */}
+            {/* <CursorEffect /> */}
             {children}
             <Analytics /> 
           </ProfileGuard>

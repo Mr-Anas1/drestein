@@ -191,6 +191,7 @@ useEffect(() => {
               fill
               style={{ objectFit: "cover" }}
               alt={event.title}
+              loading="lazy"
             />
           </div>
 
@@ -385,6 +386,62 @@ useEffect(() => {
             </a>
           </div>
         )}
+
+        {(() => {
+          const sections = Array.isArray(event.competitionCustomSections)
+            ? event.competitionCustomSections
+            : ((event.competitionCustomHeading || event.competitionCustomText)
+                ? [{ heading: event.competitionCustomHeading || '', text: event.competitionCustomText || '', afterRegistration: false }]
+                : []);
+          const publicSections = sections.filter(s => !s.afterRegistration && ((s.heading||'').trim() || (s.text||'').trim()));
+          if (publicSections.length === 0) return null;
+          return (
+            <div className="space-y-6 mb-8">
+              {publicSections.map((s, idx) => (
+                <div key={`pub-${idx}`} className="bg-background-soft border border-border rounded-2xl p-8">
+                  {s.heading && (
+                    <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+                      <FileText className="w-6 h-6 text-primary" />
+                      {s.heading}
+                    </h2>
+                  )}
+                  {s.text && (
+                    <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">{s.text}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
+        {(() => {
+          const sections = Array.isArray(event.competitionCustomSections)
+            ? event.competitionCustomSections
+            : ((event.competitionCustomHeading || event.competitionCustomText)
+                ? [{ heading: event.competitionCustomHeading || '', text: event.competitionCustomText || '', afterRegistration: false }]
+                : []);
+          const privateSections = sections.filter(s => !!s.afterRegistration && ((s.heading||'').trim() || (s.text||'').trim()));
+          if (isAuthenticated && isRegistered && privateSections.length > 0) {
+            return (
+              <div className="space-y-6 mb-8">
+                {privateSections.map((s, idx) => (
+                  <div key={`priv-${idx}`} className="bg-background-soft border border-border rounded-2xl p-8">
+                    {s.heading && (
+                      <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+                        <FileText className="w-6 h-6 text-primary" />
+                        {s.heading}
+                      </h2>
+                    )}
+                    {s.text && (
+                      <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">{s.text}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Rules */}

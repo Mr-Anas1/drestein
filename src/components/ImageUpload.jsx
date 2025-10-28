@@ -99,6 +99,7 @@ const ImageUpload = ({ onImageUpload, currentImage = null, disabled = false }) =
                             src={preview}
                             alt="Event preview"
                             className="w-full h-full object-cover"
+                            loading="lazy" decoding="async"
                         />
                         {uploading && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">

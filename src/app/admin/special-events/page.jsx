@@ -5,14 +5,12 @@ import Header from '@/components/Header';
 import { DEPARTMENTS } from '@/constants/departments';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, Trash2, Eye, Users, ArrowLeft } from 'lucide-react';
-import { useEventCache } from '@/hooks/useEventCache';
 import AddSpecialEventModal from '@/components/AddSpecialEventModal';
 import EditSpecialEventModal from '@/components/EditSpecialEventModal';
 import SpecialEventParticipantsModal from '@/components/SpecialEventParticipantsModal';
 
 const AdminSpecialEventsPage = () => {
   const { user, userRole, loading: authLoading, isSuperAdmin, isDepartmentAdmin } = useAuth();
-  const { fetchSpecialEvents: fetchSpecialEventsCache } = useEventCache();
   const router = useRouter();
   const [specialEvents, setSpecialEvents] = useState([]);
   const [filteredSpecialEvents, setFilteredSpecialEvents] = useState([]);
@@ -70,8 +68,10 @@ const AdminSpecialEventsPage = () => {
     try {
       if (append) setLoadingMore(true); else setLoading(true);
       
-      // Use cached fetch for better performance
-      const data = await fetchSpecialEventsCache(offset, limit);
+      // Fetch fresh from API (no-store) to reflect latest admin writes
+      const res = await fetch(`/api/special-events?offset=${offset}&limit=${limit}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to fetch special events');
+      const data = await res.json();
       let events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
       
       // Apply department filtering client-side
