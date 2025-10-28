@@ -6,26 +6,24 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Ticket, Download, Calendar, CheckCircle, Loader2, AlertCircle, QrCode } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEventCache } from '@/hooks/useEventCache';
 import { auth } from '@/lib/firebase';
 
 export default function MyPassesPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-  const { fetchSpecialEvents } = useEventCache();
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
   const [specialEventsMap, setSpecialEventsMap] = useState({});
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/');
-      return;
-    }
-    fetchPasses();
-  }, [isAuthenticated]);
+useEffect(() => {
+  if (!isAuthenticated) {
+    router.push('/');
+    return;
+  }
+  if (user?.uid) fetchPasses();
+}, [isAuthenticated, user?.uid]);
 
   const fetchPasses = async () => {
     try {
@@ -56,18 +54,27 @@ export default function MyPassesPage() {
         setPasses([]);
       }
 
-      // Fetch special events using cache - reduces reads by 90%
-      const specialEventsData = await fetchSpecialEvents(0, 50);
-      if (specialEventsData) {
-        const specialArray = specialEventsData?.events || specialEventsData || [];
-        const specialMap = {};
-        for (const ev of specialArray) specialMap[ev.id] = ev;
-        setSpecialEventsMap(specialMap);
-      }
+      // Background: fetch special events (no-store) so UI doesn't block
+      // Background: fetch special events (no-store) so UI doesn't block
+      void (async () => {
+        try {
+          const res = await fetch('/api/special-events', { cache: 'no-store' });
+          if (!res.ok) return;
+          const specials = await res.json();
+          const specialArray = Array.isArray(specials?.events)
+            ? specials.events
+            : (Array.isArray(specials) ? specials : []);
+          const specialMap = {};
+          for (const ev of specialArray) specialMap[ev.id] = ev;
+          setSpecialEventsMap(specialMap);
+        } catch (_e) {
+          // ignore background errors
+        }
+      })();
     } catch (err) {
       console.error('Error fetching passes:', err);
       // Check if it's a quota exceeded error
-      if (err.message.includes('RESOURCE_EXHAUSTED') || err.message.includes('quota')) {
+      if (err.message?.includes('RESOURCE_EXHAUSTED') || err.message?.includes('quota')) {
         setIsQuotaExceeded(true);
       } else {
         setError(err.message);
@@ -382,3 +389,5 @@ export default function MyPassesPage() {
     </div>
   );
 }
+
+
