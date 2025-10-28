@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { DEPARTMENTS, getDepartmentName } from '@/constants/departments'
 import { Plus, LogOut, Users, Ticket } from 'lucide-react'
+// Note: Avoid cached hooks on admin to always reflect latest writes
 
 // Import extracted components
 import AddEventModal from '@/components/AddEventModal'
@@ -25,6 +26,7 @@ const AdminDashboard = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [eventToDelete, setEventToDelete] = useState(null)
     const [selectedDepartment, setSelectedDepartment] = useState('all')
+    const [searchQuery, setSearchQuery] = useState('')
 
     // Authentication check - only allow super_admin and department_admin
     useEffect(() => {
@@ -46,9 +48,9 @@ const AdminDashboard = () => {
         if (user && userRole) {
             fetchEvents()
         }
-    }, [user, userRole])
+    }, [user, userRole, isDepartmentAdmin, userDepartment])
 
-    // Filter events based on user role and department
+    // Filter events based on user role, department and search
     useEffect(() => {
         if (!events.length) return
 
@@ -64,15 +66,36 @@ const AdminDashboard = () => {
             filtered = events.filter(event => event.department === selectedDepartment)
         }
 
+        // Apply search filter
+        const q = searchQuery.trim().toLowerCase()
+        if (q) {
+            filtered = filtered.filter(ev => {
+                const title = String(ev.title || '').toLowerCase()
+                const venue = String(ev.venue || '').toLowerCase()
+                const category = String(ev.category || '').toLowerCase()
+                return title.includes(q) || venue.includes(q) || category.includes(q)
+            })
+        }
+
         setFilteredEvents(filtered)
-    }, [events, isDepartmentAdmin, userDepartment, isSuperAdmin, selectedDepartment])
+    }, [events, isDepartmentAdmin, userDepartment, isSuperAdmin, selectedDepartment, searchQuery])
 
     const fetchEvents = async () => {
         try {
             setLoading(true)
-            const response = await fetch('/api/events')
-            const data = await response.json()
-            setEvents(data)
+            // Fetch fresh from API (no-store) to reflect latest admin writes
+            const res = await fetch(`/api/events?offset=0&limit=200`, { cache: 'no-store' })
+            if (!res.ok) throw new Error('Failed to fetch events')
+            const data = await res.json()
+            const eventsArray = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : [])
+            
+            // Filter by department for department admins
+            if (isDepartmentAdmin && userDepartment) {
+                const filtered = eventsArray.filter(event => event.department === userDepartment)
+                setEvents(filtered)
+            } else {
+                setEvents(eventsArray)
+            }
         } catch (error) {
             console.error('Error fetching events:', error)
         } finally {
@@ -112,8 +135,8 @@ const AdminDashboard = () => {
     }
 
     const handleViewDetails = (event) => {
-        setSelectedEvent(event)
-        // You can add a detailed view modal here
+        // Navigate to public event detail page for read-only view
+        router.push(`/events/${event.id}`)
     }
 
     if (authLoading || loading) {
@@ -168,7 +191,7 @@ const AdminDashboard = () => {
                             onClick={() => router.push('/admin/special-events')}
                             className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2"
                         >
-                            <Plus size={20} />
+                            {/* <Plus size={20} /> */}
                             Special Events
                         </button>
 
@@ -208,6 +231,18 @@ const AdminDashboard = () => {
                         </select>
                     </div>
                 )}
+
+                {/* Search */}
+                <div className="mb-6">
+                    <label className="block text-white font-audiowide text-sm mb-2">Search</label>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search by title, venue, or category"
+                        className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                    />
+                </div>
 
                 {/* Stats Cards */}
                 <StatsCards events={filteredEvents} />

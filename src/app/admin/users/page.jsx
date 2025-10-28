@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEPARTMENTS, getDepartmentName } from '@/constants/departments';
@@ -16,6 +16,7 @@ export default function UserManagement() {
     const [loading, setLoading] = useState(true);
     const [editingUser, setEditingUser] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     useEffect(() => {
         if (!authLoading && (!user || !isSuperAdmin)) {
@@ -77,6 +78,149 @@ export default function UserManagement() {
         );
     }
 
+const AddUserModal = ({ onClose, onAdded }) => {
+    const [formData, setFormData] = useState({
+        document_id: '',
+        displayName: '',
+        email: '',
+        role: 'department_admin',
+        department: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        if (!formData.document_id || !formData.email || !formData.role) {
+            setError('Document ID, email and role are required');
+            return;
+        }
+        if (formData.role === 'department_admin' && !formData.department) {
+            setError('Department is required for department admin');
+            return;
+        }
+        try {
+            setLoading(true);
+            const { auth } = await import('@/lib/firebase');
+            const token = await auth.currentUser?.getIdToken?.();
+            const res = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    document_id: formData.document_id.trim(),
+                    displayName: formData.displayName,
+                    email: formData.email,
+                    role: formData.role,
+                    department: formData.department,
+                }),
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data?.error || 'Failed to add user');
+            }
+            onAdded();
+            onClose();
+        } catch (err) {
+            setError(err.message || 'Failed to add user');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full">
+                <h3 className="font-audiowide text-xl text-white mb-6">Add Admin User</h3>
+                {error && (
+                    <div className="mb-4 text-red-500 font-space text-sm">{error}</div>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-audiowide text-muted-text mb-2">Document ID</label>
+                        <input
+                            type="text"
+                            value={formData.document_id}
+                            onChange={(e) => setFormData(prev => ({ ...prev, document_id: e.target.value }))}
+                            className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                            placeholder="Firebase UID or custom ID"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-audiowide text-muted-text mb-2">Display Name</label>
+                        <input
+                            type="text"
+                            value={formData.displayName}
+                            onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
+                            className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                            placeholder="Full name"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-audiowide text-muted-text mb-2">Email</label>
+                        <input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                            className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                            placeholder="email@example.com"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-audiowide text-muted-text mb-2">Role</label>
+                        <select
+                            value={formData.role}
+                            onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                            className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                        >
+                            <option value="department_admin">Department Admin</option>
+                            <option value="super_admin">Super Admin</option>
+                        </select>
+                    </div>
+                    {formData.role === 'department_admin' && (
+                        <div>
+                            <label className="block text-sm font-audiowide text-muted-text mb-2">Department</label>
+                            <select
+                                value={formData.department}
+                                onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                                className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                                required
+                            >
+                                <option value="">Select Department</option>
+                                {DEPARTMENTS.map(dept => (
+                                    <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    
+                    <div className="flex gap-4 pt-4">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-audiowide transition-colors duration-300 disabled:opacity-50"
+                        >
+                            {loading ? 'Adding...' : 'Add User'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="bg-background-soft border border-border text-white px-6 py-2 rounded-lg font-audiowide hover:bg-background transition-colors duration-300"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
     if (!isSuperAdmin) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -110,11 +254,19 @@ export default function UserManagement() {
 
                 {/* Users Table */}
                 <div className="bg-background-soft border border-border rounded-xl overflow-hidden">
-                    <div className="p-6 border-b border-border">
+                    <div className="p-6 border-b border-border flex items-center justify-between">
                         <h2 className="font-audiowide text-xl text-white flex items-center gap-2">
                             <Users size={24} />
                             All Users
                         </h2>
+                        {isSuperAdmin && (
+                            <button
+                                onClick={() => setShowAddModal(true)}
+                                className="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300"
+                            >
+                                Add Admin User
+                            </button>
+                        )}
                     </div>
 
                     <div className="overflow-x-auto">
@@ -194,6 +346,14 @@ export default function UserManagement() {
                     </div>
                 </div>
             </div>
+
+            {/* Add User Modal */}
+            {showAddModal && (
+                <AddUserModal
+                    onClose={() => setShowAddModal(false)}
+                    onAdded={fetchUsers}
+                />
+            )}
 
             {/* Edit User Modal */}
             {showEditModal && editingUser && (

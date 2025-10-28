@@ -3,12 +3,13 @@ import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import MyModel from "@/components/MyModel";
-
+import { useRouter } from "next/navigation";
 
 const Hero = () => {
   const [modelScale, setModelScale] = useState([1.8, 1.8, 1.8]);
   const [cameraPos, setCameraPos] = useState([5, 5, 5]);
   const [width, setWidth] = useState(600);
+  const router = useRouter();
 
   useEffect(() => {
     function handleResize() {
@@ -40,7 +41,7 @@ const Hero = () => {
           
           
 
-          <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-audiowide text-white animate-slide-in">
+          <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-azonix text-white animate-slide-in">
             <span className="text-primary animate-glow">DR</span>EAM
             <span className="text-secondary animate-glow"></span> D
             <span className="text-accent animate-glow">ES</span>IGN COMPE
@@ -57,7 +58,7 @@ const Hero = () => {
           onClick={() => router.push("/buy-pass")}
           >
             Register
-          </button>
+          </button> 
         </div>
 
         {/* Right Section */}

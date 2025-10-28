@@ -4,6 +4,28 @@ import { NextResponse } from "next/server";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
+// In-memory cache with request deduplication
+const cache = {
+  events: { data: null, timestamp: null },
+  eventsByDept: new Map(), // dept -> { data, timestamp }
+  pendingRequests: new Map(), // key -> Promise
+};
+
+const CACHE_DURATION = 30 * 1000; // 30 seconds
+
+function isCacheValid(type, key = null) {
+  if (type === 'events') {
+    if (!cache.events.data) return false;
+    return Date.now() - cache.events.timestamp < CACHE_DURATION;
+  }
+  if (type === 'eventsByDept' && key) {
+    const cached = cache.eventsByDept.get(key);
+    if (!cached) return false;
+    return Date.now() - cached.timestamp < CACHE_DURATION;
+  }
+  return false;
+}
+
 function getAdminDB() {
   if (!getApps().length) {
     const projectId =
@@ -25,20 +47,88 @@ function getAdminDB() {
   return getFirestore();
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const db = getAdminDB();
-    const snapshot = await db
-      .collection("events")
-      .orderBy("createdAt", "desc")
-      .get();
-    const events = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const { searchParams } = new URL(request.url);
+    const department = searchParams.get("department");
+    const id = searchParams.get("id");
 
-    return NextResponse.json(events, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-      },
-    });
+    const db = getAdminDB();
+
+    // Get single event by ID (never cache)
+    if (id) {
+      const doc = await db.collection("events").doc(id).get();
+      if (!doc.exists) {
+        return NextResponse.json(
+          { error: "Event not found" },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({ id: doc.id, ...doc.data() });
+    }
+
+    // Request deduplication - check if same request is pending
+    const cacheKey = department ? `dept-${department}` : 'all';
+    if (cache.pendingRequests.has(cacheKey)) {
+      const cachedData = await cache.pendingRequests.get(cacheKey);
+      return NextResponse.json(
+        { events: cachedData },
+        { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+      );
+    }
+
+    // Check cache validity
+    if (department && isCacheValid('eventsByDept', department)) {
+      return NextResponse.json(
+        { events: cache.eventsByDept.get(department).data },
+        { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+      );
+    }
+    if (!department && isCacheValid('events')) {
+      return NextResponse.json(
+        { events: cache.events.data },
+        { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+      );
+    }
+
+    // Create promise for this request
+    const requestPromise = (async () => {
+      try {
+        let query = db.collection("events");
+        if (department) {
+          query = query.where("department", "==", department);
+        }
+
+        const countSnapshot = await query.get();
+        let docs = countSnapshot.docs;
+        
+        docs = docs.sort((a, b) => {
+          const aTime = a.data().createdAt?.toDate?.() || new Date(0);
+          const bTime = b.data().createdAt?.toDate?.() || new Date(0);
+          return bTime - aTime;
+        });
+        
+        const events = docs.map((d) => ({ id: d.id, ...d.data() }));
+
+        // Cache the result
+        if (department) {
+          cache.eventsByDept.set(department, { data: events, timestamp: Date.now() });
+        } else {
+          cache.events = { data: events, timestamp: Date.now() };
+        }
+
+        return events;
+      } finally {
+        cache.pendingRequests.delete(cacheKey);
+      }
+    })();
+
+    cache.pendingRequests.set(cacheKey, requestPromise);
+    const events = await requestPromise;
+    return NextResponse.json(
+      { events },
+      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } }
+    );
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

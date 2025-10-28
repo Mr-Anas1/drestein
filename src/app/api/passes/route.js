@@ -50,23 +50,35 @@ export async function POST(request) {
     if (decoded.uid !== userUid) return NextResponse.json({ error: "UID mismatch" }, { status: 403 });
 
     const db = getAdminDB();
-
-    // Check if user already has a pass of the same type that's verified
-    // Allow multiple passes, but prevent duplicate pending passes of same type
+    // Check if user already has a pass of the same type
     const existingSnap = await db
       .collection("passes")
       .where("userUid", "==", userUid)
       .where("passType", "==", passType || "general")
-      .where("status", "in", ["pending_payment", "active"])
       .limit(1)
       .get();
-    
+
     if (!existingSnap.empty) {
       const existing = existingSnap.docs[0];
       const existingData = existing.data();
-      // If there's already a pending or active pass of this type, return it
-      if (existingData.status === "pending_payment" || existingData.paymentVerified) {
-        return NextResponse.json({ id: existing.id, ...existingData }, { status: 200 });
+
+      // ❌ If the user already has a verified (paid) pass of this type → reject
+      if (existingData.paymentVerified === true) {
+        return NextResponse.json(
+          {
+            error: "You already have a verified pass of this type.",
+            id: existing.id,
+          },
+          { status: 400 }
+        );
+      }
+
+      // ✅ If the existing one is still pending, just return it
+      if (existingData.status === "pending_payment") {
+        return NextResponse.json(
+          { id: existing.id, ...existingData },
+          { status: 200 }
+        );
       }
     }
 
@@ -115,18 +127,18 @@ export async function GET(request) {
     // Otherwise, return all passes for the user
     if (!userUid) return NextResponse.json({ error: "userUid or passId required" }, { status: 400 });
 
-    // Get only verified/active passes for this user
+    // Get all passes for this user (single query, no composite index needed)
     const snap = await db
       .collection("passes")
       .where("userUid", "==", userUid)
-      .where("paymentVerified", "==", true)
       .get();
 
     if (snap.empty) return NextResponse.json({ passes: [] });
 
-    // Sort by purchasedAt in memory (to avoid Firestore index requirement)
+    // Filter and sort in memory (verified passes only, sorted by date)
     const passes = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
+      .filter(pass => pass.paymentVerified === true)
       .sort((a, b) => {
         const aTime = a.purchasedAt?.toMillis?.() || 0;
         const bTime = b.purchasedAt?.toMillis?.() || 0;
@@ -136,11 +148,8 @@ export async function GET(request) {
     return NextResponse.json({ passes });
   } catch (e) {
     console.error("[PASSES GET] Error:", e);
-    console.error("[PASSES GET] Error code:", e.code);
-    console.error("[PASSES GET] Error message:", e.message);
     return NextResponse.json({ 
-      error: e?.message || "Failed to fetch passes",
-      code: e?.code 
+      error: e?.message || "Failed to fetch passes"
     }, { status: 500 });
   }
 }

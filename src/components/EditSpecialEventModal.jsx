@@ -1,34 +1,79 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
+import FileUpload from "./FileUpload";
 
 const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    title: event.title || "",
-    description: event.description || "",
-    price: event.price || "",
-    category: event.category || "competition",
-    department: event.department || "AI-DS",
-    type: event.type || "individual",
-    maxTeamSize: event.maxTeamSize || "",
-    mode: event.mode || "offline",
-    img: event.img || "",
-    venue: event.venue || "",
-    isMultiDay: event.isMultiDay || false,
-    date: event.date || "",
-    startDate: event.startDate || "",
-    endDate: event.endDate || "",
-    time: event.time || "",
-    endTime: event.endTime || "",
-    expiryDate: event.expiryDate || "",
-    rules: event.rules || [""],
-    prizes: event.prizes || [""],
-    studentCoordinators: event.studentCoordinators || (event.contactEmail ? [{ name: "", phone: event.contactPhone || "", email: event.contactEmail }] : [{ name: "", phone: "", email: "" }]),
-    facultyCoordinators: event.facultyCoordinators || (event.facultyCoordinator ? [event.facultyCoordinator] : [{ name: "", phone: "", email: "" }]),
+    title: "",
+    description: "",
+    price: "",
+    category: "competition",
+    departments: ["AI-DS"],
+    type: "individual",
+    maxTeamSize: "",
+    mode: "offline",
+    img: "",
+    venue: "",
+    isMultiDay: false,
+    date: "",
+    startDate: "",
+    endDate: "",
+    time: "",
+    endTime: "",
+    expiryDate: "",
+    rules: [""],
+    prizes: [""],
+    studentCoordinators: [{ name: "", phone: "", email: "" }],
+    facultyCoordinators: [{ name: "", phone: "", email: "" }],
+    competitionPptUrl: "",
+    competitionGformLink: "",
+    competitionCustomHeading: "",
+    competitionCustomText: "",
+    competitionCustomSections: [
+      { heading: "", text: "", afterRegistration: false }
+    ],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (event) {
+      setFormData({
+        title: event.title || "",
+        description: event.description || "",
+        price: event.price || "",
+        category: event.category || "competition",
+        departments: event.departments || (event.department ? [event.department] : ["AI-DS"]),
+        type: event.type || "individual",
+        maxTeamSize: event.maxTeamSize || "",
+        mode: event.mode || "offline",
+        img: event.img || "",
+        venue: event.venue || "",
+        isMultiDay: event.isMultiDay || false,
+        date: event.date || "",
+        startDate: event.startDate || "",
+        endDate: event.endDate || "",
+        time: event.time || "",
+        endTime: event.endTime || "",
+        expiryDate: event.expiryDate || "",
+        rules: event.rules || [""],
+        prizes: event.prizes || [""],
+        studentCoordinators: event.studentCoordinators || [{ name: "", phone: "", email: "" }],
+        facultyCoordinators: event.facultyCoordinators || [{ name: "", phone: "", email: "" }],
+        competitionPptUrl: event.competitionPptUrl || "",
+        competitionGformLink: event.competitionGformLink || "",
+        competitionCustomHeading: event.competitionCustomHeading || "",
+        competitionCustomText: event.competitionCustomText || "",
+        competitionCustomSections: Array.isArray(event.competitionCustomSections)
+          ? event.competitionCustomSections
+          : ((event.competitionCustomHeading || event.competitionCustomText)
+              ? [{ heading: event.competitionCustomHeading || "", text: event.competitionCustomText || "", afterRegistration: false }]
+              : [{ heading: "", text: "", afterRegistration: false }]),
+      });
+    }
+  }, [event]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,6 +99,23 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
     }));
+  };
+
+  const handleDepartmentToggle = (deptId) => {
+    setFormData((prev) => {
+      const currentDepts = prev.departments || [];
+      if (currentDepts.includes(deptId)) {
+        return {
+          ...prev,
+          departments: currentDepts.filter((d) => d !== deptId),
+        };
+      } else {
+        return {
+          ...prev,
+          departments: [...currentDepts, deptId],
+        };
+      }
+    });
   };
 
   const addStudentCoordinator = () => {
@@ -121,6 +183,12 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
           ...formData,
           rules: formData.rules.filter((r) => r.trim()),
           prizes: formData.prizes.filter((p) => p.trim()),
+          studentCoordinators: (formData.studentCoordinators || []).filter((c) =>
+            (c?.name || '').trim() || (c?.phone || '').trim() || (c?.email || '').trim()
+          ),
+          facultyCoordinators: (formData.facultyCoordinators || []).filter((c) =>
+            (c?.name || '').trim() || (c?.phone || '').trim() || (c?.email || '').trim()
+          ),
         }),
       });
 
@@ -159,7 +227,7 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Same form fields as Add modal */}
+          {/* Basic Info */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">
@@ -205,6 +273,7 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
             />
           </div>
 
+          {/* Category, Departments & Type */}
           <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">
@@ -222,34 +291,47 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
               </select>
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-white font-audiowide text-sm mb-2">
-                Department *
+                Departments * (Select multiple)
               </label>
-              <select
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-              >
-                <option value="AI-DS">AI-DS - Artificial Intelligence and Data Science</option>
-                <option value="AI-ML">AI-ML - Artificial Intelligence and Machine Learning</option>
-                <option value="AGRI">AGRI - Agricultural Engineering</option>
-                <option value="BIO-MED">BIO-MED - Biomedical Engineering</option>
-                <option value="CHEM">CHEM - Chemical Engineering</option>
-                <option value="CIVIL">CIVIL - Civil Engineering</option>
-                <option value="CSE">CSE - Computer Science and Engineering</option>
-                <option value="CSE-CYB">CSE-CYB - Computer Science and Engineering (Cyber Security)</option>
-                <option value="CSE-IOT">CSE-IOT - Computer Science and Engineering (Internet of Things)</option>
-                <option value="IT">IT - Information Technology</option>
-                <option value="ECE">ECE - Electronics and Communication Engineering</option>
-                <option value="EEE">EEE - Electrical and Electronics Engineering</option>
-                <option value="EIE">EIE - Electronics and Instrumentation Engineering</option>
-                <option value="MECH">MECH - Mechanical Engineering</option>
-                <option value="MED-ELE">MED-ELE - Medical Electronics Engineering</option>
-                <option value="MBA">MBA - Master of Business Administration</option>
-                <option value="S&H">S&H - Science and Humanities</option>
-              </select>
+              <div className="bg-background-soft border border-border rounded-lg p-3 max-h-48 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "AI-DS", name: "AI-DS" },
+                    { id: "AI-ML", name: "AI-ML" },
+                    { id: "AGRI", name: "AGRI" },
+                    { id: "BIO-MED", name: "BIO-MED" },
+                    { id: "CHEM", name: "CHEM" },
+                    { id: "CIVIL", name: "CIVIL" },
+                    { id: "CSE", name: "CSE" },
+                    { id: "CSE-CYB", name: "CSE-CYB" },
+                    { id: "CSE-IOT", name: "CSE-IOT" },
+                    { id: "IT", name: "IT" },
+                    { id: "ECE", name: "ECE" },
+                    { id: "EEE", name: "EEE" },
+                    { id: "EIE", name: "EIE" },
+                    { id: "MECH", name: "MECH" },
+                    { id: "MED-ELE", name: "MED-ELE" },
+                    { id: "MBA", name: "MBA" },
+                    { id: "S&H", name: "S&H" },
+                    { id: "COMMON", name: "COMMON" },
+                  ].map((dept) => (
+                    <label key={dept.id} className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.departments?.includes(dept.id) || false}
+                        onChange={() => handleDepartmentToggle(dept.id)}
+                        className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
+                      />
+                      <span className="ml-2 text-white font-space text-sm">{dept.id}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {formData.departments?.length === 0 && (
+                <p className="text-red-500 text-xs mt-1">Select at least one department</p>
+              )}
             </div>
 
             <div>
@@ -268,9 +350,9 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-
-            {formData.type === "team" && (
+          {/* Max Team Size */}
+          {formData.type === "team" && (
+            <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-white font-audiowide text-sm mb-2">
                   Max Team Size
@@ -284,9 +366,10 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
                   className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
+          {/* Event Details */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">
@@ -337,18 +420,32 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
 
           <div className="grid md:grid-cols-2 gap-4">
             {!formData.isMultiDay ? (
-              <div>
-                <label className="block text-white font-audiowide text-sm mb-2">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-white font-audiowide text-sm mb-2">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleChange}
+                    className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white font-audiowide text-sm mb-2">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </>
             ) : (
               <>
                 <div>
@@ -428,6 +525,127 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
             disabled={loading}
           />
 
+          {/* Competition specific fields */}
+          {formData.category === 'competition' && (
+            <div className="p-4 border border-dashed border-primary/50 rounded-lg space-y-4">
+              <h4 className="font-audiowide text-primary">Competition Fields</h4>
+              <div>
+                <label className="block text-white font-audiowide text-sm mb-2">
+                  Competition PPT/PDF
+                </label>
+                <FileUpload
+                  onFileUpload={(url) => setFormData((prev) => ({ ...prev, competitionPptUrl: url }))}
+                  currentFile={formData.competitionPptUrl}
+                  disabled={loading}
+                  acceptedFormats=".pdf,.ppt,.pptx,.zip"
+                  label="Upload Presentation"
+                />
+                <div className="mt-3">
+                  <label className="block text-white font-audiowide text-sm mb-2">
+                    Or paste Cloudinary URL
+                  </label>
+                  <input
+                    type="url"
+                    name="competitionPptUrl"
+                    value={formData.competitionPptUrl}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, competitionPptUrl: e.target.value }))}
+                    placeholder="https://res.cloudinary.com/your-cloud/raw/upload/.../file.zip"
+                    className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-white font-audiowide text-sm mb-2">
+                  Registration Google Form Link
+                </label>
+                <input
+                  type="url"
+                  name="competitionGformLink"
+                  value={formData.competitionGformLink}
+                  onChange={handleChange}
+                  placeholder="https://forms.gle/example"
+                  className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-white font-audiowide text-sm mb-2">Custom Sections</label>
+                <div className="space-y-4">
+                  {(formData.competitionCustomSections || []).map((section, index) => (
+                    <div key={index} className="p-4 bg-background-soft rounded-lg border border-border space-y-3">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-white font-audiowide text-sm mb-2">Heading</label>
+                          <input
+                            type="text"
+                            value={section.heading}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFormData(prev => ({
+                                ...prev,
+                                competitionCustomSections: prev.competitionCustomSections.map((s,i)=> i===index ? { ...s, heading: val } : s)
+                              }));
+                            }}
+                            placeholder="e.g., Additional Instructions"
+                            className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-white font-audiowide text-sm mb-2">Visibility</label>
+                          <label className="flex items-center gap-2 text-sm text-white/80">
+                            <input
+                              type="checkbox"
+                              checked={!!section.afterRegistration}
+                              onChange={(e)=>{
+                                const checked = e.target.checked;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  competitionCustomSections: prev.competitionCustomSections.map((s,i)=> i===index ? { ...s, afterRegistration: checked } : s)
+                                }));
+                              }}
+                              className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
+                            />
+                            <span>Show only to registered users</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Text</label>
+                        <textarea
+                          value={section.text}
+                          onChange={(e)=>{
+                            const val = e.target.value;
+                            setFormData(prev => ({
+                              ...prev,
+                              competitionCustomSections: prev.competitionCustomSections.map((s,i)=> i===index ? { ...s, text: val } : s)
+                            }));
+                          }}
+                          rows="3"
+                          placeholder="Type any custom information to show before/after registration."
+                          className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      {(formData.competitionCustomSections?.length || 0) > 1 && (
+                        <button type="button" onClick={()=>{
+                          setFormData(prev=> ({
+                            ...prev,
+                            competitionCustomSections: prev.competitionCustomSections.filter((_,i)=> i!==index)
+                          }));
+                        }} className="text-red-500 hover:text-red-400 text-sm font-space">Remove Section</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={()=>{
+                  setFormData(prev => ({
+                    ...prev,
+                    competitionCustomSections: [...(prev.competitionCustomSections||[]), { heading: "", text: "", afterRegistration: false }]
+                  }));
+                }} className="text-primary hover:text-hover-primary text-sm font-space mt-2">+ Add Section</button>
+              </div>
+            </div>
+          )}
+
+          {/* Rules */}
           <div>
             <label className="block text-white font-audiowide text-sm mb-2">
               Rules
@@ -460,6 +678,7 @@ const EditSpecialEventModal = ({ event, onClose, onSuccess }) => {
             </button>
           </div>
 
+          {/* Prizes */}
           <div>
             <label className="block text-white font-audiowide text-sm mb-2">
               Prizes

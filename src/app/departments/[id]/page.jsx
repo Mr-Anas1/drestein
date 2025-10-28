@@ -17,30 +17,52 @@ export default function DepartmentPage() {
   const [events, setEvents] = useState([]);
   const [specialEvents, setSpecialEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        // Fetch regular events
-        const eventsRes = await fetch("/api/events");
-        const eventsData = await eventsRes.json();
+        setLoading(true);
+        setError(null);
+        setIsQuotaExceeded(false);
         
-        // Fetch special events
-        const specialRes = await fetch("/api/special-events");
+        // Simple direct API calls with department filter
+        const [eventsRes, specialRes] = await Promise.all([
+          fetch(`/api/events?department=${deptId}`),
+          fetch(`/api/special-events?department=${deptId}`)
+        ]);
+        
+        if (!eventsRes.ok || !specialRes.ok) {
+          throw new Error('Failed to fetch events');
+        }
+        
+        const eventsData = await eventsRes.json();
         const specialData = await specialRes.json();
-
-        // Filter by department
-        const filteredEvents = eventsData.filter(
-          (event) => event.department === deptId
-        );
-        const filteredSpecialEvents = specialData.filter(
-          (event) => event.department === deptId
-        );
-
-        setEvents(filteredEvents);
-        setSpecialEvents(filteredSpecialEvents);
-      } catch (error) {
-        console.error("Error fetching events:", error);
+        
+        const eventsArray = eventsData?.events || eventsData || [];
+        const specialArray = specialData?.events || specialData || [];
+        
+        if (!Array.isArray(eventsArray)) {
+          throw new Error('Invalid events format');
+        }
+        if (!Array.isArray(specialArray)) {
+          throw new Error('Invalid special events format');
+        }
+        
+        setEvents(eventsArray);
+        setSpecialEvents(specialArray);
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        const errorMsg = err.message || '';
+        if (errorMsg.includes('RESOURCE_EXHAUSTED') || 
+            errorMsg.includes('Quota exceeded') || 
+            errorMsg.includes('quota') || 
+            errorMsg.includes('timeout')) {
+          setIsQuotaExceeded(true);
+        } else {
+          setError(err.message);
+        }
       } finally {
         setLoading(false);
       }
@@ -84,7 +106,7 @@ export default function DepartmentPage() {
           alt={department.name}
           fill
           className="object-cover"
-          priority
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent"></div>
         
@@ -113,83 +135,35 @@ export default function DepartmentPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-text font-space">Loading events...</p>
           </div>
+        ) : isQuotaExceeded ? (
+          <div className="max-w-2xl mx-auto bg-background-soft border border-border rounded-2xl p-12 text-center">
+            <div className="inline-block p-6 bg-secondary/10 rounded-full mb-6">
+              <span className="text-5xl">🎉</span>
+            </div>
+            <h2 className="text-3xl font-audiowide mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Stay Tuned!</h2>
+            <p className="text-muted-text font-space mb-4 text-lg">
+              We're experiencing high traffic right now. Events are loading soon!
+            </p>
+            <p className="text-muted-text font-space mb-8">
+              Please try again in a few moments. We're working hard to bring you the best experience!
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide px-8 py-3 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+            >
+              Retry
+            </button>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="text-red-500 text-lg mb-4">Error loading events</div>
+            <p className="text-muted-text font-space">{error}</p>
+          </div>
         ) : (
           <>
-            {/* Regular Events */}
-            {events.length > 0 && (
-              <div className="mb-16">
-                <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-8">
-                  Common Events (7/11/25 - 8/11/25)
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {events.map((event) => (
-                    <Link
-                      key={event.id}
-                      href={`/events/${event.id}`}
-                      className="group"
-                    >
-                      <div className="rounded-2xl p-[1px] bg-gradient-to-r from-primary/30 to-secondary/30 hover:from-primary/60 hover:to-secondary/60 transition-all duration-300 hover:-translate-y-1 h-full">
-                        <div className="rounded-2xl bg-background-soft border border-border/60 overflow-hidden h-full flex flex-col">
-                          {event.img && (
-                            <div className="relative w-full h-48 overflow-hidden">
-                              <Image
-                                src={event.img}
-                                alt={event.title}
-                                fill
-                                className="object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                            </div>
-                          )}
-                          <div className="p-6 flex flex-col flex-1">
-                            <h3 className="font-audiowide text-xl text-white group-hover:text-primary transition-colors mb-3">
-                              {event.title}
-                            </h3>
-                            <p className="text-muted-text font-space text-sm mb-4 line-clamp-2 flex-1">
-                              {event.description}
-                            </p>
-                            <div className="space-y-2 text-sm">
-                              {event.date && (
-                                <div className="flex items-center gap-2 text-muted-text">
-                                  <Calendar className="w-4 h-4 text-primary" />
-                                  <span className="font-space">{event.date}</span>
-                                </div>
-                              )}
-                              {event.time && (
-                                <div className="flex items-center gap-2 text-muted-text">
-                                  <Clock className="w-4 h-4 text-primary" />
-                                  <span className="font-space">{event.time}</span>
-                                </div>
-                              )}
-                              {event.venue && (
-                                <div className="flex items-center gap-2 text-muted-text">
-                                  <MapPin className="w-4 h-4 text-primary" />
-                                  <span className="font-space">{event.venue}</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="mt-4 flex items-center justify-between gap-2">
-                              <div className="flex gap-2">
-                                <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-space">
-                                  {event.category}
-                                </span>
-                                <span className="text-xs px-3 py-1 rounded-full bg-primary/20 text-primary border border-primary/30 font-audiowide">
-                                  Common Event
-                                </span>
-                              </div>
-                              <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Premium Events */}
+            {/* Premium Events - Shown First */}
             {specialEvents.length > 0 && (
-              <div>
+              <div className="mb-16">
                 <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-8">
                   Premium Events (3/11/25 - 6/11/25)
                 </h2>
@@ -208,6 +182,7 @@ export default function DepartmentPage() {
                                 src={event.img}
                                 alt={event.title}
                                 fill
+                                loading="lazy"
                                 className="object-cover group-hover:scale-110 transition-transform duration-300"
                               />
                             </div>
@@ -260,6 +235,79 @@ export default function DepartmentPage() {
                                 </span>
                               </div>
                               <ArrowRight className="w-5 h-5 text-secondary group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Common Events - Shown Second */}
+            {events.length > 0 && (
+              <div>
+                <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-8">
+                  Common Events (7/11/25 - 8/11/25)
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {events.map((event) => (
+                    <Link
+                      key={event.id}
+                      href={`/events/${event.id}`}
+                      className="group"
+                    >
+                      <div className="rounded-2xl p-[1px] bg-gradient-to-r from-primary/30 to-secondary/30 hover:from-primary/60 hover:to-secondary/60 transition-all duration-300 hover:-translate-y-1 h-full">
+                        <div className="rounded-2xl bg-background-soft border border-border/60 overflow-hidden h-full flex flex-col">
+                          {event.img && (
+                            <div className="relative w-full h-48 overflow-hidden">
+                              <Image
+                                src={event.img}
+                                alt={event.title}
+                                fill
+                                loading="lazy"
+                                className="object-cover group-hover:scale-110 transition-transform duration-300"
+                              />
+                            </div>
+                          )}
+                          <div className="p-6 flex flex-col flex-1">
+                            <h3 className="font-audiowide text-xl text-white group-hover:text-primary transition-colors mb-3">
+                              {event.title}
+                            </h3>
+                            <p className="text-muted-text font-space text-sm mb-4 line-clamp-2 flex-1">
+                              {event.description}
+                            </p>
+                            <div className="space-y-2 text-sm">
+                              {event.date && (
+                                <div className="flex items-center gap-2 text-muted-text">
+                                  <Calendar className="w-4 h-4 text-primary" />
+                                  <span className="font-space">{event.date}</span>
+                                </div>
+                              )}
+                              {event.time && (
+                                <div className="flex items-center gap-2 text-muted-text">
+                                  <Clock className="w-4 h-4 text-primary" />
+                                  <span className="font-space">{event.time}</span>
+                                </div>
+                              )}
+                              {event.venue && (
+                                <div className="flex items-center gap-2 text-muted-text">
+                                  <MapPin className="w-4 h-4 text-primary" />
+                                  <span className="font-space">{event.venue}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-4 flex items-center justify-between gap-2">
+                              <div className="flex gap-2">
+                                <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-space">
+                                  {event.category}
+                                </span>
+                                <span className="text-xs px-3 py-1 rounded-full bg-primary/20 text-primary border border-primary/30 font-audiowide">
+                                  Common Event
+                                </span>
+                              </div>
+                              <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
                             </div>
                           </div>
                         </div>

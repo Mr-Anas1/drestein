@@ -84,11 +84,30 @@ const Stats = ({ value, title }) => {
   };
 
   return (
-    <div ref={statsRef} className="flex flex-col items-center justify-center gap-2">
-      <div className="font-audiowide text-4xl md:text-6xl font-bold text-primary">
-        {formatValue(count)}+
+    <div ref={statsRef} className="flex flex-col items-center justify-center gap-4 group">
+      {/* Card Background with Gradient Border */}
+      <div className="relative w-full max-w-xs">
+        {/* Animated Gradient Border */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-primary rounded-3xl p-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm"></div>
+        
+        {/* Card Content */}
+        <div className="relative bg-gradient-to-br from-background-soft/90 to-background/80 backdrop-blur-xl border border-border/40 group-hover:border-primary/60 rounded-3xl px-8 py-8 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-1">
+          <div className="text-center space-y-3">
+            {/* Number with Gradient */}
+            <div className="font-audiowide text-6xl md:text-7xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300 leading-tight">
+              {formatValue(count)}+
+            </div>
+            
+            {/* Title */}
+            <p className="font-audiowide md:text-lg text-base text-muted-text group-hover:text-white transition-colors duration-300 uppercase tracking-widest font-semibold">
+              {title}
+            </p>
+            
+            {/* Decorative Line */}
+            <div className="h-1 w-12 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
+        </div>
       </div>
-      <p className="font-audiowide md:text-2xl text-xl text-white">{title}</p>
     </div>
   );
 };

@@ -13,32 +13,85 @@ const page = () => {
     const [specialEvents, setSpecialEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState('all');
 
     useEffect(() => {
         const fetchEvents = async () => {
             try {
                 setLoading(true);
-                const [eventsRes, specialRes] = await Promise.all([
+                setError(null);
+                setIsQuotaExceeded(false);
+                
+                // Simple direct API calls without pagination/caching
+                const [eventsRes, specialEventsRes] = await Promise.all([
                     fetch('/api/events'),
                     fetch('/api/special-events')
                 ]);
-
-                if (!eventsRes.ok) {
-                    throw new Error(`HTTP error! status: ${eventsRes.status}`);
+                
+                if (!eventsRes.ok || !specialEventsRes.ok) {
+                    throw new Error('Failed to fetch events');
                 }
-
+                
                 const eventsData = await eventsRes.json();
-                const specialData = specialRes.ok ? await specialRes.json() : [];
+                const specialEventsData = await specialEventsRes.json();
                 
-                console.log("Fetched events from Firestore:", eventsData);
-                console.log("Fetched special events:", specialData);
+                const eventsArray = eventsData?.events || eventsData || [];
+                const specialArray = specialEventsData?.events || specialEventsData || [];
                 
-                setEvents(eventsData);
-                setSpecialEvents(specialData);
+                // Normalize department ids to canonical DEPARTMENTS ids
+                const normalizeDept = (val) => {
+                    const raw = String(val || '').trim();
+                    if (!raw) return raw;
+                    const upper = raw.toUpperCase();
+                    const alias = {
+                        CYB: 'CSE-CYB',
+                        IOT: 'CSE-IOT',
+                        MED: 'MED-ELE',
+                        BME: 'BIO-MED',
+                        SH: 'S&H',
+                        'S & H': 'S&H',
+                    };
+                    const aliasMapped = alias[upper] || upper;
+                    const match = DEPARTMENTS.find(
+                        d => d.id === aliasMapped || String(d.code || '').toUpperCase() === aliasMapped
+                    );
+                    return match ? match.id : aliasMapped;
+                };
+
+                // Helper to check if event is expired
+                const isEventExpired = (event) => {
+                    if (!event.expiryDate) return false;
+                    const expiryDate = new Date(event.expiryDate);
+                    return expiryDate < new Date();
+                };
+
+                const normalizedEvents = eventsArray.map(e => ({
+                    ...e,
+                    department: normalizeDept(e.department),
+                    departments: Array.isArray(e.departments) ? e.departments.map(normalizeDept) : undefined,
+                    isExpired: isEventExpired(e),
+                }));
+                const normalizedSpecial = specialArray.map(e => ({
+                    ...e,
+                    department: normalizeDept(e.department),
+                    departments: Array.isArray(e.departments) ? e.departments.map(normalizeDept) : undefined,
+                    isExpired: isEventExpired(e),
+                }));
+
+                setEvents(normalizedEvents);
+                setSpecialEvents(normalizedSpecial);
             } catch (err) {
                 console.error("Error fetching events:", err);
-                setError(err.message);
+                const errorMsg = err.message || '';
+                if (errorMsg.includes('RESOURCE_EXHAUSTED') || 
+                    errorMsg.includes('Quota exceeded') || 
+                    errorMsg.includes('quota') || 
+                    errorMsg.includes('timeout')) {
+                    setIsQuotaExceeded(true);
+                } else {
+                    setError(err.message);
+                }
             } finally {
                 setLoading(false);
             }
@@ -47,16 +100,27 @@ const page = () => {
         fetchEvents();
     }, []);
 
+
     // Memoize filtered events to avoid recalculation on every render
     const { departmentIds, otherEvents, filteredDepartments } = useMemo(() => {
         const deptIds = new Set(DEPARTMENTS.map(d => d.id));
         const others = events.filter(e => !e?.department || !deptIds.has(e.department));
         
+        // Helper to check if event belongs to department
+        const eventBelongsToDept = (event, deptId) => {
+            // Check new departments array format
+            if (Array.isArray(event.departments)) {
+                return event.departments.includes(deptId);
+            }
+            // Check old department string format
+            return event.department === deptId;
+        };
+        
         // Pre-filter departments that have events or special events
         const filtered = DEPARTMENTS.filter(dept => {
             if (selectedDepartment !== 'all' && dept.id !== selectedDepartment) return false;
-            const hasCommonEvents = events.some(e => e.department === dept.id);
-            const hasSpecialEvents = specialEvents.some(e => e.department === dept.id);
+            const hasCommonEvents = events.some(e => eventBelongsToDept(e, dept.id));
+            const hasSpecialEvents = specialEvents.some(e => eventBelongsToDept(e, dept.id));
             return hasCommonEvents || hasSpecialEvents;
         });
         
@@ -130,17 +194,47 @@ const page = () => {
                     </div>
                 )}
 
+                {isQuotaExceeded && (
+                    <div className="max-w-2xl mx-auto bg-background-soft border border-border rounded-2xl p-12 text-center">
+                        <div className="inline-block p-6 bg-secondary/10 rounded-full mb-6">
+                            <span className="text-5xl">🎉</span>
+                        </div>
+                        <h2 className="text-3xl font-audiowide mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Stay Tuned!</h2>
+                        <p className="text-muted-text font-space mb-4 text-lg">
+                            We're experiencing high traffic right now. Events are loading soon!
+                        </p>
+                        <p className="text-muted-text font-space mb-8">
+                            Please try again in a few moments. We're working hard to bring you the best experience!
+                        </p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide px-8 py-3 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
                 {error && (
                     <div className="flex justify-center items-center py-20">
                         <div className="text-red-500 text-lg">Error: {error}</div>
                     </div>
                 )}
 
-                {!loading && !error && (
+                {!loading && !error && !isQuotaExceeded && (
                     <div className="w-full pt-10 space-y-16">
                         {filteredDepartments.map((dept) => {
-                            const deptCommonEvents = events.filter(e => e.department === dept.id);
-                            const deptSpecialEvents = specialEvents.filter(e => e.department === dept.id);
+                            // Helper to filter events by department (handles both array and string formats)
+                            const filterByDept = (eventList, deptId) => {
+                                return eventList.filter(e => {
+                                    if (Array.isArray(e.departments)) {
+                                        return e.departments.includes(deptId);
+                                    }
+                                    return e.department === deptId;
+                                });
+                            };
+                            const deptCommonEvents = filterByDept(events, dept.id);
+                            const deptSpecialEvents = filterByDept(specialEvents, dept.id);
                             return (
                                 <section key={dept.id} id={`dept-${dept.id}`} className="space-y-6">
                                     {/* Department Header */}
@@ -151,7 +245,22 @@ const page = () => {
                                         <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto md:mx-0"></div>
                                     </div>
                                     
-                                    {/* Common Events */}
+                                    {/* Premium Events - Shown First */}
+                                    {deptSpecialEvents.length > 0 && (
+                                        <div className="space-y-4">
+                                            <h3 className="font-audiowide text-lg text-secondary">Premium Events</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
+                                                {deptSpecialEvents.map((event) => (
+                                                    <SpecialEventBox
+                                                        key={event.id}
+                                                        event={event}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Common Events - Shown Second */}
                                     {deptCommonEvents.length > 0 && (
                                         <div className="space-y-4">
                                             <h3 className="font-audiowide text-lg text-primary">Common Events</h3>
@@ -164,21 +273,6 @@ const page = () => {
                                                         description={event.description}
                                                         link={`/events/${event.id}`}
                                                         id={event.id}
-                                                        event={event}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Premium Events */}
-                                    {deptSpecialEvents.length > 0 && (
-                                        <div className="space-y-4">
-                                            <h3 className="font-audiowide text-lg text-secondary">Premium Events</h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-items-center">
-                                                {deptSpecialEvents.map((event) => (
-                                                    <SpecialEventBox
-                                                        key={event.id}
                                                         event={event}
                                                     />
                                                 ))}
@@ -217,6 +311,7 @@ const page = () => {
                         )}
                     </div>
                 )}
+
 
             </div>
 

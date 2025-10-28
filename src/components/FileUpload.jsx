@@ -1,22 +1,28 @@
 "use client";
 import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, FileText } from 'lucide-react';
 
-const ImageUpload = ({ onImageUpload, currentImage = null, disabled = false }) => {
+const FileUpload = ({ onFileUpload, currentFile = null, disabled = false, acceptedFormats = '.pdf,.ppt,.pptx', label = "Upload File" }) => {
     const [uploading, setUploading] = useState(false);
-    const [preview, setPreview] = useState(currentImage);
+    const [fileName, setFileName] = useState(currentFile ? 'File uploaded' : null);
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef(null);
 
     const handleFileSelect = async (file) => {
-        if (!file || !file.type.startsWith('image/')) {
-            alert('Please select a valid image file');
+        if (!file) {
+            alert('Please select a valid file');
             return;
         }
 
-        // Show preview immediately
-        const previewUrl = URL.createObjectURL(file);
-        setPreview(previewUrl);
+        const validExtensions = acceptedFormats.split(',').map(ext => ext.trim().toLowerCase());
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!validExtensions.includes(fileExtension)) {
+            alert(`Please select a valid file. Accepted formats: ${acceptedFormats}`);
+            return;
+        }
+
+        setFileName(file.name);
         setUploading(true);
 
         try {
@@ -33,15 +39,12 @@ const ImageUpload = ({ onImageUpload, currentImage = null, disabled = false }) =
             }
 
             const result = await response.json();
-            
-            // Update preview with Cloudinary URL
-            setPreview(result.url);
-            onImageUpload(result.url);
+            onFileUpload(result.url);
 
         } catch (error) {
             console.error('Upload error:', error);
-            alert('Failed to upload image. Please try again.');
-            setPreview(currentImage);
+            alert('Failed to upload file. Please try again.');
+            setFileName(null);
         } finally {
             setUploading(false);
         }
@@ -78,9 +81,9 @@ const ImageUpload = ({ onImageUpload, currentImage = null, disabled = false }) =
         }
     };
 
-    const removeImage = () => {
-        setPreview(null);
-        onImageUpload('');
+    const removeFile = () => {
+        setFileName(null);
+        onFileUpload('');
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -89,28 +92,24 @@ const ImageUpload = ({ onImageUpload, currentImage = null, disabled = false }) =
     return (
         <div className="space-y-4">
             <label className="block text-sm font-audiowide text-muted-text mb-2">
-                Event Image
+                {label}
             </label>
             
-            {preview ? (
+            {fileName ? (
                 <div className="relative">
-                    <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
-                        <img
-                            src={preview}
-                            alt="Event preview"
-                            className="w-full h-full object-cover"
-                            loading="lazy" decoding="async"
-                        />
+                    <div className="relative w-full p-4 rounded-lg overflow-hidden border border-border bg-background-soft flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <FileText className="text-primary" size={24} />
+                            <span className="text-white font-space">{fileName}</span>
+                        </div>
                         {uploading && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                            </div>
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                         )}
                     </div>
-                    {!disabled && (
+                    {!disabled && !uploading && (
                         <button
                             type="button"
-                            onClick={removeImage}
+                            onClick={removeFile}
                             className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors duration-300"
                         >
                             <X size={16} />
@@ -132,7 +131,7 @@ const ImageUpload = ({ onImageUpload, currentImage = null, disabled = false }) =
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/*"
+                        accept={acceptedFormats}
                         onChange={handleFileInput}
                         className="hidden"
                         disabled={disabled}
@@ -143,19 +142,19 @@ const ImageUpload = ({ onImageUpload, currentImage = null, disabled = false }) =
                             {uploading ? (
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                             ) : (
-                                <ImageIcon className="text-muted-text" size={24} />
+                                <FileText className="text-muted-text" size={24} />
                             )}
                         </div>
                         
                         <div>
                             <p className="text-white font-audiowide text-sm mb-2">
-                                {uploading ? 'Uploading...' : 'Upload Event Image'}
+                                {uploading ? 'Uploading...' : label}
                             </p>
                             <p className="text-muted-text font-space text-xs">
-                                Drag and drop an image here, or click to select
+                                Drag and drop a file here, or click to select
                             </p>
                             <p className="text-muted-text font-space text-xs mt-1">
-                                Supports: JPG, PNG, GIF (Max 10MB)
+                                Accepted formats: {acceptedFormats}
                             </p>
                         </div>
                         
@@ -173,10 +172,10 @@ const ImageUpload = ({ onImageUpload, currentImage = null, disabled = false }) =
             )}
             
             <p className="text-muted-text font-space text-xs">
-                💡 Images will be automatically optimized and resized for best performance
+                💡 Files will be securely uploaded and stored
             </p>
         </div>
     );
 };
 
-export default ImageUpload;
+export default FileUpload;

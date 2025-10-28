@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import { DEPARTMENTS } from '@/constants/departments';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, Trash2, Eye, Users, ArrowLeft } from 'lucide-react';
 import AddSpecialEventModal from '@/components/AddSpecialEventModal';
@@ -12,6 +13,7 @@ const AdminSpecialEventsPage = () => {
   const { user, userRole, loading: authLoading, isSuperAdmin, isDepartmentAdmin } = useAuth();
   const router = useRouter();
   const [specialEvents, setSpecialEvents] = useState([]);
+  const [filteredSpecialEvents, setFilteredSpecialEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -19,6 +21,10 @@ const AdminSpecialEventsPage = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [participantsEvent, setParticipantsEvent] = useState(null);
+  const [pagination, setPagination] = useState({ total: 0, offset: 0, limit: 20, hasMore: false });
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Authentication check
   useEffect(() => {
@@ -35,20 +41,65 @@ const AdminSpecialEventsPage = () => {
 
   useEffect(() => {
     if (user && (isSuperAdmin || isDepartmentAdmin)) {
-      fetchSpecialEvents();
+      // reset pagination on role/department change
+      setPagination((prev) => ({ ...prev, offset: 0 }));
+      fetchSpecialEvents({ offset: 0, append: false, limit: pagination.limit });
     }
-  }, [user, isSuperAdmin, isDepartmentAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isSuperAdmin, isDepartmentAdmin, userRole, selectedDepartment]);
 
-  const fetchSpecialEvents = async () => {
+  // Apply client-side search filtering
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setFilteredSpecialEvents(specialEvents);
+      return;
+    }
+    const filtered = specialEvents.filter(ev => {
+      const title = String(ev.title || '').toLowerCase();
+      const venue = String(ev.venue || '').toLowerCase();
+      const category = String(ev.category || '').toLowerCase();
+      return title.includes(q) || venue.includes(q) || category.includes(q);
+    });
+    setFilteredSpecialEvents(filtered);
+  }, [specialEvents, searchQuery]);
+
+  const fetchSpecialEvents = async ({ offset = 0, append = false, limit = 50 } = {}) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/special-events');
-      const data = await response.json();
-      setSpecialEvents(data);
+      if (append) setLoadingMore(true); else setLoading(true);
+      
+      // Fetch fresh from API (no-store) to reflect latest admin writes
+      const res = await fetch(`/api/special-events?offset=${offset}&limit=${limit}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to fetch special events');
+      const data = await res.json();
+      let events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
+      
+      // Apply department filtering client-side
+      if (isDepartmentAdmin && userRole?.department) {
+        events = events.filter(event => event.department === userRole.department);
+      } else if (isSuperAdmin && selectedDepartment && selectedDepartment !== 'all') {
+        events = events.filter(event => event.department === selectedDepartment);
+      }
+
+      if (append) {
+        setSpecialEvents((prev) => [...prev, ...events]);
+      } else {
+        setSpecialEvents(events);
+      }
+
+      const apiPag = data?.pagination || {};
+      const total = typeof apiPag.total === 'number' ? apiPag.total : (append ? (specialEvents.length + events.length) : events.length);
+      const hasMore = typeof apiPag.hasMore === 'boolean' ? apiPag.hasMore : (offset + limit < total);
+      setPagination({
+        total,
+        offset,
+        limit,
+        hasMore,
+      });
     } catch (error) {
       console.error('Error fetching special events:', error);
     } finally {
-      setLoading(false);
+      if (append) setLoadingMore(false); else setLoading(false);
     }
   };
 
@@ -108,6 +159,8 @@ const AdminSpecialEventsPage = () => {
             </p>
           </div>
 
+          
+
           {/* Only super admins can add special events */}
           {isSuperAdmin && (
             <button
@@ -120,25 +173,55 @@ const AdminSpecialEventsPage = () => {
           )}
         </div>
 
+{/* Department Filter for Super Admin */}
+          {isSuperAdmin && (
+            <div className="mb-6">
+              <label className="block text-white font-audiowide text-sm mb-2">Filter by Department</label>
+              <select
+                value={selectedDepartment}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                className="bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+              >
+                <option value="all">All Departments</option>
+                {DEPARTMENTS.map(dept => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        {/* Search */}
+        <div className="mb-6">
+          <label className="block text-white font-audiowide text-sm mb-2">Search</label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title, venue, or category"
+            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+          />
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-background-soft border border-border rounded-xl p-6">
-            <div className="text-3xl font-audiowide text-white mb-2">{specialEvents.length}</div>
+            <div className="text-3xl font-audiowide text-white mb-2">{filteredSpecialEvents.length}</div>
             <p className="text-muted-text font-space text-sm">Total Special Events</p>
           </div>
           <div className="bg-background-soft border border-border rounded-xl p-6">
             <div className="text-3xl font-audiowide text-white mb-2">
-              {specialEvents.filter(e => e.category === 'competition').length}
+              {filteredSpecialEvents.filter(e => e.category === 'competition').length}
             </div>
             <p className="text-muted-text font-space text-sm">Competitions</p>
           </div>
           <div className="bg-background-soft border border-border rounded-xl p-6">
             <div className="text-3xl font-audiowide text-white mb-2">
-              {specialEvents.filter(e => e.category === 'workshop').length}
+              {filteredSpecialEvents.filter(e => e.category === 'workshop').length}
             </div>
             <p className="text-muted-text font-space text-sm">Workshops</p>
           </div>
         </div>
+
+        
 
         {/* Events Table */}
         <div className="bg-background-soft border border-border rounded-xl overflow-hidden">
@@ -154,14 +237,14 @@ const AdminSpecialEventsPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {specialEvents.length === 0 ? (
+                {filteredSpecialEvents.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center text-muted-text font-space">
                       No special events yet. Click "Add Special Event" to create one.
                     </td>
                   </tr>
                 ) : (
-                  specialEvents.map((event) => (
+                  filteredSpecialEvents.map((event) => (
                     <tr key={event.id} className="hover:bg-background transition-colors">
                       <td className="px-6 py-4">
                         <div className="text-white font-space">{event.title}</div>
@@ -193,13 +276,15 @@ const AdminSpecialEventsPage = () => {
                           >
                             <Users className="w-5 h-5" />
                           </button>
-                          <button
-                            onClick={() => router.push(`/special-events/${event.id}`)}
-                            className="text-primary hover:text-hover-primary transition-colors"
-                            title="View"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
+                          {isSuperAdmin && (
+                            <button
+                              onClick={() => router.push(`/special-events/${event.id}`)}
+                              className="text-primary hover:text-hover-primary transition-colors"
+                              title="View"
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+                          )}
                           {/* Only super admins can edit/delete special events */}
                           {isSuperAdmin && (
                             <>
@@ -231,6 +316,18 @@ const AdminSpecialEventsPage = () => {
             </table>
           </div>
         </div>
+
+        {pagination.hasMore && (
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={() => fetchSpecialEvents({ offset: pagination.offset + pagination.limit, append: true, limit: pagination.limit })}
+              disabled={loadingMore}
+              className="px-6 py-3 rounded-lg font-audiowide bg-background-soft border border-border text-white hover:bg-background transition-colors disabled:opacity-60"
+            >
+              {loadingMore ? 'Loading...' : 'Load more'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Add Modal */}
@@ -239,7 +336,7 @@ const AdminSpecialEventsPage = () => {
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             setShowAddModal(false);
-            fetchSpecialEvents();
+            fetchSpecialEvents({ offset: 0, append: false, limit: pagination.limit });
           }}
         />
       )}
@@ -255,7 +352,7 @@ const AdminSpecialEventsPage = () => {
           onSuccess={() => {
             setShowEditModal(false);
             setSelectedEvent(null);
-            fetchSpecialEvents();
+            fetchSpecialEvents({ offset: 0, append: false, limit: pagination.limit });
           }}
         />
       )}
