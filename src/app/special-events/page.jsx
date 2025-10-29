@@ -44,7 +44,7 @@ const SpecialEventsPage = () => {
         } catch {
           try {
             errMsg = await res.text();
-          } catch {}
+          } catch { }
         }
         throw new Error(errMsg);
       }
@@ -68,32 +68,32 @@ const SpecialEventsPage = () => {
         setLoading(true);
         setError(null);
         setIsQuotaExceeded(false);
-        
+
         // Fetch all special events
         const res = await fetch('/api/special-events');
         if (!res.ok) throw new Error('Failed to fetch special events');
-        
+
         const data = await res.json();
         const eventsArray = data?.events || data || [];
-        
+
         if (!Array.isArray(eventsArray)) {
           throw new Error('Invalid events format');
         }
-        
+
         console.log('Fetched events:', eventsArray);
-        
+
         // Filter events based on user's student status
         const userIsStudent = studentProfile?.isStudent !== false; // Default to true if not specified
-        
+
         const filteredEvents = eventsArray.filter(e => {
           const forStudents = e.isForStudents !== false; // Default true if not specified
           const forNonStudents = e.isForNonStudents === true;
-          
+
           // If both checkboxes are checked or neither is checked, show to everyone
           if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
             return true;
           }
-          
+
           // If only one checkbox is checked, filter based on user status
           if (userIsStudent) {
             return forStudents;
@@ -101,26 +101,26 @@ const SpecialEventsPage = () => {
             return forNonStudents;
           }
         });
-        
+
         // Separate competitions and workshops
-        const comps = filteredEvents.filter(event => 
-          String(event.category || '').toLowerCase() === 'competition' || 
+        const comps = filteredEvents.filter(event =>
+          String(event.category || '').toLowerCase() === 'competition' ||
           String(event.category || '').toLowerCase() === 'other'
         );
-        
-        const workshps = filteredEvents.filter(event => 
+
+        const workshps = filteredEvents.filter(event =>
           String(event.category || '').toLowerCase() === 'workshop'
         );
-        
+
         setCompetitions(comps);
         setWorkshops(workshps);
       } catch (err) {
         console.error("Error fetching premium events:", err);
         const errorMsg = err.message || '';
-        if (errorMsg.includes('RESOURCE_EXHAUSTED') || 
-            errorMsg.includes('Quota exceeded') || 
-            errorMsg.includes('quota') || 
-            errorMsg.includes('timeout')) {
+        if (errorMsg.includes('RESOURCE_EXHAUSTED') ||
+          errorMsg.includes('Quota exceeded') ||
+          errorMsg.includes('quota') ||
+          errorMsg.includes('timeout')) {
           setIsQuotaExceeded(true);
         } else {
           setError(err.message);
@@ -206,7 +206,7 @@ const SpecialEventsPage = () => {
   const filteredWorkshopDepts = selectedDepartment === 'all'
     ? deptsWithWorkshops
     : deptsWithWorkshops.filter(d => d.id === selectedDepartment);
-  
+
   // Check if there are events without department info
   const hasCommonCompetitions = competitionsByDept['COMMON'] && competitionsByDept['COMMON'].length > 0;
   const hasCommonWorkshops = workshopsByDept['COMMON'] && workshopsByDept['COMMON'].length > 0;
@@ -223,7 +223,7 @@ const SpecialEventsPage = () => {
           Special competitions, workshops, and exclusive events
         </p>
 
-        {isSuperAdmin && (
+        {/* {isSuperAdmin && (
           <div className="flex justify-center mb-6">
             <button
               onClick={handleBulkSetVisibleToEveryone}
@@ -234,7 +234,7 @@ const SpecialEventsPage = () => {
               {bulkUpdating ? 'Updating…' : 'Make All Special Events Visible to Everyone'}
             </button>
           </div>
-        )}
+        )} */}
 
         {/* Department filter moved below competitions; now filters workshops only */}
 
@@ -300,7 +300,7 @@ const SpecialEventsPage = () => {
                           </h3>
                           <div className="h-1 w-20 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto md:mx-0"></div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                           {deptEvents.map((event) => (
                             <SpecialEventBox
@@ -312,7 +312,7 @@ const SpecialEventsPage = () => {
                       </div>
                     );
                   })}
-                  
+
                   {hasCommonCompetitions && (
                     <div className="space-y-6">
                       <div className="text-center md:text-left">
@@ -369,7 +369,7 @@ const SpecialEventsPage = () => {
                           </h3>
                           <div className="h-1 w-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto md:mx-0"></div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                           {deptEvents.map((event) => (
                             <SpecialEventBox
@@ -381,7 +381,7 @@ const SpecialEventsPage = () => {
                       </div>
                     );
                   })}
-                  
+
                   {hasCommonWorkshops && selectedDepartment === 'all' && (
                     <div className="space-y-6">
                       <div className="text-center md:text-left">
