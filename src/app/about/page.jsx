@@ -297,7 +297,7 @@ const About = () => {
                                 </a>
                                 <a href="https://www.linkedin.com/in/jayaganapathi?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
                                     <div className="w-22 h-22 bg-gradient-to-r from-accent to-secondary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                                        <img src="/jayaganapati.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                        <img src="/jayaganapathi.jpg" alt="headshot" className="w-full h-full object-cover" />
                                     </div>
                                     <h4 className="font-audiowide text-base text-white mb-1 group-hover:text-accent transition-colors duration-300">JAYAGANAPATHI S</h4>
                                     <p className="text-accent font-space text-xs">Designer</p>
