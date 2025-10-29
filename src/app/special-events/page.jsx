@@ -304,7 +304,7 @@ const SpecialEventsPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                           {deptEvents.map((event) => (
                             <SpecialEventBox
-                              key={event.id}
+                              key={`comp-${dept.id}-${event.id}`}
                               event={event}
                             />
                           ))}
@@ -373,7 +373,7 @@ const SpecialEventsPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                           {deptEvents.map((event) => (
                             <SpecialEventBox
-                              key={event.id}
+                              key={`workshop-${dept.id}-${event.id}`}
                               event={event}
                             />
                           ))}
