@@ -4,24 +4,27 @@ import Footer from '@/components/Footer';
 import SpecialEventBox from '@/components/SpecialEventBox';
 import { useEffect, useState, useMemo } from 'react';
 import { DEPARTMENTS } from '@/constants/departments';
+import CustomDropdown from '@/components/CustomDropdown';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 const SpecialEventsPage = () => {
-  const [premiumEvents, setPremiumEvents] = useState([]);
+  const [competitions, setCompetitions] = useState([]);
+  const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState('all');
 
   useEffect(() => {
-    const fetchPremiumEvents = async () => {
+    const fetchSpecialEvents = async () => {
       try {
         setLoading(true);
         setError(null);
         setIsQuotaExceeded(false);
         
-        // Simple direct API call
-        const res = await fetch('/api/special-events?category=competition');
+        // Fetch all special events
+        const res = await fetch('/api/special-events');
         if (!res.ok) throw new Error('Failed to fetch special events');
         
         const data = await res.json();
@@ -32,7 +35,19 @@ const SpecialEventsPage = () => {
         }
         
         console.log('Fetched events:', eventsArray);
-        setPremiumEvents(eventsArray);
+        
+        // Separate competitions and workshops
+        const comps = eventsArray.filter(event => 
+          String(event.category || '').toLowerCase() === 'competition' || 
+          String(event.category || '').toLowerCase() === 'other'
+        );
+        
+        const workshps = eventsArray.filter(event => 
+          String(event.category || '').toLowerCase() === 'workshop'
+        );
+        
+        setCompetitions(comps);
+        setWorkshops(workshps);
       } catch (err) {
         console.error("Error fetching premium events:", err);
         const errorMsg = err.message || '';
@@ -49,14 +64,14 @@ const SpecialEventsPage = () => {
       }
     };
 
-    fetchPremiumEvents();
+    fetchSpecialEvents();
   }, []);
 
 
-  // Group events by department (handle both array and string formats)
-  const eventsByDepartment = useMemo(() => {
+  // Group competitions by department (handle both array and string formats)
+  const competitionsByDept = useMemo(() => {
     const grouped = {};
-    premiumEvents.forEach(event => {
+    competitions.forEach(event => {
       // Handle new departments array format
       if (Array.isArray(event.departments) && event.departments.length > 0) {
         event.departments.forEach(dept => {
@@ -82,13 +97,53 @@ const SpecialEventsPage = () => {
       }
     });
     return grouped;
-  }, [premiumEvents]);
+  }, [competitions]);
 
-  // Get departments that have competition events (including COMMON)
-  const departmentsWithEvents = DEPARTMENTS.filter(dept => eventsByDepartment[dept.id]);
+  // Group workshops by department
+  const workshopsByDept = useMemo(() => {
+    const grouped = {};
+    workshops.forEach(event => {
+      // Handle new departments array format
+      if (Array.isArray(event.departments) && event.departments.length > 0) {
+        event.departments.forEach(dept => {
+          if (!grouped[dept]) {
+            grouped[dept] = [];
+          }
+          grouped[dept].push(event);
+        });
+      }
+      // Handle old department string format (backward compatibility)
+      else if (event.department) {
+        if (!grouped[event.department]) {
+          grouped[event.department] = [];
+        }
+        grouped[event.department].push(event);
+      }
+      // Handle events without department info - add to 'COMMON'
+      else {
+        if (!grouped['COMMON']) {
+          grouped['COMMON'] = [];
+        }
+        grouped['COMMON'].push(event);
+      }
+    });
+    return grouped;
+  }, [workshops]);
+
+  // Get departments that have events
+  const deptsWithCompetitions = DEPARTMENTS.filter(dept => competitionsByDept[dept.id]);
+  const deptsWithWorkshops = DEPARTMENTS.filter(dept => workshopsByDept[dept.id]);
+  // Apply dropdown filter
+  const filteredCompetitionDepts = selectedDepartment === 'all'
+    ? deptsWithCompetitions
+    : deptsWithCompetitions.filter(d => d.id === selectedDepartment);
+  const filteredWorkshopDepts = selectedDepartment === 'all'
+    ? deptsWithWorkshops
+    : deptsWithWorkshops.filter(d => d.id === selectedDepartment);
   
   // Check if there are events without department info
-  const hasCommonEvents = eventsByDepartment['COMMON'] && eventsByDepartment['COMMON'].length > 0;
+  const hasCommonCompetitions = competitionsByDept['COMMON'] && competitionsByDept['COMMON'].length > 0;
+  const hasCommonWorkshops = workshopsByDept['COMMON'] && workshopsByDept['COMMON'].length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background">
@@ -101,6 +156,8 @@ const SpecialEventsPage = () => {
         <p className='text-muted-text text-center font-space text-lg mb-8'>
           Special competitions, workshops, and exclusive events
         </p>
+
+        {/* Department filter moved below competitions; now filters workshops only */}
 
         {loading && (
           <div className="flex justify-center items-center py-20">
@@ -135,61 +192,139 @@ const SpecialEventsPage = () => {
           </div>
         )}
 
-        {!loading && !error && !isQuotaExceeded && premiumEvents.length === 0 && !hasCommonEvents && (
+        {!loading && !error && !isQuotaExceeded && competitions.length === 0 && workshops.length === 0 && (
           <div className="flex justify-center items-center py-20">
-            <div className="text-muted-text text-lg font-space">No premium competitions available yet</div>
+            <div className="text-muted-text text-lg font-space">No special events available yet</div>
           </div>
         )}
 
-        {!loading && !error && !isQuotaExceeded && (premiumEvents.length > 0 || hasCommonEvents) && (
-          <>
-            <div className="space-y-16">
-              {departmentsWithEvents.map((dept) => {
-                const deptEvents = eventsByDepartment[dept.id];
-                return (
-                  <section key={dept.id} className="space-y-6">
-                    {/* Department Header */}
-                    <div className="text-center md:text-left">
-                      <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-2">
-                        {dept.name}
-                      </h2>
-                      <div className="h-1 w-24 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto md:mx-0"></div>
+        {!loading && !error && !isQuotaExceeded && (competitions.length > 0 || workshops.length > 0) && (
+          <div className="space-y-20">
+            {/* Competitions Section */}
+            {(competitions.length > 0 || hasCommonCompetitions) && (
+              <section className="space-y-8">
+                <div className="text-center">
+                  <h2 className="font-audiowide text-4xl md:text-5xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-4">
+                    Competitions
+                  </h2>
+                  <div className="h-1 w-32 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto"></div>
+                </div>
+
+                <div className="space-y-16">
+                  {deptsWithCompetitions.map((dept) => {
+                    const deptEvents = competitionsByDept[dept.id];
+                    return (
+                      <div key={dept.id} className="space-y-6">
+                        <div className="text-center md:text-left">
+                          <h3 className="font-audiowide text-2xl md:text-3xl text-white mb-2">
+                            {dept.name} Competitions
+                          </h3>
+                          <div className="h-1 w-20 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto md:mx-0"></div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                          {deptEvents.map((event) => (
+                            <SpecialEventBox
+                              key={event.id}
+                              event={event}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {hasCommonCompetitions && (
+                    <div className="space-y-6">
+                      <div className="text-center md:text-left">
+                        <h3 className="font-audiowide text-2xl md:text-3xl text-white mb-2">
+                          General Competitions
+                        </h3>
+                        <div className="h-1 w-20 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto md:mx-0"></div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                        {competitionsByDept['COMMON'].map((event) => (
+                          <SpecialEventBox
+                            key={event.id}
+                            event={event}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    
-                    {/* Events Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
-                      {deptEvents.map((event) => (
-                        <SpecialEventBox
-                          key={event.id}
-                          event={event}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                );
-              })}
-              
-              {hasCommonEvents && (
-                <section className="space-y-6">
-                  <div className="text-center md:text-left">
-                    <h2 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-2">
-                      General Competitions
-                    </h2>
-                    <div className="h-1 w-24 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto md:mx-0"></div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
-                    {eventsByDepartment['COMMON'].map((event) => (
-                      <SpecialEventBox
-                        key={event.id}
-                        event={event}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Workshops Filter Dropdown (applies to workshops only) */}
+            <div className="flex justify-center mb-8 mt-2">
+              <CustomDropdown
+                value={selectedDepartment}
+                onChange={setSelectedDepartment}
+                options={[
+                  { id: 'all', name: 'All Departments', short: 'ALL' },
+                  ...DEPARTMENTS
+                ]}
+                placeholder="Filter Workshops by Department"
+              />
             </div>
-            
-          </>
+
+            {/* Workshops Section */}
+            {(workshops.length > 0 || (hasCommonWorkshops && selectedDepartment === 'all')) && (
+              <section className="space-y-8 pt-10 border-t border-gray-800">
+                <div className="text-center">
+                  <h2 className="font-audiowide text-4xl md:text-5xl bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent mb-4">
+                    Workshops
+                  </h2>
+                  <div className="h-1 w-32 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto"></div>
+                </div>
+
+                <div className="space-y-16">
+                  {filteredWorkshopDepts.map((dept) => {
+                    const deptEvents = workshopsByDept[dept.id];
+                    return (
+                      <div key={dept.id} className="space-y-6">
+                        <div className="text-center md:text-left">
+                          <h3 className="font-audiowide text-2xl md:text-3xl text-white mb-2">
+                            {dept.name} Workshops
+                          </h3>
+                          <div className="h-1 w-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto md:mx-0"></div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                          {deptEvents.map((event) => (
+                            <SpecialEventBox
+                              key={event.id}
+                              event={event}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {hasCommonWorkshops && selectedDepartment === 'all' && (
+                    <div className="space-y-6">
+                      <div className="text-center md:text-left">
+                        <h3 className="font-audiowide text-2xl md:text-3xl text-white mb-2">
+                          General Workshops
+                        </h3>
+                        <div className="h-1 w-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto md:mx-0"></div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                        {workshopsByDept['COMMON'].map((event) => (
+                          <SpecialEventBox
+                            key={event.id}
+                            event={event}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+          </div>
         )}
       </div>
       <Footer />

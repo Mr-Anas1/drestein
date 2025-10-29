@@ -36,8 +36,16 @@ const page = () => {
                 const eventsData = await eventsRes.json();
                 const specialEventsData = await specialEventsRes.json();
                 
-                const eventsArray = eventsData?.events || eventsData || [];
+                // Get all events (both common and premium)
+                const allEvents = eventsData?.events || eventsData || [];
                 const specialArray = specialEventsData?.events || specialEventsData || [];
+                
+                // Separate common events (non-premium). Do not rely on category filter.
+                const commonEvents = allEvents.filter(event => !event.isPremium);
+                
+                // For the events page, we'll show common events
+                // and use premium events for department filtering
+                const eventsArray = [...commonEvents];
                 
                 // Normalize department ids to canonical DEPARTMENTS ids
                 const normalizeDept = (val) => {
@@ -156,7 +164,7 @@ const page = () => {
                     Events
                 </h1>
 
-                <p className='text-muted-text text-center font-space text-lg mb-8'>Discover all the Events and Workshops</p>
+                <p className='text-muted-text text-center font-space text-lg mb-8'>Discover all the Events happening at the fest</p>
 
                 {/* Department Filter Dropdown */}
                 <div className="flex justify-center mb-8">
@@ -184,14 +192,11 @@ const page = () => {
                                 🎫 Events Overview
                             </h3>
                             <p className="text-muted-text font-space leading-relaxed mb-3 text-md md:text-lg">
-                                This page features two types of events:
+                                This page features events included in the Common Pass. For workshops and competitions, please visit the <a href="/special-events" className="text-primary hover:underline">Special Events</a> page.
                             </p>
                             <div className="space-y-2 text-sm">
                                 <p className="text-muted-text text-lg font-space leading-relaxed">
-                                    <span className="text-primary font-semibold">Common Events:</span> Included in the <span className="text-primary font-semibold">Common Pass (₹300)</span> • Valid for Nov 7-8, 2025
-                                </p>
-                                <p className="text-muted-text font-space leading-relaxed text-md md:text-lg">
-                                    <span className="text-secondary font-semibold">Premium Events:</span> Individual pricing • Add to cart and purchase separately
+                                    <span className="text-primary font-semibold">All Events:</span> Included in the <span className="text-primary font-semibold">Common Pass (₹300)</span> • Valid for Nov 7-8, 2025
                                 </p>
                             </div>
                         </div>
