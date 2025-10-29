@@ -55,9 +55,9 @@ const SpecialEventBox = React.memo(({ event }) => {
                   ₹{price}
                 </span>
               </div>
-              <p className="text-gray-600 font-space text-sm mb-4 line-clamp-2 flex-1">
+              {/* <p className="text-gray-600 font-space text-sm mb-4 line-clamp-2 flex-1">
                 {description}
-              </p>
+              </p> */}
               <div className="space-y-2 text-sm">
                 {event?.date && (
                   <div className="flex items-center gap-2 text-gray-600">
