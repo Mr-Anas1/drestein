@@ -16,6 +16,8 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
     mode: "offline",
     img: "",
     venue: "",
+    isForStudents: true,
+    isForNonStudents: false,
     isMultiDay: false,
     date: "",
     startDate: "",
@@ -365,8 +367,8 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
             </div>
           </div>
 
-          {/* Multi-day Event Toggle */}
-          <div className="flex items-center gap-3">
+          {/* Event Type Toggle */}
+          <div className="flex flex-wrap items-center gap-6">
             <label className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -378,6 +380,34 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
               />
               <span className="ml-2 text-white font-space text-sm">
                 Multi-day Event
+              </span>
+            </label>
+            
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.isForStudents}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, isForStudents: e.target.checked }))
+                }
+                className="w-4 h-4 text-primary bg-background-soft border-border rounded focus:ring-primary"
+              />
+              <span className="ml-2 text-white font-space text-sm">
+                For Students
+              </span>
+            </label>
+            
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.isForNonStudents}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, isForNonStudents: e.target.checked }))
+                }
+                className="w-4 h-4 text-primary bg-background-soft border-border rounded focus:ring-primary"
+              />
+              <span className="ml-2 text-white font-space text-sm">
+                For Non-Students
               </span>
             </label>
           </div>

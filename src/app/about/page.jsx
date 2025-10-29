@@ -154,9 +154,9 @@ const About = () => {
                         {coordinators.map((coordinator, index) => (
                             <div key={index} className="bg-background-soft border border-border rounded-xl p-6 text-center hover:border-primary transition-all duration-300 hover:transform hover:scale-105 cursor-pointer group">
                                 <div className="relative w-24 h-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                                    <img 
-                                        className="w-full h-full object-cover" 
-                                        src={coordinator.image} 
+                                    <img
+                                        className="w-full h-full object-cover"
+                                        src={coordinator.image}
                                         alt={coordinator.name}
                                         loading="lazy" decoding="async"
                                     />
@@ -183,7 +183,7 @@ const About = () => {
                                             <a href={coordinator.profile} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-white transition-colors duration-300 font-space text-xs">
                                                 Profile
                                             </a>
-                                        ) 
+                                        )
                                     }
                                 </div>
                             </div>
@@ -223,24 +223,24 @@ const About = () => {
                         <div className="border-t border-border pt-6">
                             <div className="grid md:grid-cols-3 gap-6 mb-6">
                                 <a href="https://www.linkedin.com/in/md-anas1/" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
-                                    <div className="w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                                        <span className="text-white font-audiowide text-lg">MA</span>
+                                    <div className="w-22 h-22 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/anas.jpg" alt="headshot" className="w-full h-full object-cover" />
                                     </div>
                                     <h4 className="font-audiowide text-lg text-white mb-1 group-hover:text-primary transition-colors duration-300">MOHAMED ANAS</h4>
                                     <p className="text-primary font-space text-sm">React Developer</p>
                                     <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
                                 </a>
                                 <a href="https://www.linkedin.com/in/mohamed-farook-s-2aa0352b2/" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
-                                    <div className="w-20 h-20 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                                        <span className="text-white font-audiowide text-lg">MF</span>
+                                    <div className="w-22 h-22 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/farook.jpg" alt="headshot" className="w-full h-full object-cover" />
                                     </div>
                                     <h4 className="font-audiowide text-lg text-white mb-1 group-hover:text-secondary transition-colors duration-300">MOHAMED FAROOK</h4>
                                     <p className="text-secondary font-space text-sm">UI/UX Designer</p>
                                     <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
                                 </a>
                                 <a href="https://www.linkedin.com/in/rdxkeerthi" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
-                                    <div className="w-20 h-20 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                                        <span className="text-white font-audiowide text-lg">K</span>
+                                    <div className="w-22 h-22 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/keerthi.jpg" alt="headshot" className="w-full h-full object-cover" />
                                     </div>
                                     <h4 className="font-audiowide text-lg text-white mb-1 group-hover:text-accent transition-colors duration-300">KEERTHIVASAN M</h4>
                                     <p className="text-accent font-space text-sm">Security & Testing</p>
@@ -305,7 +305,7 @@ const About = () => {
                                     <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
                                 </a>
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -329,15 +329,15 @@ const About = () => {
                             { dept: "AI&ML", name: "Mr. POZHILAN", contact: "9043693955" },
                             { dept: "AGRI", name: "Ms. SANJANA", contact: "9600037887" },
                             { dept: "BIO-MED", name: "Ms. SHERENA JENICE J", contact: "9566533465" },
-                            { dept: "CHEM", name: "Mr. HARISHANKAR E", contact: "8807051192"},
+                            { dept: "CHEM", name: "Mr. HARISHANKAR E", contact: "8807051192" },
                             { dept: "CIVIL", name: "Mr. ARUN KUMAR", contact: "8072582553" },
                             { dept: "CSE", name: "Mr. GOKUL SHARAN R", contact: "9791486718" },
                             { dept: "CYB SEC", name: "Mr. RAGUL RAAJAN T", contact: "9488001452" },
                             { dept: "ECE", name: "Mr. ABINANDHAN G", contact: "6383796369" },
-                            { dept: "EEE", name: "Mr. VISVANTH", contact: "9840928549"},
-                            { dept: "EIE", name: "Mr. JEGINTHAN", contact: "6374470752"},
+                            { dept: "EEE", name: "Mr. VISVANTH", contact: "9840928549" },
+                            { dept: "EIE", name: "Mr. JEGINTHAN", contact: "6374470752" },
                             { dept: "IoT", name: "Ms. RAJALAKSHMI R", contact: "9488610743" },
-                            { dept: "MECH", name: "Mr. VISAKAN G", contact: "7094998410"},
+                            { dept: "MECH", name: "Mr. VISAKAN G", contact: "7094998410" },
                             { dept: "MED ELE", name: "Ms. MADHUMITHA E. M", contact: "9629934867" },
                             { dept: "IT", name: "Ms. LAKSHMI PRIYA V", contact: "6381478448" },
                             { dept: "S&H", name: "Mr. JOTHIKRISHNAA V", contact: "9042162885" },
@@ -365,9 +365,9 @@ const About = () => {
                                 </div>
                             </div>
                         ))}
-                        
+
                         {/* MBA with two coordinators */}
-                        
+
                         <div className="bg-background-soft border border-border rounded-lg p-4 hover:border-primary transition-all duration-300 hover:transform hover:scale-105">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">

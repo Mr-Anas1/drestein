@@ -7,8 +7,10 @@ import SpecialEventBox from '@/components/SpecialEventBox'
 import CustomDropdown from '@/components/CustomDropdown'
 import { DEPARTMENTS } from '@/constants/departments'
 import { Info } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 const page = () => {
+    const { studentProfile } = useAuth();
     const [events, setEvents] = useState([]);
     const [specialEvents, setSpecialEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -75,13 +77,50 @@ const page = () => {
                     return expiryDate < new Date();
                 };
 
-                const normalizedEvents = eventsArray.map(e => ({
+                // Filter events based on user's student status
+                const userIsStudent = studentProfile?.isStudent !== false; // Default to true if not specified
+                
+                const filteredEvents = eventsArray.filter(e => {
+                    const forStudents = e.isForStudents !== false; // Default true if not specified
+                    const forNonStudents = e.isForNonStudents === true;
+                    
+                    // If both checkboxes are checked or neither is checked, show to everyone
+                    if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
+                        return true;
+                    }
+                    
+                    // If only one checkbox is checked, filter based on user status
+                    if (userIsStudent) {
+                        return forStudents;
+                    } else {
+                        return forNonStudents;
+                    }
+                });
+                
+                const filteredSpecial = specialArray.filter(e => {
+                    const forStudents = e.isForStudents !== false; // Default true if not specified
+                    const forNonStudents = e.isForNonStudents === true;
+                    
+                    // If both checkboxes are checked or neither is checked, show to everyone
+                    if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
+                        return true;
+                    }
+                    
+                    // If only one checkbox is checked, filter based on user status
+                    if (userIsStudent) {
+                        return forStudents;
+                    } else {
+                        return forNonStudents;
+                    }
+                });
+
+                const normalizedEvents = filteredEvents.map(e => ({
                     ...e,
                     department: normalizeDept(e.department),
                     departments: Array.isArray(e.departments) ? e.departments.map(normalizeDept) : undefined,
                     isExpired: isEventExpired(e),
                 }));
-                const normalizedSpecial = specialArray.map(e => ({
+                const normalizedSpecial = filteredSpecial.map(e => ({
                     ...e,
                     department: normalizeDept(e.department),
                     departments: Array.isArray(e.departments) ? e.departments.map(normalizeDept) : undefined,
@@ -107,7 +146,7 @@ const page = () => {
         };
 
         fetchEvents();
-    }, []);
+    }, [studentProfile]);
 
 
     // Memoize filtered events to avoid recalculation on every render

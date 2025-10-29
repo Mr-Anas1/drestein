@@ -36,10 +36,10 @@ const Hero = () => {
 
       <div className="flex flex-col-reverse lg:flex-row items-center justify-between w-full h-[calc(100vh-80px)] px-4 md:px-12 relative z-10 gap-0 lg:gap-8">
         {/* Left Section */}
-        
+
         <div className="flex-1 flex flex-col gap-4 md:gap-6 justify-center items-center lg:items-start h-full pb-4 lg:pb-0">
-          
-          
+
+          <h1 className="lg:text-left text-[20px] md:text-[40px] leading-[1.1] font-azonix animate-slide-in bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">DRESTEIN-25</h1>
 
           <h1 className="text-center lg:text-left text-[32px] md:text-[64px] leading-[1.1] font-azonix text-white animate-slide-in">
             <span className="text-primary animate-glow">DR</span>EAM
@@ -55,10 +55,10 @@ const Hero = () => {
           </p>
 
           <button className="bg-primary w-[150px] md:w-[250px] text-white rounded-lg hover:bg-hover-primary hover:scale-105 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 py-2 md:py-3 cursor-pointer font-audiowide animate-slide-in"
-          onClick={() => router.push("/buy-pass")}
+            onClick={() => router.push("/buy-pass")}
           >
             Register
-          </button> 
+          </button>
         </div>
 
         {/* Right Section */}

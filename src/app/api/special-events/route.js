@@ -48,6 +48,14 @@ function setCache(key, data) {
   else cache.byCategoryAndDept.set(key, entry);
 }
 
+// Helper to clear all caches after bulk updates
+function clearAllCaches() {
+  cache.allEvents = { data: null, timestamp: null };
+  cache.byCategory.clear();
+  cache.byDept.clear();
+  cache.byCategoryAndDept.clear();
+}
+
 function getAdminDB() {
   if (!getApps().length) {
     const projectId =
@@ -310,18 +318,20 @@ export async function POST(request) {
     let normalizedSections = [];
     if (Array.isArray(competitionCustomSections)) {
       normalizedSections = competitionCustomSections
-        .filter((s) => s && (String(s.heading||'').trim() || String(s.text||'').trim()))
+        .filter((s) => s && (String(s.heading || '').trim() || String(s.text || '').trim()))
         .map((s) => ({
-          heading: String(s.heading||'').trim(),
-          text: String(s.text||'').trim(),
+          heading: String(s.heading || '').trim(),
+          text: String(s.text || '').trim(),
           afterRegistration: !!s.afterRegistration,
         }));
-    } else if ((competitionCustomHeading || competitionCustomText)) {
-      normalizedSections = [{
-        heading: String(competitionCustomHeading||'').trim(),
-        text: String(competitionCustomText||'').trim(),
-        afterRegistration: false,
-      }];
+    } else if (competitionCustomHeading || competitionCustomText) {
+      normalizedSections = [
+        {
+          heading: String(competitionCustomHeading || '').trim(),
+          text: String(competitionCustomText || '').trim(),
+          afterRegistration: false,
+        },
+      ];
     }
 
     const docRef = await db.collection("specialEvents").add({
@@ -341,6 +351,9 @@ export async function POST(request) {
       isMultiDay: data.isMultiDay || false,
       startDate: normalizedStartDate,
       endDate: normalizedEndDate,
+      // visibility flags
+      isForStudents: data.isForStudents !== false, // default true
+      isForNonStudents: !!data.isForNonStudents, // default false
       rules: rules || [],
       prizes: prizes || [],
       contactEmail: contactEmail || "",
@@ -486,6 +499,56 @@ export async function DELETE(request) {
     console.error("Error deleting special event:", error);
     return NextResponse.json(
       { error: error.message || "Failed to delete special event" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Bulk update visibility flags for all special events (Super Admin only)
+export async function PATCH(request) {
+  try {
+    const decoded = await verifyAuth(request);
+    if (!decoded) {
+      return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    }
+
+    const isSuper = await checkIsSuperAdmin(decoded.uid);
+    if (!isSuper) {
+      return NextResponse.json(
+        { error: "Super admin access required" },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { isForStudents = true, isForNonStudents = true } = body || {};
+
+    const db = getAdminDB();
+    const snapshot = await db.collection("specialEvents").get();
+    const docs = snapshot.docs;
+    let updated = 0;
+    for (let i = 0; i < docs.length; i += 400) {
+      const batch = db.batch();
+      const slice = docs.slice(i, i + 400);
+      slice.forEach((doc) => {
+        batch.update(doc.ref, {
+          isForStudents: !!isForStudents,
+          isForNonStudents: !!isForNonStudents,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      });
+      await batch.commit();
+      updated += slice.length;
+    }
+
+    // Invalidate caches
+    clearAllCaches();
+
+    return NextResponse.json({ updated, isForStudents: !!isForStudents, isForNonStudents: !!isForNonStudents });
+  } catch (error) {
+    console.error("Error bulk-updating special events:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to bulk update special events" },
       { status: 500 }
     );
   }

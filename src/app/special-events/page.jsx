@@ -7,14 +7,60 @@ import { DEPARTMENTS } from '@/constants/departments';
 import CustomDropdown from '@/components/CustomDropdown';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { auth } from '@/lib/firebase';
 
 const SpecialEventsPage = () => {
+  const { studentProfile, isSuperAdmin } = useAuth();
   const [competitions, setCompetitions] = useState([]);
   const [workshops, setWorkshops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+
+  const handleBulkSetVisibleToEveryone = async () => {
+    if (!isSuperAdmin) return;
+    const ok = window.confirm('Set ALL special events visible to both students and non-students?');
+    if (!ok) return;
+    try {
+      setBulkUpdating(true);
+      const token = await auth.currentUser?.getIdToken?.();
+      const res = await fetch('/api/special-events', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isForStudents: true, isForNonStudents: true }),
+      });
+      if (!res.ok) {
+        // Try to read JSON error; if not JSON, read text
+        let errMsg = 'Bulk update failed';
+        try {
+          const data = await res.json();
+          errMsg = data?.error || errMsg;
+        } catch {
+          try {
+            errMsg = await res.text();
+          } catch {}
+        }
+        throw new Error(errMsg);
+      }
+      const data = await res.json();
+      // Refresh list
+      window.alert(`Updated ${data.updated} special events.`);
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error('Bulk update error:', e);
+      window.alert(e.message || 'Bulk update failed');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
 
   useEffect(() => {
     const fetchSpecialEvents = async () => {
@@ -36,13 +82,33 @@ const SpecialEventsPage = () => {
         
         console.log('Fetched events:', eventsArray);
         
+        // Filter events based on user's student status
+        const userIsStudent = studentProfile?.isStudent !== false; // Default to true if not specified
+        
+        const filteredEvents = eventsArray.filter(e => {
+          const forStudents = e.isForStudents !== false; // Default true if not specified
+          const forNonStudents = e.isForNonStudents === true;
+          
+          // If both checkboxes are checked or neither is checked, show to everyone
+          if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
+            return true;
+          }
+          
+          // If only one checkbox is checked, filter based on user status
+          if (userIsStudent) {
+            return forStudents;
+          } else {
+            return forNonStudents;
+          }
+        });
+        
         // Separate competitions and workshops
-        const comps = eventsArray.filter(event => 
+        const comps = filteredEvents.filter(event => 
           String(event.category || '').toLowerCase() === 'competition' || 
           String(event.category || '').toLowerCase() === 'other'
         );
         
-        const workshps = eventsArray.filter(event => 
+        const workshps = filteredEvents.filter(event => 
           String(event.category || '').toLowerCase() === 'workshop'
         );
         
@@ -65,7 +131,7 @@ const SpecialEventsPage = () => {
     };
 
     fetchSpecialEvents();
-  }, []);
+  }, [studentProfile]);
 
 
   // Group competitions by department (handle both array and string formats)
@@ -156,6 +222,19 @@ const SpecialEventsPage = () => {
         <p className='text-muted-text text-center font-space text-lg mb-8'>
           Special competitions, workshops, and exclusive events
         </p>
+
+        {isSuperAdmin && (
+          <div className="flex justify-center mb-6">
+            <button
+              onClick={handleBulkSetVisibleToEveryone}
+              disabled={bulkUpdating}
+              className={`font-audiowide px-5 py-2 rounded-lg border transition-all duration-200 ${bulkUpdating ? 'opacity-60 cursor-not-allowed' : 'hover:border-primary'} bg-background-soft border-border text-white`}
+              title="Set all special events visible to both students and non-students"
+            >
+              {bulkUpdating ? 'Updating…' : 'Make All Special Events Visible to Everyone'}
+            </button>
+          </div>
+        )}
 
         {/* Department filter moved below competitions; now filters workshops only */}
 
