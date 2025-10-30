@@ -40,22 +40,14 @@ const AdminPassesPage = () => {
   const fetchPasses = async () => {
     try {
       setLoading(true);
-      const { auth } = await import('@/lib/firebase');
       const token = await auth.currentUser?.getIdToken?.();
-<<<<<<< HEAD
       if (!token) {
         console.error('No auth token available');
         setLoading(false);
         return;
       }
       const response = await fetch('/api/admin/passes', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-=======
-      const response = await fetch('/api/admin/passes', {
         headers: { Authorization: `Bearer ${token}` },
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
       });
       const data = await response.json();
       if (response.ok) {
@@ -70,29 +62,6 @@ const AdminPassesPage = () => {
     }
   };
 
-<<<<<<< HEAD
-  const filteredPasses = passes.filter(pass => {
-    // Apply filter
-    let passesFilter = true;
-    if (filter === 'all') passesFilter = true;
-    else if (filter === 'general') passesFilter = pass.passType === 'general';
-    else if (filter === 'custom') passesFilter = pass.passType === 'custom';
-    else if (filter === 'pending') passesFilter = !pass.paymentVerified;
-    else if (filter === 'verified') passesFilter = pass.paymentVerified;
-
-    // Apply search query
-    if (!searchQuery.trim()) return passesFilter;
-    
-    const query = searchQuery.toLowerCase();
-    const matchesSearch = 
-      (pass.userEmail && pass.userEmail.toLowerCase().includes(query)) ||
-      (pass.userUid && pass.userUid.toLowerCase().includes(query)) ||
-      (pass.passName && pass.passName.toLowerCase().includes(query)) ||
-      (pass.passType && pass.passType.toLowerCase().includes(query));
-    
-    return passesFilter && matchesSearch;
-  });
-=======
   // Apply filters based on selection
   const filteredPasses = passes
     .filter(pass => {
@@ -120,7 +89,6 @@ const AdminPassesPage = () => {
         userName.includes(q)
       );
     });
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
 
   const stats = {
     total: passes.length,
@@ -207,33 +175,8 @@ const AdminPassesPage = () => {
           </div>
         )}
 
-<<<<<<< HEAD
-        {/* Search and Filters */}
-        <div className="mb-6 space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by email, user ID, or pass name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-background-soft border border-border text-white placeholder-muted-text focus:outline-none focus:border-primary transition-colors duration-300 font-space"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-text hover:text-white transition-colors"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Filters */}
-=======
         {/* Filters + Search */}
         <div className="mb-6 flex flex-col gap-4">
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
           <div className="flex items-center gap-4">
             <Filter className="w-5 h-5 text-muted-text" />
             <div className="flex gap-2 flex-wrap">
@@ -241,18 +184,15 @@ const AdminPassesPage = () => {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-4 py-2 rounded-lg font-audiowide text-sm transition-all duration-300 ${
-                    filter === f
-                      ? 'bg-gradient-to-r from-primary to-secondary text-white'
-                      : 'bg-background-soft border border-border text-muted-text hover:border-primary'
+                  className={`px-4 py-2 rounded-lg font-audiowide text-sm transition-all duration-300 ${filter === f
+                    ? 'bg-gradient-to-r from-primary to-secondary text-white'
+                    : 'bg-background-soft border border-border text-muted-text hover:border-primary'
                   }`}
                 >
                   {f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
             </div>
-<<<<<<< HEAD
-=======
           </div>
           <div>
             <input
@@ -262,7 +202,6 @@ const AdminPassesPage = () => {
               placeholder="Search by pass id, name, email, user id, pass name or order id"
               className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
             />
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
           </div>
         </div>
 
@@ -272,15 +211,7 @@ const AdminPassesPage = () => {
             <table className="w-full">
               <thead className="bg-background border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
-                    Pass ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
-                    User Email
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
-                    Roll No
-                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">User</th>
                   <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
                     Pass Type
                   </th>
@@ -301,7 +232,7 @@ const AdminPassesPage = () => {
               <tbody className="divide-y divide-border">
                 {filteredPasses.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-6 py-8 text-center text-muted-text font-space">
+                    <td colSpan="6" className="px-6 py-8 text-center text-muted-text font-space">
                       {searchQuery ? 'No passes match your search' : 'No passes found'}
                     </td>
                   </tr>
@@ -322,66 +253,49 @@ const AdminPassesPage = () => {
                       }
                     }
                     return (
-                    <tr key={pass.id} className="hover:bg-background transition-colors">
-                      <td className="px-6 py-4">
-<<<<<<< HEAD
-                        <div className="text-white font-mono text-xs">{pass.id?.substring(0, 8)}...</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-white font-space text-sm">{pass.userEmail || pass.userUid}</div>
-=======
-                        <div className="text-white font-space text-sm">{pass.userName || '—'}</div>
-                        <div className="text-muted-text font-space text-xs">{pass.userEmail || pass.userUid}</div>
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-white font-space text-sm">{pass.rollNo || 'N/A'}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-audiowide ${
-                            pass.passType === 'custom'
+                      <tr key={pass.id} className="hover:bg-background transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="text-white font-space text-sm">{pass.userName || '—'}</div>
+                          <div className="text-muted-text font-space text-xs">{pass.userEmail || pass.userUid}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-audiowide ${pass.passType === 'custom'
                               ? 'bg-secondary/20 text-secondary'
                               : 'bg-primary/20 text-primary'
-                          }`}>
-                            {pass.passName || pass.passType}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-white font-audiowide">₹{pass.passPrice || pass.amount || 0}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {pass.paymentVerified ? (
-                          <span className="flex items-center gap-1 text-green-500 text-sm font-space">
-                            <CheckCircle className="w-4 h-4" />
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1 text-yellow-500 text-sm font-space">
-                            <Clock className="w-4 h-4" />
-                            Pending
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-<<<<<<< HEAD
-                        <span className="text-muted-text font-space text-sm">
-                          {purchasedDate ? purchasedDate.toLocaleDateString() : 'N/A'}
-                        </span>
-=======
-                        <span className="text-white font-mono text-xs">{pass.id}</span>
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => viewPassDetails(pass)}
-                          className="text-primary hover:text-hover-primary transition-colors"
-                        >
-                          <Eye className="w-5 h-5" />
-                        </button>
-                      </td>
-                    </tr>
+                            }`}>
+                              {pass.passName || pass.passType}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-white font-audiowide">₹{pass.passPrice || pass.amount || 0}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {pass.paymentVerified ? (
+                            <span className="flex items-center gap-1 text-green-500 text-sm font-space">
+                              <CheckCircle className="w-4 h-4" />
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-yellow-500 text-sm font-space">
+                              <Clock className="w-4 h-4" />
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-white font-mono text-xs">{pass.id}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => viewPassDetails(pass)}
+                            className="text-primary hover:text-hover-primary transition-colors"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                        </td>
+                      </tr>
                     );
                   })
                 )}
@@ -473,7 +387,6 @@ const AdminPassesPage = () => {
               )}
 
               <div className="bg-background-soft border border-border rounded-lg p-4">
-<<<<<<< HEAD
                 <p className="text-muted-text text-sm mb-1">Purchased At</p>
                 <p className="text-white font-space">
                   {(() => {
@@ -484,20 +397,14 @@ const AdminPassesPage = () => {
                       } else if (selectedPass.purchasedAt instanceof Date) {
                         date = selectedPass.purchasedAt;
                       } else if (selectedPass.purchasedAt._seconds) {
-                        // Handle Firestore Timestamp object with _seconds and _nanoseconds
                         date = new Date(selectedPass.purchasedAt._seconds * 1000);
                       } else if (selectedPass.purchasedAt.seconds) {
-                        // Handle alternative Firestore Timestamp format
                         date = new Date(selectedPass.purchasedAt.seconds * 1000);
                       }
                     }
                     return date ? date.toLocaleString() : 'N/A';
                   })()}
                 </p>
-=======
-                <p className="text-muted-text text-sm mb-1">Pass ID</p>
-                <p className="text-white font-mono text-sm">{selectedPass.id}</p>
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
               </div>
             </div>
           </div>
