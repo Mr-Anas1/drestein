@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { DEPARTMENTS, getDepartmentName } from '@/constants/departments'
+import CustomDropdown from '@/components/CustomDropdown'
 import { Plus, LogOut, Users, Ticket } from 'lucide-react'
 // Note: Avoid cached hooks on admin to always reflect latest writes
 
@@ -56,14 +57,22 @@ const AdminDashboard = () => {
 
         let filtered = events
 
+        const eventBelongsToDept = (event, deptId) => {
+            if (!deptId) return false
+            if (Array.isArray(event.departments)) {
+                return event.departments.includes(deptId)
+            }
+            return event.department === deptId
+        }
+
         // Department admins can only see their department's events
         if (isDepartmentAdmin && userDepartment) {
-            filtered = events.filter(event => event.department === userDepartment)
+            filtered = events.filter(event => eventBelongsToDept(event, userDepartment))
         }
 
         // Apply department filter for super admin
         if (isSuperAdmin && selectedDepartment !== 'all') {
-            filtered = events.filter(event => event.department === selectedDepartment)
+            filtered = events.filter(event => eventBelongsToDept(event, selectedDepartment))
         }
 
         // Apply search filter
@@ -91,7 +100,7 @@ const AdminDashboard = () => {
             
             // Filter by department for department admins
             if (isDepartmentAdmin && userDepartment) {
-                const filtered = eventsArray.filter(event => event.department === userDepartment)
+                const filtered = eventsArray.filter(event => Array.isArray(event.departments) ? event.departments.includes(userDepartment) : event.department === userDepartment)
                 setEvents(filtered)
             } else {
                 setEvents(eventsArray)
@@ -219,16 +228,14 @@ const AdminDashboard = () => {
                 {isSuperAdmin && (
                     <div className="mb-6">
                         <label className="block text-white font-audiowide text-sm mb-2">Filter by Department</label>
-                        <select
-                            value={selectedDepartment}
-                            onChange={(e) => setSelectedDepartment(e.target.value)}
-                            className="bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-                        >
-                            <option value="all">All Departments</option>
-                            {DEPARTMENTS.map(dept => (
-                                <option key={dept.id} value={dept.id}>{dept.name}</option>
-                            ))}
-                        </select>
+                        <div className="max-w-sm">
+                            <CustomDropdown
+                                value={selectedDepartment}
+                                onChange={setSelectedDepartment}
+                                options={[{ id: 'all', name: 'All Departments', short: 'ALL' }, ...DEPARTMENTS]}
+                                placeholder="Select Department"
+                            />
+                        </div>
                     </div>
                 )}
 

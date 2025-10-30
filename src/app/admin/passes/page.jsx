@@ -55,15 +55,14 @@ const AdminPassesPage = () => {
     }
   };
 
-  // Always show only verified passes in the table
+  // Apply filters based on selection
   const filteredPasses = passes
-    .filter(pass => pass.paymentVerified)
     .filter(pass => {
-      if (filter === 'all' || filter === 'verified') return true;
+      if (filter === 'verified') return !!pass.paymentVerified;
+      if (filter === 'pending') return !pass.paymentVerified;
       if (filter === 'general') return pass.passType === 'general';
       if (filter === 'custom') return pass.passType === 'custom';
-      // pending is intentionally excluded
-      return true;
+      return true; // 'all'
     })
     .filter(pass => {
       const q = searchQuery.trim().toLowerCase();
@@ -72,7 +71,16 @@ const AdminPassesPage = () => {
       const uid = String(pass.userUid || '').toLowerCase();
       const passName = String(pass.passName || pass.passType || '').toLowerCase();
       const orderId = String(pass.orderId || '').toLowerCase();
-      return email.includes(q) || uid.includes(q) || passName.includes(q) || orderId.includes(q);
+      const passId = String(pass.id || '').toLowerCase();
+      const userName = String(pass.userName || '').toLowerCase();
+      return (
+        email.includes(q) ||
+        uid.includes(q) ||
+        passName.includes(q) ||
+        orderId.includes(q) ||
+        passId.includes(q) ||
+        userName.includes(q)
+      );
     });
 
   const stats = {
@@ -185,7 +193,7 @@ const AdminPassesPage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by email, user id, pass name or order id"
+              placeholder="Search by pass id, name, email, user id, pass name or order id"
               className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
             />
           </div>
@@ -228,7 +236,8 @@ const AdminPassesPage = () => {
                   filteredPasses.map((pass) => (
                     <tr key={pass.id} className="hover:bg-background transition-colors">
                       <td className="px-6 py-4">
-                        <div className="text-white font-space text-sm">{pass.userEmail || pass.userUid}</div>
+                        <div className="text-white font-space text-sm">{pass.userName || '—'}</div>
+                        <div className="text-muted-text font-space text-xs">{pass.userEmail || pass.userUid}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">

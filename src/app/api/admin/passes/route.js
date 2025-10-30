@@ -67,13 +67,16 @@ export async function GET(request) {
     for (const doc of passesSnapshot.docs) {
       const passData = doc.data();
       
-      // Try to get user email
+      // Try to get user email and name
       let userEmail = null;
+      let userName = null;
       if (passData.userUid) {
         try {
           const studentDoc = await db.collection("students").doc(passData.userUid).get();
           if (studentDoc.exists) {
-            userEmail = studentDoc.data().email;
+            const studentData = studentDoc.data();
+            userEmail = studentData.email;
+            userName = studentData.name || studentData.displayName || null;
           }
         } catch (e) {
           console.error("Error fetching user email:", e);
@@ -84,6 +87,7 @@ export async function GET(request) {
         id: doc.id,
         ...passData,
         userEmail,
+        userName,
       });
     }
 

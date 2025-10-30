@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import CustomDropdown from '@/components/CustomDropdown';
 import { DEPARTMENTS } from '@/constants/departments';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, Trash2, Eye, Users, ArrowLeft } from 'lucide-react';
@@ -74,11 +75,18 @@ const AdminSpecialEventsPage = () => {
       const data = await res.json();
       let events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
       
+      // Helper: event belongs to department (supports array/string)
+      const belongsToDept = (event, deptId) => {
+        if (!deptId) return false;
+        if (Array.isArray(event.departments)) return event.departments.includes(deptId);
+        return event.department === deptId;
+      };
+
       // Apply department filtering client-side
       if (isDepartmentAdmin && userRole?.department) {
-        events = events.filter(event => event.department === userRole.department);
+        events = events.filter(event => belongsToDept(event, userRole.department));
       } else if (isSuperAdmin && selectedDepartment && selectedDepartment !== 'all') {
-        events = events.filter(event => event.department === selectedDepartment);
+        events = events.filter(event => belongsToDept(event, selectedDepartment));
       }
 
       if (append) {
@@ -177,16 +185,14 @@ const AdminSpecialEventsPage = () => {
           {isSuperAdmin && (
             <div className="mb-6">
               <label className="block text-white font-audiowide text-sm mb-2">Filter by Department</label>
-              <select
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
-              >
-                <option value="all">All Departments</option>
-                {DEPARTMENTS.map(dept => (
-                  <option key={dept.id} value={dept.id}>{dept.name}</option>
-                ))}
-              </select>
+              <div className="max-w-sm">
+                <CustomDropdown
+                  value={selectedDepartment}
+                  onChange={setSelectedDepartment}
+                  options={[{ id: 'all', name: 'All Departments', short: 'ALL' }, ...DEPARTMENTS]}
+                  placeholder="Select Department"
+                />
+              </div>
             </div>
           )}
         {/* Search */}
