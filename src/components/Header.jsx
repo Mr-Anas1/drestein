@@ -64,21 +64,21 @@ const Header = () => {
             <img src="/logo.png" alt="saveetha-logo" loading="lazy" decoding="async" />
           </div>
         </h1>
-        
+
         {/* Excellence Logo */}
         <div className="w-[40px] sm:w-[50px] md:w-[60px] lg:w-[80px] flex-shrink-0">
           <img src="/excellence.png" alt="excellence-logo" className="w-full h-auto object-contain" loading="lazy" decoding="async" />
         </div>
 
-       <div className="w-[30px] sm:w-[40px] md:w-[50px] lg:w-[60px] flex flex-col items-center justify-center flex-shrink-0">
-        <img
-          src="/drestein-logo.png"
-          alt="drestein-logo"
-          className="w-full h-auto object-contain animate-spin [animation-duration:6s]"
-          loading="lazy" decoding="async"
-        />
-      </div>
-{/* 
+        <div className="w-[30px] sm:w-[40px] md:w-[50px] lg:w-[60px] flex flex-col items-center justify-center flex-shrink-0">
+          <img
+            src="/drestein-logo.png"
+            alt="drestein-logo"
+            className="w-full h-auto object-contain animate-spin [animation-duration:6s]"
+            loading="lazy" decoding="async"
+          />
+        </div>
+        {/* 
         <h2 className="text-white font-azonix text-2xl hidden md:block">DRESTEIN</h2> */}
 
       </div>
@@ -108,7 +108,7 @@ const Header = () => {
             onClick={() => router.push("/special-events")}
             className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-1 cursor-pointer text-sm xl:text-base"
           >
-            Special Events
+            Special Events & Workshops
           </a>
 
           <a
@@ -217,7 +217,7 @@ const Header = () => {
               )}
             </button>
           )}
-          
+
           {/* Hamburger Menu */}
           {menuDisplay ? (
             <X
@@ -243,7 +243,7 @@ const Header = () => {
             { label: "Home", path: "/" },
             { label: "Departments", path: "/departments" },
             { label: "Events", path: "/events" },
-            { label: "Special Events", path: "/special-events" },
+            { label: "Special Events & Workshops", path: "/special-events" },
             { label: "About", path: "/about" },
           ].map((item) => (
             <button

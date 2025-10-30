@@ -285,7 +285,7 @@ const About = () => {
                         </div>
 
                         <div className="border-t border-border pt-6">
-                            <div className="grid md:grid-cols-2 gap-6 mb-6">
+                            <div className="grid md:grid-cols-3 gap-6 mb-6">
                                 <a href="https://www.linkedin.com/in/priyan-v-43496332a?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
                                     <div className="w-22 h-22 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                         <img src="/priyan.png" alt="headshot" className="w-full h-full object-cover" />
@@ -302,6 +302,15 @@ const About = () => {
                                     <h4 className="font-audiowide text-base text-white mb-1 group-hover:text-accent transition-colors duration-300">JAYAGANAPATHI S</h4>
                                     <p className="text-accent font-space text-xs">Designer</p>
                                     <p className="text-secondary font-space text-xs mt-1">CSE</p>
+                                    <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
+                                </a>
+                                <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" className="text-center group cursor-pointer">
+                                    <div className="w-22 h-22 bg-gradient-to-r from-accent to-secondary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/thameez.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                    </div>
+                                    <h4 className="font-audiowide text-base text-white mb-1 group-hover:text-accent transition-colors duration-300">Thameez Ahamed A</h4>
+                                    <p className="text-accent font-space text-xs">Designer</p>
+                                    <p className="text-secondary font-space text-xs mt-1">IT</p>
                                     <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p>
                                 </a>
                             </div>

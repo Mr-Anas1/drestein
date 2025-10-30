@@ -17,7 +17,7 @@ export default function PassPurchaseModal({ onClose, onPurchased, showCloseButto
   
   // Extract pass details
   const passType = passData?.id || 'general';
-  const passPrice = passData?.price || 250;
+  const passPrice = passData?.price || 300;
   const passName = passData?.name || 'General Pass';
   const customEvents = passData?.customEvents || [];
   const includesGeneralPass = passData?.includesGeneralPass || false;

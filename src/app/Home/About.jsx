@@ -28,44 +28,44 @@ const About = () => {
         <div className="flex flex-col md:flex-row flex-wrap px-4 gap-8 mt-12 justify-center items-center">
           <Reveal effect="fade-up" delay={0}>
             <AboutFeature
-            title={"The InoInnovation Hub"}
-            description={
-              "Showcase cutting-edge projects and breakthrough technologies"
-            }
-            icon={
-              <Rocket
-                className="text-primary text-center animate-floating"
-                style={{ animationDelay: `${Math.random() * 2}s` }}
-              />
-            }
+              title={"The Innovation Hub"}
+              description={
+                "Showcase cutting-edge projects and breakthrough technologies"
+              }
+              icon={
+                <Rocket
+                  className="text-primary text-center animate-floating"
+                  style={{ animationDelay: `${Math.random() * 2}s` }}
+                />
+              }
             />
           </Reveal>
           <Reveal effect="fade-up" delay={100}>
             <AboutFeature
-            title={"Learning Platform"}
-            description={
-              "Workshops, seminars, and hands-on sessions with industry experts"
-            }
-            icon={
-              <Code
-                className="text-secondary text-center animate-floating"
-                style={{ animationDelay: `${Math.random() * 2}s` }}
-              />
-            }
+              title={"Learning Platform"}
+              description={
+                "Workshops, seminars, and hands-on sessions with industry experts"
+              }
+              icon={
+                <Code
+                  className="text-secondary text-center animate-floating"
+                  style={{ animationDelay: `${Math.random() * 2}s` }}
+                />
+              }
             />
           </Reveal>
           <Reveal effect="fade-up" delay={200}>
             <AboutFeature
-            title={"Networking Zone"}
-            description={
-              "Connect with like-minded individuals and industry professionals"
-            }
-            icon={
-              <Network
-                className="text-accent text-center animate-floating"
-                style={{ animationDelay: `${Math.random() * 2}s` }}
-              />
-            }
+              title={"Networking Zone"}
+              description={
+                "Connect with like-minded individuals and industry professionals"
+              }
+              icon={
+                <Network
+                  className="text-accent text-center animate-floating"
+                  style={{ animationDelay: `${Math.random() * 2}s` }}
+                />
+              }
             />
           </Reveal>
         </div>

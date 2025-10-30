@@ -88,7 +88,7 @@ export async function POST(request) {
       transactionId: transactionId ? String(transactionId).trim() : undefined,
       passType: passType || "general",
       passName: passName || "General Pass",
-      passPrice: passPrice || 250,
+      passPrice: passPrice || 300,
       status: "pending_payment",
       paymentStatus: "pending",
       paymentVerified: false,

@@ -334,7 +334,7 @@ export default function MyPassesPage() {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <div className="text-muted-text font-space mb-1">Amount Paid</div>
-                          <div className="text-white font-audiowide">₹{pass.passPrice || pass.amount || '250'}</div>
+                          <div className="text-white font-audiowide">₹{pass.passPrice || pass.amount || '300'}</div>
                         </div>
                         <div>
                           <div className="text-muted-text font-space mb-1">Status</div>

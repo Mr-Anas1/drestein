@@ -183,7 +183,7 @@ export async function POST(request) {
         email: decoded.email || passData.email || "N/A",
         orderId: passData.orderId || "N/A",
         purchaseDate: purchaseDate,
-        amount: passData.passPrice || passData.amount || "250",
+        amount: passData.passPrice || passData.amount || "300",
         qrCode: qrCodeDataURL,
         status: "active",
         passType: typeInfo.name,
