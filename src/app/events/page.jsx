@@ -215,7 +215,7 @@ const page = () => {
                     Events
                 </h1>
 
-                <p className='text-muted-text text-center font-space text-lg mb-8'>Discover all the Events happening at the fest</p>
+                <p className='text-muted-text text-center font-space text-lg mb-8'>Discover all the common Events happening at the fest</p>
 
                 {/* Department Filter Dropdown */}
                 <div className="flex justify-center mb-8">
