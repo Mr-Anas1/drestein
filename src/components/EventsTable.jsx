@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDepartmentName } from '@/constants/departments';
 import { Eye, Edit, Trash2, Users } from 'lucide-react';
@@ -11,6 +11,7 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
     const [showParticipantModal, setShowParticipantModal] = useState(false);
     const [selectedEventForParticipants, setSelectedEventForParticipants] = useState(null);
     const { isSuperAdmin, isDepartmentAdmin, userDepartment } = useAuth();
+    const [countsByEvent, setCountsByEvent] = useState({});
 
     const canEditEvent = (event) => {
         // Only super admins can edit/delete events
@@ -23,6 +24,40 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
         setSelectedEventForParticipants(event);
         setShowParticipantModal(true);
     };
+
+    // Fetch confirmed participant counts per event
+    useEffect(() => {
+        let cancelled = false;
+        async function loadCounts() {
+            const ids = Array.from(new Set((events || []).map(e => e.id).filter(Boolean)));
+            const results = await Promise.allSettled(ids.map(async (id) => {
+                try {
+                    const res = await fetch(`/api/registrations?eventId=${encodeURIComponent(id)}`);
+                    if (!res.ok) throw new Error('failed');
+                    const data = await res.json();
+                    const list = Array.isArray(data?.participants) ? data.participants : [];
+                    const confirmed = list.filter(p => (p?.status === 'confirmed' || p?.paymentStatus === 'approved' || p?.paymentStatus === 'paid'));
+                    return { id, count: confirmed.length };
+                } catch {
+                    return { id, count: 0 };
+                }
+            }));
+            if (cancelled) return;
+            const map = {};
+            for (const r of results) {
+                if (r.status === 'fulfilled' && r.value) {
+                    map[r.value.id] = r.value.count;
+                }
+            }
+            setCountsByEvent(map);
+        }
+        if (events && events.length) {
+            loadCounts();
+        } else {
+            setCountsByEvent({});
+        }
+        return () => { cancelled = true; };
+    }, [events]);
 
     if (loading) {
         return (
@@ -105,7 +140,7 @@ export default function EventsTable({ events, loading, onEdit, onDelete, onView 
                                 </td>
                                 <td className="p-4">
                                     <p className="text-white font-audiowide text-sm">
-                                        {event.participationCount || 0}
+                                        {countsByEvent[event.id] ?? 0}
                                     </p>
                                 </td>
                                 <td className="p-4">

@@ -23,8 +23,9 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
 
             if (response.ok) {
                 const participantsList = data.participants || [];
-                setParticipants(participantsList);
-                setFilteredParticipants(participantsList);
+                const confirmed = participantsList.filter(p => (p?.status === 'confirmed') || (p?.paymentStatus === 'paid'));
+                setParticipants(confirmed);
+                setFilteredParticipants(confirmed);
             } else {
                 setError(data.error || 'Failed to fetch participants');
             }

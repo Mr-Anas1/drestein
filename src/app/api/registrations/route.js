@@ -266,20 +266,8 @@ export async function POST(request) {
       );
     }
 
-    // Update event participation count (increment)
-    try {
-      const eventRef = db.collection("events").doc(eventId);
-      await db.runTransaction(async (tx) => {
-        const snap = await tx.get(eventRef);
-        if (!snap.exists) return;
-        const current = snap.data()?.participationCount || 0;
-        tx.update(eventRef, { participationCount: current + 1 });
-      });
-      console.log("Event participation count updated successfully");
-    } catch (updateError) {
-      console.error("Failed to update event participation count:", updateError);
-      // Don't fail the registration if count update fails
-    }
+    // Note: Do not increment participationCount on pending creation.
+    // Counts will be incremented only when payment is approved (see PATCH handler).
 
     return NextResponse.json(
       {

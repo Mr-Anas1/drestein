@@ -6,6 +6,8 @@ import CustomDropdown from '@/components/CustomDropdown';
 import { DEPARTMENTS } from '@/constants/departments';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, Trash2, Eye, Users, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
+import { getDepartmentName } from '@/constants/departments';
 import AddSpecialEventModal from '@/components/AddSpecialEventModal';
 import EditSpecialEventModal from '@/components/EditSpecialEventModal';
 import SpecialEventParticipantsModal from '@/components/SpecialEventParticipantsModal';
@@ -22,10 +24,15 @@ const AdminSpecialEventsPage = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [participantsEvent, setParticipantsEvent] = useState(null);
-  const [pagination, setPagination] = useState({ total: 0, offset: 0, limit: 20, hasMore: false });
+  const [pagination, setPagination] = useState({ total: 0, offset: 0, limit: 500, hasMore: false });
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [countsByEvent, setCountsByEvent] = useState({});
+  const totalEvents = filteredSpecialEvents.length;
+  const totalParticipants = Object.values(countsByEvent).reduce((a, b) => a + (Number(b) || 0), 0);
+  const competitionsCount = filteredSpecialEvents.filter(e => String(e.category).toLowerCase() === 'competition').length;
+  const workshopsCount = filteredSpecialEvents.filter(e => String(e.category).toLowerCase() === 'workshop').length;
 
   // Authentication check
   useEffect(() => {
@@ -65,16 +72,50 @@ const AdminSpecialEventsPage = () => {
     setFilteredSpecialEvents(filtered);
   }, [specialEvents, searchQuery]);
 
-  const fetchSpecialEvents = async ({ offset = 0, append = false, limit = 50 } = {}) => {
+  // Fetch confirmed participant counts per special event
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCounts() {
+      const ids = Array.from(new Set((filteredSpecialEvents || []).map(e => e.id).filter(Boolean)));
+      const results = await Promise.allSettled(ids.map(async (id) => {
+        try {
+          const res = await fetch(`/api/registrations?eventId=${encodeURIComponent(id)}&isSpecialEvent=true`);
+          if (!res.ok) throw new Error('failed');
+          const data = await res.json();
+          const list = Array.isArray(data?.participants) ? data.participants : [];
+          const confirmed = list.filter(p => (p?.status === 'confirmed' || p?.paymentStatus === 'approved' || p?.paymentStatus === 'paid'));
+          return { id, count: confirmed.length };
+        } catch {
+          return { id, count: 0 };
+        }
+      }));
+      if (cancelled) return;
+      const map = {};
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value) {
+          map[r.value.id] = r.value.count;
+        }
+      }
+      setCountsByEvent(map);
+    }
+    if (filteredSpecialEvents && filteredSpecialEvents.length) {
+      loadCounts();
+    } else {
+      setCountsByEvent({});
+    }
+    return () => { cancelled = true; };
+  }, [filteredSpecialEvents]);
+
+  const fetchSpecialEvents = async ({ offset = 0, append = false, limit = 500 } = {}) => {
     try {
       if (append) setLoadingMore(true); else setLoading(true);
-      
+
       // Fetch fresh from API (no-store) to reflect latest admin writes
       const res = await fetch(`/api/special-events?offset=${offset}&limit=${limit}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to fetch special events');
       const data = await res.json();
       let events = Array.isArray(data?.events) ? data.events : (Array.isArray(data) ? data : []);
-      
+
       // Helper: event belongs to department (supports array/string)
       const belongsToDept = (event, deptId) => {
         if (!deptId) return false;
@@ -97,12 +138,11 @@ const AdminSpecialEventsPage = () => {
 
       const apiPag = data?.pagination || {};
       const total = typeof apiPag.total === 'number' ? apiPag.total : (append ? (specialEvents.length + events.length) : events.length);
-      const hasMore = typeof apiPag.hasMore === 'boolean' ? apiPag.hasMore : (offset + limit < total);
       setPagination({
         total,
         offset,
         limit,
-        hasMore,
+        hasMore: false,
       });
     } catch (error) {
       console.error('Error fetching special events:', error);
@@ -115,7 +155,7 @@ const AdminSpecialEventsPage = () => {
     try {
       const { auth } = await import('@/lib/firebase');
       const token = await auth.currentUser?.getIdToken?.();
-      
+
       const response = await fetch(`/api/special-events?id=${eventId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -167,7 +207,7 @@ const AdminSpecialEventsPage = () => {
             </p>
           </div>
 
-          
+
 
           {/* Only super admins can add special events */}
           {isSuperAdmin && (
@@ -181,20 +221,20 @@ const AdminSpecialEventsPage = () => {
           )}
         </div>
 
-{/* Department Filter for Super Admin */}
-          {isSuperAdmin && (
-            <div className="mb-6">
-              <label className="block text-white font-audiowide text-sm mb-2">Filter by Department</label>
-              <div className="max-w-sm">
-                <CustomDropdown
-                  value={selectedDepartment}
-                  onChange={setSelectedDepartment}
-                  options={[{ id: 'all', name: 'All Departments', short: 'ALL' }, ...DEPARTMENTS]}
-                  placeholder="Select Department"
-                />
-              </div>
+        {/* Department Filter for Super Admin */}
+        {isSuperAdmin && (
+          <div className="mb-6">
+            <label className="block text-white font-audiowide text-sm mb-2">Filter by Department</label>
+            <div className="max-w-sm">
+              <CustomDropdown
+                value={selectedDepartment}
+                onChange={setSelectedDepartment}
+                options={[{ id: 'all', name: 'All Departments', short: 'ALL' }, ...DEPARTMENTS]}
+                placeholder="Select Department"
+              />
             </div>
-          )}
+          </div>
+        )}
         {/* Search */}
         <div className="mb-6">
           <label className="block text-white font-audiowide text-sm mb-2">Search</label>
@@ -208,7 +248,7 @@ const AdminSpecialEventsPage = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-background-soft border border-border rounded-xl p-6">
             <div className="text-3xl font-audiowide text-white mb-2">{filteredSpecialEvents.length}</div>
             <p className="text-muted-text font-space text-sm">Total Special Events</p>
@@ -225,27 +265,52 @@ const AdminSpecialEventsPage = () => {
             </div>
             <p className="text-muted-text font-space text-sm">Workshops</p>
           </div>
-        </div>
+        </div> */}
 
-        
+
 
         {/* Events Table */}
         <div className="bg-background-soft border border-border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="p-6 border-b border-border">
+            <h2 className="font-audiowide text-xl text-white">Special Events Overview</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <div className="bg-background rounded-lg border border-border p-4">
+                <p className="text-muted-text text-xs font-space">Total Special Events</p>
+                <p className="text-white font-audiowide text-2xl mt-1">{totalEvents}</p>
+              </div>
+              <div className="bg-background rounded-lg border border-border p-4">
+                <p className="text-muted-text text-xs font-space">Total Participants</p>
+                <p className="text-white font-audiowide text-2xl mt-1">{totalParticipants}</p>
+              </div>
+              <div className="bg-background rounded-lg border border-border p-4">
+                <p className="text-muted-text text-xs font-space">Competitions</p>
+                <p className="text-white font-audiowide text-2xl mt-1">{competitionsCount}</p>
+              </div>
+              <div className="bg-background rounded-lg border border-border p-4">
+                <p className="text-muted-text text-xs font-space">Workshops</p>
+                <p className="text-white font-audiowide text-2xl mt-1">{workshopsCount}</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6 border-b border-border">
+            <div className="flex items-center justify-between">
+              <h2 className="font-audiowide text-xl text-white">All Special Events</h2>
+            </div>
             <table className="w-full">
               <thead className="bg-background border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Title</th>
+                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Event</th>
+                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Department</th>
                   <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Category</th>
-                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Price</th>
-                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Participants</th>
                   <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredSpecialEvents.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-muted-text font-space">
+                    <td colSpan="6" className="px-6 py-8 text-center text-muted-text font-space">
                       No special events yet. Click "Add Special Event" to create one.
                     </td>
                   </tr>
@@ -253,22 +318,53 @@ const AdminSpecialEventsPage = () => {
                   filteredSpecialEvents.map((event) => (
                     <tr key={event.id} className="hover:bg-background transition-colors">
                       <td className="px-6 py-4">
-                        <div className="text-white font-space">{event.title}</div>
+                        <div className="flex items-center gap-3">
+                          <Image
+                            src={event.img || "/square.png"}
+                            alt={event.title}
+                            width={48}
+                            height={48}
+                            loading="lazy"
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                          <div>
+                            <p className="font-audiowide text-white text-sm">{event.title}</p>
+                            <p className="text-muted-text font-space text-xs">{event.venue || 'TBA'}</p>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-audiowide ${
-                          event.category === 'competition' ? 'bg-primary/20 text-primary' :
+                        {event.isMultiDay && event.startDate && event.endDate ? (
+                          <>
+                            <p className="text-white font-space text-sm">
+                              {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </p>
+                            <p className="text-muted-text font-space text-xs">{event.time || 'Multi-day'}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-white font-space text-sm">{event.date || 'TBA'}</p>
+                            <p className="text-muted-text font-space text-xs">{event.time || 'TBA'}</p>
+                          </>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-white font-space text-sm">
+                          {event.department ? getDepartmentName(event.department) : (event.departments && event.departments.length > 0 ? getDepartmentName(event.departments[0]) : 'All')}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-audiowide ${event.category === 'competition' ? 'bg-primary/20 text-primary' :
                           event.category === 'workshop' ? 'bg-secondary/20 text-secondary' :
-                          'bg-green-500/20 text-green-500'
-                        }`}>
+                            'bg-green-500/20 text-green-500'
+                          }`}>
                           {event.category}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-white font-audiowide">₹{event.price}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-muted-text font-space text-sm">{event.type}</span>
+                        <p className="text-white font-audiowide text-sm">
+                          {countsByEvent[event.id] ?? 0}
+                        </p>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -323,17 +419,7 @@ const AdminSpecialEventsPage = () => {
           </div>
         </div>
 
-        {pagination.hasMore && (
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={() => fetchSpecialEvents({ offset: pagination.offset + pagination.limit, append: true, limit: pagination.limit })}
-              disabled={loadingMore}
-              className="px-6 py-3 rounded-lg font-audiowide bg-background-soft border border-border text-white hover:bg-background transition-colors disabled:opacity-60"
-            >
-              {loadingMore ? 'Loading...' : 'Load more'}
-            </button>
-          </div>
-        )}
+        {/* Pagination removed as per requirement */}
       </div>
 
       {/* Add Modal */}

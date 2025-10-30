@@ -16,6 +16,7 @@ import {
   Mail,
   ArrowLeft,
   Info,
+  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import SpecialEventRegistrationModal from "@/components/SpecialEventRegistrationModal";
@@ -370,7 +371,19 @@ const SpecialEventDetailPage = () => {
                     </h2>
                   )}
                   {s.text && (
-                    <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">{s.text}</p>
+                    s.isLink && s.linkUrl ? (
+                      <a
+                        href={s.linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-primary hover:text-hover-primary font-space break-words underline decoration-primary/50 hover:decoration-primary transition-all"
+                      >
+                        <ExternalLink className="w-5 h-5 flex-shrink-0" />
+                        <span>{s.text}</span>
+                      </a>
+                    ) : (
+                      <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">{s.text}</p>
+                    )
                   )}
                 </div>
               ))}
@@ -397,7 +410,19 @@ const SpecialEventDetailPage = () => {
                       </h2>
                     )}
                     {s.text && (
-                      <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">{s.text}</p>
+                      s.isLink && s.linkUrl ? (
+                        <a
+                          href={s.linkUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-primary hover:text-hover-primary font-space break-words underline decoration-primary/50 hover:decoration-primary transition-all"
+                        >
+                          <ExternalLink className="w-5 h-5 flex-shrink-0" />
+                          <span>{s.text}</span>
+                        </a>
+                      ) : (
+                        <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">{s.text}</p>
+                      )
                     )}
                   </div>
                 ))}

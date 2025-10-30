@@ -34,7 +34,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
     competitionCustomHeading: "",
     competitionCustomText: "",
     competitionCustomSections: [
-      { heading: "", text: "", afterRegistration: false }
+      { heading: "", text: "", afterRegistration: false, isLink: false, linkUrl: "" },
     ],
   });
   const [loading, setLoading] = useState(false);
@@ -600,10 +600,27 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
                             />
                             <span>Show only to registered users</span>
                           </label>
+                          <label className="flex items-center gap-2 text-sm text-white/80 mt-2">
+                            <input
+                              type="checkbox"
+                              checked={!!section.isLink}
+                              onChange={(e)=>{
+                                const checked = e.target.checked;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  competitionCustomSections: prev.competitionCustomSections.map((s,i)=> i===index ? { ...s, isLink: checked } : s)
+                                }));
+                              }}
+                              className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
+                            />
+                            <span>Treat text as a link</span>
+                          </label>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-white font-audiowide text-sm mb-2">Text</label>
+                        <label className="block text-white font-audiowide text-sm mb-2">
+                          {section.isLink ? 'Link Text (will be clickable)' : 'Text'}
+                        </label>
                         <textarea
                           value={section.text}
                           onChange={(e)=>{
@@ -614,9 +631,28 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
                             }));
                           }}
                           rows="3"
-                          placeholder="Type any custom information to show before/after registration."
+                          placeholder={section.isLink ? "e.g., Click here to access the presentation" : "Type any custom information to show before/after registration."}
                           className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
                         />
+                        {section.isLink && (
+                          <div className="mt-3">
+                            <label className="block text-white font-audiowide text-sm mb-2">Link URL (where to redirect)</label>
+                            <input
+                              type="url"
+                              value={section.linkUrl || ''}
+                              onChange={(e)=>{
+                                const val = e.target.value;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  competitionCustomSections: prev.competitionCustomSections.map((s,i)=> i===index ? { ...s, linkUrl: val } : s)
+                                }));
+                              }}
+                              placeholder="https://drive.google.com/file/d/..."
+                              className="w-full bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            />
+                            <p className="text-xs text-muted-text mt-1">💡 The text above will become a clickable link to this URL</p>
+                          </div>
+                        )}
                       </div>
                       {(formData.competitionCustomSections?.length || 0) > 1 && (
                         <button type="button" onClick={()=>{
@@ -632,7 +668,7 @@ const AddSpecialEventModal = ({ onClose, onSuccess }) => {
                 <button type="button" onClick={()=>{
                   setFormData(prev => ({
                     ...prev,
-                    competitionCustomSections: [...(prev.competitionCustomSections||[]), { heading: "", text: "", afterRegistration: false }]
+                    competitionCustomSections: [...(prev.competitionCustomSections||[]), { heading: "", text: "", afterRegistration: false, isLink: false, linkUrl: "" }]
                   }));
                 }} className="text-primary hover:text-hover-primary text-sm font-space mt-2">+ Add Section</button>
               </div>

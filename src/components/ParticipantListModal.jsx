@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Users, Mail, User, Download } from 'lucide-react';
+import { X, Users, Mail, User, Download, UserCheck } from 'lucide-react';
 
 export default function ParticipantListModal({ event, onClose }) {
     const [participants, setParticipants] = useState([]);
@@ -19,7 +19,9 @@ export default function ParticipantListModal({ event, onClose }) {
             const data = await response.json();
 
             if (response.ok) {
-                setParticipants(data.participants || []);
+                const list = data.participants || [];
+                const confirmed = list.filter(p => (p?.status === 'confirmed') || (p?.paymentStatus === 'paid'));
+                setParticipants(confirmed);
             } else {
                 setError(data.error || 'Failed to fetch participants');
             }
@@ -34,13 +36,15 @@ export default function ParticipantListModal({ event, onClose }) {
     const exportToCSV = () => {
         if (participants.length === 0) return;
 
-        const headers = ['Name', 'Email', 'Transaction ID'];
+        const headers = ['Name', 'Roll No', 'College', 'Team Members', 'Status'];
         const csvContent = [
             headers.join(','),
             ...participants.map(p => [
-                `"${p.name}"`,
-                `"${p.email}"`,
-                `"${p.transactionId}"`
+                `"${p.name || 'N/A'}"`,
+                `"${p.rollNo || 'N/A'}"`,
+                `"${p.college || 'N/A'}"`,
+                `"${p.teamMembers ? p.teamMembers.join('; ') : 'Individual'}"`,
+                `"${p.status || 'confirmed'}"`
             ].join(','))
         ].join('\n');
 
@@ -116,8 +120,10 @@ export default function ParticipantListModal({ event, onClose }) {
                                         <tr>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">#</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Name</th>
-                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Email</th>
-                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Transaction ID</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Roll No</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">College</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Team Members</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -129,20 +135,37 @@ export default function ParticipantListModal({ event, onClose }) {
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-2">
                                                         <User size={16} className="text-primary" />
-                                                        <span className="text-white font-space">{participant.name}</span>
+                                                        <span className="text-white font-space">{participant.name || 'N/A'}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Mail size={16} className="text-secondary" />
-                                                        <span className="text-white font-space">{participant.email}</span>
-                                                    </div>
+                                                    <span className="text-white font-space text-sm">{participant.rollNo || '-'}</span>
                                                 </td>
                                                 <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Mail size={16} className="text-secondary" />
-                                                        <span className="text-white font-space">{participant.transactionId}</span>
-                                                    </div>
+                                                    <span className="text-white font-space text-sm">{participant.college || '-'}</span>
+                                                </td>
+                                                <td className="p-4">
+                                                    {participant.teamMembers && participant.teamMembers.length > 0 ? (
+                                                        <div className="flex flex-col gap-1">
+                                                            {participant.teamMembers.map((member, idx) => (
+                                                                <div key={idx} className="flex items-center gap-1">
+                                                                    <UserCheck size={12} className="text-accent" />
+                                                                    <span className="text-muted-text font-space text-xs">{member}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted-text font-space text-xs italic">Individual</span>
+                                                    )}
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-audiowide ${
+                                                        participant.status === 'confirmed' || participant.paymentStatus === 'paid'
+                                                            ? 'bg-green-500/20 text-green-500'
+                                                            : 'bg-yellow-500/20 text-yellow-500'
+                                                    }`}>
+                                                        {participant.status === 'confirmed' || participant.paymentStatus === 'paid' ? 'Confirmed' : 'Pending'}
+                                                    </span>
                                                 </td>
                                             </tr>
                                         ))}

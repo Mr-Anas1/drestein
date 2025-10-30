@@ -28,9 +28,8 @@ export default function BuyPassPage() {
       price: 300,
       description: 'Access to all events on November 7-8, 2025',
       features: [
-        'Access to all events on Nov 7-8, 2025',
+        'Access to all common events on Nov 7-8, 2025',
         'Valid for Nov 7-8, 2025',
-        'Cultural performances',
         'Networking opportunities',
       ],
       popular: true,

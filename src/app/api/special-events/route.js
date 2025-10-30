@@ -323,6 +323,8 @@ export async function POST(request) {
           heading: String(s.heading || '').trim(),
           text: String(s.text || '').trim(),
           afterRegistration: !!s.afterRegistration,
+          isLink: !!s.isLink,
+          linkUrl: String(s.linkUrl || '').trim(),
         }));
     } else if (competitionCustomHeading || competitionCustomText) {
       normalizedSections = [
@@ -330,6 +332,8 @@ export async function POST(request) {
           heading: String(competitionCustomHeading || '').trim(),
           text: String(competitionCustomText || '').trim(),
           afterRegistration: false,
+          isLink: false,
+          linkUrl: '',
         },
       ];
     }
