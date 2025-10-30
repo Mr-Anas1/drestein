@@ -64,6 +64,16 @@ export async function POST(request) {
     const CANCEL_URL = process.env.CCAVENUE_CANCEL_URL;
     const BASE_URL = process.env.CCAVENUE_BASE_URL || "https://test.ccavenue.com";
 
+    // Safeguard: Only allow LIVE payments from drestein.in host
+    const requestHost = new URL(request.url).host;
+    const isLive = BASE_URL.includes('secure.ccavenue.com');
+    if (isLive && !requestHost.endsWith('drestein.in')) {
+      return NextResponse.json(
+        { error: "Live payments must be initiated from drestein.in", host: requestHost },
+        { status: 400 }
+      );
+    }
+
     const missing = [];
     if (!MERCHANT_ID) missing.push("CCAVENUE_MERCHANT_ID");
     if (!ACCESS_CODE) missing.push("CCAVENUE_ACCESS_CODE");
