@@ -24,35 +24,35 @@ const page = () => {
                 setLoading(true);
                 setError(null);
                 setIsQuotaExceeded(false);
-                
+
                 // Simple direct API calls without pagination/caching
                 const [eventsRes, specialEventsRes] = await Promise.all([
                     fetch('/api/events'),
                     fetch('/api/special-events')
                 ]);
-                
+
                 if (!eventsRes.ok || !specialEventsRes.ok) {
                     throw new Error('Failed to fetch events');
                 }
-                
+
                 const eventsData = await eventsRes.json();
                 const specialEventsData = await specialEventsRes.json();
-                
+
                 // Get all events (both common and premium)
                 const allEvents = eventsData?.events || eventsData || [];
                 const specialArray = specialEventsData?.events || specialEventsData || [];
-                
+
                 // Separate common events (non-premium). Do not rely on category filter.
                 const commonEvents = allEvents.filter(event => !event.isPremium);
-                
+
                 console.log('[EVENTS DEBUG] Total events fetched:', allEvents.length);
                 console.log('[EVENTS DEBUG] Common events (non-premium):', commonEvents.length);
                 console.log('[EVENTS DEBUG] Sample event:', allEvents[0]);
-                
+
                 // For the events page, we'll show common events
                 // and use premium events for department filtering
                 const eventsArray = [...commonEvents];
-                
+
                 // Normalize department ids to canonical DEPARTMENTS ids
                 const normalizeDept = (val) => {
                     const raw = String(val || '').trim();
@@ -83,16 +83,16 @@ const page = () => {
 
                 // Filter events based on user's student status
                 const userIsStudent = studentProfile?.isStudent !== false; // Default to true if not specified
-                
+
                 const filteredEvents = eventsArray.filter(e => {
                     const forStudents = e.isForStudents !== false; // Default true if not specified
                     const forNonStudents = e.isForNonStudents === true;
-                    
+
                     // If both checkboxes are checked or neither is checked, show to everyone
                     if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
                         return true;
                     }
-                    
+
                     // If only one checkbox is checked, filter based on user status
                     if (userIsStudent) {
                         return forStudents;
@@ -100,16 +100,16 @@ const page = () => {
                         return forNonStudents;
                     }
                 });
-                
+
                 const filteredSpecial = specialArray.filter(e => {
                     const forStudents = e.isForStudents !== false; // Default true if not specified
                     const forNonStudents = e.isForNonStudents === true;
-                    
+
                     // If both checkboxes are checked or neither is checked, show to everyone
                     if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
                         return true;
                     }
-                    
+
                     // If only one checkbox is checked, filter based on user status
                     if (userIsStudent) {
                         return forStudents;
@@ -140,9 +140,9 @@ const page = () => {
             } catch (err) {
                 console.error("Error fetching events:", err);
                 const errorMsg = err.message || '';
-                if (errorMsg.includes('RESOURCE_EXHAUSTED') || 
-                    errorMsg.includes('Quota exceeded') || 
-                    errorMsg.includes('quota') || 
+                if (errorMsg.includes('RESOURCE_EXHAUSTED') ||
+                    errorMsg.includes('Quota exceeded') ||
+                    errorMsg.includes('quota') ||
                     errorMsg.includes('timeout')) {
                     setIsQuotaExceeded(true);
                 } else {
@@ -171,7 +171,7 @@ const page = () => {
             const hasKnownDept = inArray || inString;
             return cat === 'other' && !hasKnownDept;
         });
-        
+
         // Helper to check if event belongs to department
         const eventBelongsToDept = (event, deptId) => {
             // Check new departments array format
@@ -181,7 +181,7 @@ const page = () => {
             // Check old department string format
             return event.department === deptId;
         };
-        
+
         // Pre-filter departments that have events or special events
         const filtered = DEPARTMENTS.filter(dept => {
             if (selectedDepartment !== 'all' && dept.id !== selectedDepartment) return false;
@@ -189,10 +189,10 @@ const page = () => {
             const hasSpecialEvents = specialEvents.some(e => eventBelongsToDept(e, dept.id));
             return hasCommonEvents || hasSpecialEvents;
         });
-        
+
         console.log('[EVENTS DEBUG] Filtered departments with events:', filtered.length);
         console.log('[EVENTS DEBUG] Filtered department IDs:', filtered.map(d => d.id));
-        
+
         return { departmentIds: deptIds, otherEvents: others, otherSpecialEvents: specialsOther, filteredDepartments: filtered };
     }, [events, specialEvents, selectedDepartment]);
 
@@ -242,12 +242,12 @@ const page = () => {
                             <h3 className="font-audiowide text-xl text-white mb-3 flex items-center gap-2">
                                 🎫 Events Overview
                             </h3>
-                            <p className="text-muted-text font-space leading-relaxed mb-3 text-md md:text-lg">
-                                This page features events included in the Common Pass. For workshops and competitions, please visit the <a href="/special-events" className="text-primary hover:underline">Special Events</a> page.
-                            </p>
-                            <div className="space-y-2 text-sm">
-                                <p className="text-muted-text text-lg font-space leading-relaxed">
-                                    <span className="text-primary font-semibold">All Events:</span> Included in the <span className="text-primary font-semibold">Common Pass (₹300)</span> • Valid for Nov 7-8, 2025
+                            <div className="space-y-2 text-md md:text-lg">
+                                <p className="text-muted-text font-space leading-relaxed">
+                                    <span className="text-primary font-semibold">SEC Students:</span> Can attend all events on this page <span className="text-primary font-semibold">free of cost</span>.
+                                </p>
+                                <p className="text-muted-text font-space leading-relaxed">
+                                    <span className="text-primary font-semibold">Other College Students:</span> Require a <span className="text-primary font-semibold">Common Pass (₹300)</span> for common events and a <span className="text-primary font-semibold">Custom Pass</span> for premium events. Visit <a href="/special-events" className="text-primary hover:underline">Special Events & Workshops</a> for premium selections.
                                 </p>
                             </div>
                         </div>
@@ -310,7 +310,7 @@ const page = () => {
                                         </h2>
                                         <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto md:mx-0"></div>
                                     </div>
-                                    
+
                                     {/* Premium Events - Shown First */}
                                     {deptSpecialEvents.length > 0 && (
                                         <div className="space-y-4">
@@ -325,7 +325,7 @@ const page = () => {
                                             </div>
                                         </div>
                                     )}
-                                    
+
                                     {/* Common Events - Shown Second */}
                                     {deptCommonEvents.length > 0 && (
                                         <div className="space-y-4">
@@ -358,7 +358,7 @@ const page = () => {
                                     </h2>
                                     <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto md:mx-0"></div>
                                 </div>
-                                
+
                                 {/* Premium Events (category: other) */}
                                 {otherSpecialEvents.length > 0 && (
                                     <div className="space-y-4">
