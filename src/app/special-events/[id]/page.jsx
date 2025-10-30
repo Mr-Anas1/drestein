@@ -24,51 +24,51 @@ import { getDepartmentName } from "@/constants/departments";
 const SpecialEventDetailPage = () => {
   const params = useParams();
   const router = useRouter();
-  
-    const { user, isAuthenticated } = useAuth();
+
+  const { user, isAuthenticated } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
 
-useEffect(() => {
-  const fetchEvent = async () => {
-    try {
-      if (!params.id) return;
-      setLoading(true);
-      const res = await fetch(`/api/special-events?id=${encodeURIComponent(params.id)}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error('Event not found');
-      const data = await res.json();
-      setEvent(data);
-      setLoading(false);
-    } catch (err) {
-      console.error("Error fetching event:", err);
-      setError(err.message);
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        if (!params.id) return;
+        setLoading(true);
+        const res = await fetch(`/api/special-events?id=${encodeURIComponent(params.id)}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Event not found');
+        const data = await res.json();
+        setEvent(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching event:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
 
-  fetchEvent();
-}, [params.id]);
+    fetchEvent();
+  }, [params.id]);
 
-useEffect(() => {
-  const checkRegistration = async () => {
-    try {
-      if (!user || !event?.id) return;
-      const res = await fetch(`/api/registrations?userUid=${encodeURIComponent(user.uid)}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const list = Array.isArray(data?.participants) ? data.participants : [];
-      const match = list.find((r) => r.eventId === event.id || r.eventId === params.id);
-      setIsRegistered(!!match);
-    } catch (_e) {
-      setIsRegistered(false);
-    }
-  };
+  useEffect(() => {
+    const checkRegistration = async () => {
+      try {
+        if (!user || !event?.id) return;
+        const res = await fetch(`/api/registrations?userUid=${encodeURIComponent(user.uid)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = Array.isArray(data?.participants) ? data.participants : [];
+        const match = list.find((r) => r.eventId === event.id || r.eventId === params.id);
+        setIsRegistered(!!match);
+      } catch (_e) {
+        setIsRegistered(false);
+      }
+    };
 
-  checkRegistration();
-}, [user, event?.id, params.id]);
+    checkRegistration();
+  }, [user, event?.id, params.id]);
 
   const isExpired = (() => {
     const raw = event?.expiryDate;
@@ -250,35 +250,33 @@ useEffect(() => {
               )}
             </div>
 
-            
+
 
             {/* Register Button */}
             <button
               onClick={() => setShowRegistrationModal(true)}
               disabled={isExpired}
-              className={`w-full ${
-                isExpired
+              className={`w-full ${isExpired
                   ? "bg-background-soft border border-border text-muted-text"
                   : "bg-gradient-to-r from-primary to-secondary text-white hover:from-hover-primary hover:to-primary"
-              } font-audiowide py-4 rounded-xl transition-all duration-300 ${
-                isExpired ? "" : "transform hover:scale-105"
-              }`}
+                } font-audiowide py-4 rounded-xl transition-all duration-300 ${isExpired ? "" : "transform hover:scale-105"
+                }`}
             >
               {isExpired
                 ? "Registration Closed"
                 : `Register Now - ₹${event.price}`}
             </button>
-            
+
             <div className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center">
               <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
               <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
             </div>
 
-            
+
           </div>
         </div>
 
-        
+
 
         {/* Info Box for Special Event Pricing */}
         <div className="mb-8 bg-gradient-to-r from-secondary/10 via-accent/10 to-secondary/10 border-2 border-secondary/30 rounded-2xl p-6 backdrop-blur-sm">
@@ -357,9 +355,9 @@ useEffect(() => {
           const sections = Array.isArray(event.competitionCustomSections)
             ? event.competitionCustomSections
             : ((event.competitionCustomHeading || event.competitionCustomText)
-                ? [{ heading: event.competitionCustomHeading || '', text: event.competitionCustomText || '', afterRegistration: false }]
-                : []);
-          const publicSections = sections.filter(s => !s.afterRegistration && ((s.heading||'').trim() || (s.text||'').trim()));
+              ? [{ heading: event.competitionCustomHeading || '', text: event.competitionCustomText || '', afterRegistration: false }]
+              : []);
+          const publicSections = sections.filter(s => !s.afterRegistration && ((s.heading || '').trim() || (s.text || '').trim()));
           if (publicSections.length === 0) return null;
           return (
             <div className="space-y-6 mb-8">
@@ -384,9 +382,9 @@ useEffect(() => {
           const sections = Array.isArray(event.competitionCustomSections)
             ? event.competitionCustomSections
             : ((event.competitionCustomHeading || event.competitionCustomText)
-                ? [{ heading: event.competitionCustomHeading || '', text: event.competitionCustomText || '', afterRegistration: false }]
-                : []);
-          const privateSections = sections.filter(s => !!s.afterRegistration && ((s.heading||'').trim() || (s.text||'').trim()));
+              ? [{ heading: event.competitionCustomHeading || '', text: event.competitionCustomText || '', afterRegistration: false }]
+              : []);
+          const privateSections = sections.filter(s => !!s.afterRegistration && ((s.heading || '').trim() || (s.text || '').trim()));
           if (isAuthenticated && isRegistered && privateSections.length > 0) {
             return (
               <div className="space-y-6 mb-8">
@@ -466,142 +464,142 @@ useEffect(() => {
           const hasAny = filteredStudent.length > 0 || filteredFaculty.length > 0 || (event.facultyCoordinator && event.facultyCoordinator.name) || event.contactEmail || event.contactPhone;
           if (!hasAny) return null;
           return (
-          <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
-            <h2 className="font-audiowide text-2xl text-white mb-6">
-              Contact Information
-            </h2>
-            <div className="space-y-6">
-              {/* Student Coordinators */}
-              {filteredStudent.length > 0 && (
-                <div>
-                  <p className="font-audiowide text-sm text-primary mb-3">
-                    Student Coordinators
-                  </p>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {filteredStudent.map((coordinator, index) => (
-                      <div key={index} className="bg-background rounded-lg p-4 space-y-2">
-                        <p className="text-white font-space font-semibold">{coordinator.name}</p>
-                        <div className="space-y-1">
-                          {coordinator.phone && (
-                            <a
-                              href={`tel:${coordinator.phone}`}
-                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                            >
-                              <Phone className="w-4 h-4" />
-                              {coordinator.phone}
-                            </a>
-                          )}
-                          {coordinator.email && (
-                            <a
-                              href={`mailto:${coordinator.email}`}
-                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                            >
-                              <Mail className="w-4 h-4" />
-                              {coordinator.email}
-                            </a>
-                          )}
+            <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
+              <h2 className="font-audiowide text-2xl text-white mb-6">
+                Contact Information
+              </h2>
+              <div className="space-y-6">
+                {/* Student Coordinators */}
+                {filteredStudent.length > 0 && (
+                  <div>
+                    <p className="font-audiowide text-sm text-primary mb-3">
+                      Student Coordinators
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {filteredStudent.map((coordinator, index) => (
+                        <div key={index} className="bg-background rounded-lg p-4 space-y-2">
+                          <p className="text-white font-space font-semibold">{coordinator.name}</p>
+                          <div className="space-y-1">
+                            {coordinator.phone && (
+                              <a
+                                href={`tel:${coordinator.phone}`}
+                                className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                              >
+                                <Phone className="w-4 h-4" />
+                                {coordinator.phone}
+                              </a>
+                            )}
+                            {coordinator.email && (
+                              <a
+                                href={`mailto:${coordinator.email}`}
+                                className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                              >
+                                <Mail className="w-4 h-4" />
+                                {coordinator.email}
+                              </a>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Faculty Coordinators */}
-              {filteredFaculty.length > 0 && (
-                <div>
-                  <p className="font-audiowide text-sm text-secondary mb-3">
-                    Faculty Coordinators
-                  </p>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {filteredFaculty.map((coordinator, index) => (
-                      <div key={index} className="bg-background rounded-lg p-4 space-y-2">
-                        <p className="text-white font-space font-semibold">{coordinator.name}</p>
-                        <div className="space-y-1">
-                          {coordinator.phone && (
-                            <a
-                              href={`tel:${coordinator.phone}`}
-                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                            >
-                              <Phone className="w-4 h-4" />
-                              {coordinator.phone}
-                            </a>
-                          )}
-                          {coordinator.email && (
-                            <a
-                              href={`mailto:${coordinator.email}`}
-                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                            >
-                              <Mail className="w-4 h-4" />
-                              {coordinator.email}
-                            </a>
-                          )}
+                {/* Faculty Coordinators */}
+                {filteredFaculty.length > 0 && (
+                  <div>
+                    <p className="font-audiowide text-sm text-secondary mb-3">
+                      Faculty Coordinators
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {filteredFaculty.map((coordinator, index) => (
+                        <div key={index} className="bg-background rounded-lg p-4 space-y-2">
+                          <p className="text-white font-space font-semibold">{coordinator.name}</p>
+                          <div className="space-y-1">
+                            {coordinator.phone && (
+                              <a
+                                href={`tel:${coordinator.phone}`}
+                                className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                              >
+                                <Phone className="w-4 h-4" />
+                                {coordinator.phone}
+                              </a>
+                            )}
+                            {coordinator.email && (
+                              <a
+                                href={`mailto:${coordinator.email}`}
+                                className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                              >
+                                <Mail className="w-4 h-4" />
+                                {coordinator.email}
+                              </a>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Fallback for old single faculty coordinator */}
-              {!event.facultyCoordinators && event.facultyCoordinator && event.facultyCoordinator.name && (
-                <div>
-                  <p className="font-audiowide text-sm text-secondary mb-3">
-                    Faculty Coordinator
-                  </p>
-                  <div className="bg-background rounded-lg p-4 space-y-2">
-                    <p className="text-white font-space font-semibold">{event.facultyCoordinator.name}</p>
-                    <div className="space-y-1">
-                      <a
-                        href={`tel:${event.facultyCoordinator.phone}`}
-                        className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                      >
-                        <Phone className="w-4 h-4" />
-                        {event.facultyCoordinator.phone}
-                      </a>
-                      {event.facultyCoordinator.email && (
+                {/* Fallback for old single faculty coordinator */}
+                {!event.facultyCoordinators && event.facultyCoordinator && event.facultyCoordinator.name && (
+                  <div>
+                    <p className="font-audiowide text-sm text-secondary mb-3">
+                      Faculty Coordinator
+                    </p>
+                    <div className="bg-background rounded-lg p-4 space-y-2">
+                      <p className="text-white font-space font-semibold">{event.facultyCoordinator.name}</p>
+                      <div className="space-y-1">
                         <a
-                          href={`mailto:${event.facultyCoordinator.email}`}
+                          href={`tel:${event.facultyCoordinator.phone}`}
                           className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
                         >
-                          <Mail className="w-4 h-4" />
-                          {event.facultyCoordinator.email}
+                          <Phone className="w-4 h-4" />
+                          {event.facultyCoordinator.phone}
                         </a>
-                      )}
+                        {event.facultyCoordinator.email && (
+                          <a
+                            href={`mailto:${event.facultyCoordinator.email}`}
+                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                          >
+                            <Mail className="w-4 h-4" />
+                            {event.facultyCoordinator.email}
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Fallback for old contact structure */}
-              {!event.studentCoordinators && (event.contactEmail || event.contactPhone) && (
-                <div className="grid md:grid-cols-2 gap-4">
-                  {event.contactEmail && (
-                    <div className="flex items-center gap-3 text-muted-text font-space">
-                      <Mail className="w-5 h-5 text-primary" />
-                      <a
-                        href={`mailto:${event.contactEmail}`}
-                        className="hover:text-primary transition-colors"
-                      >
-                        {event.contactEmail}
-                      </a>
-                    </div>
-                  )}
-                  {event.contactPhone && (
-                    <div className="flex items-center gap-3 text-muted-text font-space">
-                      <Phone className="w-5 h-5 text-primary" />
-                      <a
-                        href={`tel:${event.contactPhone}`}
-                        className="hover:text-primary transition-colors"
-                      >
-                        {event.contactPhone}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              )}
+                {/* Fallback for old contact structure */}
+                {!event.studentCoordinators && (event.contactEmail || event.contactPhone) && (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {event.contactEmail && (
+                      <div className="flex items-center gap-3 text-muted-text font-space">
+                        <Mail className="w-5 h-5 text-primary" />
+                        <a
+                          href={`mailto:${event.contactEmail}`}
+                          className="hover:text-primary transition-colors"
+                        >
+                          {event.contactEmail}
+                        </a>
+                      </div>
+                    )}
+                    {event.contactPhone && (
+                      <div className="flex items-center gap-3 text-muted-text font-space">
+                        <Phone className="w-5 h-5 text-primary" />
+                        <a
+                          href={`tel:${event.contactPhone}`}
+                          className="hover:text-primary transition-colors"
+                        >
+                          {event.contactPhone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
           );
         })()}
       </div>
