@@ -29,32 +29,32 @@ const EventDetailPage = () => {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
 
   // Fetch event data from Firestore
-useEffect(() => {
-  const fetchEvent = async () => {
-    if (!params.id) return;
+  useEffect(() => {
+    const fetchEvent = async () => {
+      if (!params.id) return;
 
-    try {
-      setLoading(true);
-      const eventDoc = doc(db, "events", params.id);
-      const eventSnapshot = await getDoc(eventDoc);
+      try {
+        setLoading(true);
+        const eventDoc = doc(db, "events", params.id);
+        const eventSnapshot = await getDoc(eventDoc);
 
-      if (eventSnapshot.exists()) {
-        const eventData = { id: eventSnapshot.id, ...eventSnapshot.data() };
-        setEvent(eventData);
-      } else {
-        console.log("No event found with this ID");
+        if (eventSnapshot.exists()) {
+          const eventData = { id: eventSnapshot.id, ...eventSnapshot.data() };
+          setEvent(eventData);
+        } else {
+          console.log("No event found with this ID");
+          setEvent(null);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching event:", error);
         setEvent(null);
+        setLoading(false);
       }
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching event:", error);
-      setEvent(null);
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchEvent();
-}, [params.id]);
+    fetchEvent();
+  }, [params.id]);
 
   // Handle registration
   // const handleRegistration = async () => {
@@ -231,10 +231,27 @@ useEffect(() => {
             </div>
 
             {/* Register Button */}
-            <div className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center">
+            {isRegistered ? (
+              <button
+                onClick={() => setIsRegistered(false)}
+                className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center"
+              >
+                <p className="text-primary font-audiowide text-lg">🎉 Registered!</p>
+                <p className="text-muted-text font-space text-sm mt-2">You have already registered for this event</p>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowRegistrationModal(true)}
+                className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center"
+              >
+                <p className="text-primary font-audiowide text-lg">Register Now</p>
+                <p className="text-muted-text font-space text-sm mt-2">Register for this event</p>
+              </button>
+            )}
+            {/* <div className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center">
               <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
               <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -317,151 +334,151 @@ useEffect(() => {
         </div>
 
         {/* Contact Info */}
-        {((event.studentCoordinators && event.studentCoordinators.length > 0) || 
-          (event.facultyCoordinator && event.facultyCoordinator.name) || 
+        {((event.studentCoordinators && event.studentCoordinators.length > 0) ||
+          (event.facultyCoordinator && event.facultyCoordinator.name) ||
           (event.facultyCoordinators && event.facultyCoordinators.length > 0) ||
           event.contact) && (
-          <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
-            <h2 className="font-audiowide text-2xl text-white mb-6">
-              Contact Information
-            </h2>
-            <div className="space-y-6">
-              {/* Student Coordinators */}
-              {event.studentCoordinators && event.studentCoordinators.length > 0 && (
-                <div>
-                  <p className="font-audiowide text-sm text-primary mb-3">
-                    Student Coordinators
-                  </p>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {event.studentCoordinators.map((coordinator, index) => (
-                      <div key={index} className="bg-background rounded-lg p-4 space-y-2">
-                        <p className="text-white font-space font-semibold">{coordinator.name}</p>
-                        <div className="space-y-1">
-                          {coordinator.phone && (
-                            <a
-                              href={`tel:${coordinator.phone}`}
-                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                            >
-                              <Phone className="w-4 h-4" />
-                              {coordinator.phone}
-                            </a>
-                          )}
-                          {coordinator.email && (
-                            <a
-                              href={`mailto:${coordinator.email}`}
-                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                            >
-                              <Mail className="w-4 h-4" />
-                              {coordinator.email}
-                            </a>
-                          )}
+            <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
+              <h2 className="font-audiowide text-2xl text-white mb-6">
+                Contact Information
+              </h2>
+              <div className="space-y-6">
+                {/* Student Coordinators */}
+                {event.studentCoordinators && event.studentCoordinators.length > 0 && (
+                  <div>
+                    <p className="font-audiowide text-sm text-primary mb-3">
+                      Student Coordinators
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {event.studentCoordinators.map((coordinator, index) => (
+                        <div key={index} className="bg-background rounded-lg p-4 space-y-2">
+                          <p className="text-white font-space font-semibold">{coordinator.name}</p>
+                          <div className="space-y-1">
+                            {coordinator.phone && (
+                              <a
+                                href={`tel:${coordinator.phone}`}
+                                className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                              >
+                                <Phone className="w-4 h-4" />
+                                {coordinator.phone}
+                              </a>
+                            )}
+                            {coordinator.email && (
+                              <a
+                                href={`mailto:${coordinator.email}`}
+                                className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                              >
+                                <Mail className="w-4 h-4" />
+                                {coordinator.email}
+                              </a>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Faculty Coordinators */}
-              {event.facultyCoordinators && event.facultyCoordinators.length > 0 && (
-                <div>
-                  <p className="font-audiowide text-sm text-secondary mb-3">
-                    Faculty Coordinators
-                  </p>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {event.facultyCoordinators.map((coordinator, index) => (
-                      <div key={index} className="bg-background rounded-lg p-4 space-y-2">
-                        <p className="text-white font-space font-semibold">{coordinator.name}</p>
-                        <div className="space-y-1">
-                          {coordinator.phone && (
-                            <a
-                              href={`tel:${coordinator.phone}`}
-                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                            >
-                              <Phone className="w-4 h-4" />
-                              {coordinator.phone}
-                            </a>
-                          )}
-                          {coordinator.email && (
-                            <a
-                              href={`mailto:${coordinator.email}`}
-                              className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                            >
-                              <Mail className="w-4 h-4" />
-                              {coordinator.email}
-                            </a>
-                          )}
+                {/* Faculty Coordinators */}
+                {event.facultyCoordinators && event.facultyCoordinators.length > 0 && (
+                  <div>
+                    <p className="font-audiowide text-sm text-secondary mb-3">
+                      Faculty Coordinators
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {event.facultyCoordinators.map((coordinator, index) => (
+                        <div key={index} className="bg-background rounded-lg p-4 space-y-2">
+                          <p className="text-white font-space font-semibold">{coordinator.name}</p>
+                          <div className="space-y-1">
+                            {coordinator.phone && (
+                              <a
+                                href={`tel:${coordinator.phone}`}
+                                className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                              >
+                                <Phone className="w-4 h-4" />
+                                {coordinator.phone}
+                              </a>
+                            )}
+                            {coordinator.email && (
+                              <a
+                                href={`mailto:${coordinator.email}`}
+                                className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                              >
+                                <Mail className="w-4 h-4" />
+                                {coordinator.email}
+                              </a>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Fallback for old single faculty coordinator */}
-              {!event.facultyCoordinators && event.facultyCoordinator && event.facultyCoordinator.name && (
-                <div>
-                  <p className="font-audiowide text-sm text-secondary mb-3">
-                    Faculty Coordinator
-                  </p>
-                  <div className="bg-background rounded-lg p-4 space-y-2">
-                    <p className="text-white font-space font-semibold">{event.facultyCoordinator.name}</p>
-                    <div className="space-y-1">
-                      {event.facultyCoordinator.phone && (
+                {/* Fallback for old single faculty coordinator */}
+                {!event.facultyCoordinators && event.facultyCoordinator && event.facultyCoordinator.name && (
+                  <div>
+                    <p className="font-audiowide text-sm text-secondary mb-3">
+                      Faculty Coordinator
+                    </p>
+                    <div className="bg-background rounded-lg p-4 space-y-2">
+                      <p className="text-white font-space font-semibold">{event.facultyCoordinator.name}</p>
+                      <div className="space-y-1">
+                        {event.facultyCoordinator.phone && (
+                          <a
+                            href={`tel:${event.facultyCoordinator.phone}`}
+                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                          >
+                            <Phone className="w-4 h-4" />
+                            {event.facultyCoordinator.phone}
+                          </a>
+                        )}
+                        {event.facultyCoordinator.email && (
+                          <a
+                            href={`mailto:${event.facultyCoordinator.email}`}
+                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                          >
+                            <Mail className="w-4 h-4" />
+                            {event.facultyCoordinator.email}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Fallback for old contact structure */}
+                {!event.studentCoordinators && event.contact && (
+                  <div>
+                    <p className="font-audiowide text-sm text-primary mb-3">
+                      Coordinator
+                    </p>
+                    <div className="bg-background rounded-lg p-4 space-y-2">
+                      <p className="text-white font-space font-semibold">{event.contact.name}</p>
+                      <div className="space-y-1">
                         <a
-                          href={`tel:${event.facultyCoordinator.phone}`}
+                          href={`tel:${event.contact.phone}`}
                           className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
                         >
                           <Phone className="w-4 h-4" />
-                          {event.facultyCoordinator.phone}
+                          {event.contact.phone}
                         </a>
-                      )}
-                      {event.facultyCoordinator.email && (
-                        <a
-                          href={`mailto:${event.facultyCoordinator.email}`}
-                          className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                        >
-                          <Mail className="w-4 h-4" />
-                          {event.facultyCoordinator.email}
-                        </a>
-                      )}
+                        {event.contact.email && (
+                          <a
+                            href={`mailto:${event.contact.email}`}
+                            className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
+                          >
+                            <Mail className="w-4 h-4" />
+                            {event.contact.email}
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Fallback for old contact structure */}
-              {!event.studentCoordinators && event.contact && (
-                <div>
-                  <p className="font-audiowide text-sm text-primary mb-3">
-                    Coordinator
-                  </p>
-                  <div className="bg-background rounded-lg p-4 space-y-2">
-                    <p className="text-white font-space font-semibold">{event.contact.name}</p>
-                    <div className="space-y-1">
-                      <a
-                        href={`tel:${event.contact.phone}`}
-                        className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                      >
-                        <Phone className="w-4 h-4" />
-                        {event.contact.phone}
-                      </a>
-                      {event.contact.email && (
-                        <a
-                          href={`mailto:${event.contact.email}`}
-                          className="flex items-center gap-2 text-muted-text hover:text-white transition-colors font-space text-sm"
-                        >
-                          <Mail className="w-4 h-4" />
-                          {event.contact.email}
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
 
       {/* Registration Modal */}
@@ -476,9 +493,9 @@ useEffect(() => {
             setEvent((prev) =>
               prev
                 ? {
-                    ...prev,
-                    participationCount: (prev.participationCount || 0) + 1,
-                  }
+                  ...prev,
+                  participationCount: (prev.participationCount || 0) + 1,
+                }
                 : prev
             );
           }}

@@ -54,8 +54,10 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
                 const res = await fetch(`/api/passes?userUid=${encodeURIComponent(user.uid)}`);
                 if (!res.ok) throw new Error('Failed to check pass');
                 const data = await res.json();
-                const pass = data?.pass || null;
-                setHasVerifiedPass(!!pass && pass.paymentVerified === true);
+                // API returns { passes: [] } - check if user has any verified pass
+                const passes = data?.passes || [];
+                const hasAnyVerifiedPass = passes.some(p => p.paymentVerified === true);
+                setHasVerifiedPass(hasAnyVerifiedPass);
             } catch (e) {
                 // Don't hard fail the modal, just show CTA
                 setHasVerifiedPass(false);

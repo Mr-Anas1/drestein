@@ -45,6 +45,10 @@ const page = () => {
                 // Separate common events (non-premium). Do not rely on category filter.
                 const commonEvents = allEvents.filter(event => !event.isPremium);
                 
+                console.log('[EVENTS DEBUG] Total events fetched:', allEvents.length);
+                console.log('[EVENTS DEBUG] Common events (non-premium):', commonEvents.length);
+                console.log('[EVENTS DEBUG] Sample event:', allEvents[0]);
+                
                 // For the events page, we'll show common events
                 // and use premium events for department filtering
                 const eventsArray = [...commonEvents];
@@ -127,6 +131,10 @@ const page = () => {
                     isExpired: isEventExpired(e),
                 }));
 
+                console.log('[EVENTS DEBUG] After filtering by student status:', filteredEvents.length);
+                console.log('[EVENTS DEBUG] After normalization:', normalizedEvents.length);
+                console.log('[EVENTS DEBUG] Sample normalized event:', normalizedEvents[0]);
+
                 setEvents(normalizedEvents);
                 setSpecialEvents(normalizedSpecial);
             } catch (err) {
@@ -151,6 +159,7 @@ const page = () => {
 
     // Memoize filtered events to avoid recalculation on every render
     const { departmentIds, otherEvents, otherSpecialEvents, filteredDepartments } = useMemo(() => {
+        console.log('[EVENTS DEBUG] useMemo - events state:', events.length);
         const deptIds = new Set(DEPARTMENTS.map(d => d.id));
         const others = events.filter(e => !e?.department || !deptIds.has(e.department));
 
@@ -180,6 +189,9 @@ const page = () => {
             const hasSpecialEvents = specialEvents.some(e => eventBelongsToDept(e, dept.id));
             return hasCommonEvents || hasSpecialEvents;
         });
+        
+        console.log('[EVENTS DEBUG] Filtered departments with events:', filtered.length);
+        console.log('[EVENTS DEBUG] Filtered department IDs:', filtered.map(d => d.id));
         
         return { departmentIds: deptIds, otherEvents: others, otherSpecialEvents: specialsOther, filteredDepartments: filtered };
     }, [events, specialEvents, selectedDepartment]);
