@@ -67,26 +67,18 @@ export async function GET(request) {
     for (const doc of passesSnapshot.docs) {
       const passData = doc.data();
       
-<<<<<<< HEAD
-      // Try to get user email and roll number
-      let userEmail = null;
-      let rollNo = null;
-=======
-      // Try to get user email and name
+      // Try to get user email, name and roll number
       let userEmail = null;
       let userName = null;
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
+      let rollNo = null;
       if (passData.userUid) {
         try {
           const studentDoc = await db.collection("students").doc(passData.userUid).get();
           if (studentDoc.exists) {
             const studentData = studentDoc.data();
             userEmail = studentData.email;
-<<<<<<< HEAD
-            rollNo = studentData.rollNo;
-=======
             userName = studentData.name || studentData.displayName || null;
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
+            rollNo = studentData.rollNo || null;
           }
         } catch (e) {
           console.error(`[ADMIN PASSES] Error fetching user data for ${passData.userUid}:`, e);
@@ -97,11 +89,8 @@ export async function GET(request) {
         id: doc.id,
         ...passData,
         userEmail,
-<<<<<<< HEAD
-        rollNo,
-=======
         userName,
->>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
+        rollNo,
       });
     }
 
