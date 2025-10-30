@@ -30,6 +30,77 @@ const SpecialEventBox = React.memo(({ event }) => {
     return new Date() > end;
   })();
 
+  if (isExpired) {
+    return (
+      <div className="group cursor-not-allowed">
+        <div className="rounded-2xl p-[1px] bg-gradient-to-r from-gray-600/30 to-gray-600/30 h-full opacity-50">
+          <div className="rounded-2xl bg-background-soft border border-border/30 overflow-hidden h-full flex flex-col">
+            {img && (
+              <div className="relative w-full h-48 overflow-hidden grayscale">
+                <Image
+                  src={img}
+                  alt={title}
+                  fill
+                  loading="lazy"
+                  className="object-cover"
+                />
+              </div>
+            )}
+            <div className="p-6 flex flex-col flex-1">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="font-audiowide text-xl text-gray-500 flex-1">
+                  {title}
+                </h3>
+                <span className="text-gray-500 font-audiowide text-lg ml-2 line-through">
+                  ₹{price}
+                </span>
+              </div>
+              <p className="text-gray-600 font-space text-sm mb-4 line-clamp-2 flex-1">
+                {description}
+              </p>
+              <div className="space-y-2 text-sm">
+                {event?.date && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    <span className="font-space">{event.date}</span>
+                  </div>
+                )}
+                {event?.time && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span className="font-space">{event.time}</span>
+                  </div>
+                )}
+                {event?.venue && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    <span className="font-space">{event.venue}</span>
+                  </div>
+                )}
+                {event?.type && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span className="font-space capitalize">{event.type}</span>
+                  </div>
+                )}
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-2">
+                <div className="flex gap-2">
+                  <span className="text-xs px-3 py-1 rounded-full bg-gray-700/30 text-gray-500 border border-gray-600/30 font-space capitalize">
+                    {category}
+                  </span>
+                  <span className="text-xs px-3 py-1 rounded-full bg-red-900/30 text-red-600 border border-red-700/30 font-audiowide">
+                    Expired
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Link href={`/special-events/${id}`} className="group">
       <div className="rounded-2xl p-[1px] bg-gradient-to-r from-secondary/30 to-primary/30 hover:from-secondary/60 hover:to-primary/60 transition-all duration-300 hover:-translate-y-1 h-full">
@@ -40,6 +111,7 @@ const SpecialEventBox = React.memo(({ event }) => {
                 src={img}
                 alt={title}
                 fill
+                loading="lazy"
                 className="object-cover group-hover:scale-110 transition-transform duration-300"
               />
             </div>

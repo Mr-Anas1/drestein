@@ -1,5 +1,5 @@
 import React from 'react'
-import { Facebook } from 'lucide-react'
+import { Facebook, MessageSquareDot } from 'lucide-react'
 import { Twitter } from 'lucide-react'
 import { Instagram } from 'lucide-react'
 import { Linkedin } from 'lucide-react'
@@ -7,11 +7,12 @@ import { Youtube } from 'lucide-react'
 
 const Footer = () => {
   const socialLinks = [
-    { name: 'Facebook', url: '#', icon: <Facebook /> },
-    { name: 'Twitter', url: '#', icon: <Twitter /> },
-    { name: 'Instagram', url: '#', icon: <Instagram /> },
-    { name: 'LinkedIn', url: '#', icon: <Linkedin /> },
-    { name: 'YouTube', url: '#', icon: <Youtube /> }
+    { name: 'Facebook', url: 'https://www.facebook.com/SaveethaEngineeringCollegeSEC/', icon: <Facebook /> },
+    { name: 'Instagram', url: 'https://www.instagram.com/secdrestein', icon: <Instagram /> },
+    { name: 'LinkedIn', url: 'https://www.linkedin.com/school/saveetha-engineering-college/', icon: <Linkedin /> },
+    { name: 'YouTube', url: 'https://www.youtube.com/@saveethaengineeringcollege1624', icon: <Youtube /> },
+    { name: 'Arattai', url: 'https://aratt.ai/@saveetha_engineering_college', icon: <MessageSquareDot />},
+
   ]
 
   const pages = [
@@ -28,7 +29,7 @@ const Footer = () => {
 
           {/* Column 1: DRESTEIN 2025 */}
           <div className="space-y-4">
-            <h2 className="font-audiowide text-2xl md:text-3xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h2 className="font-azonix text-2xl md:text-3xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               DRESTEIN
             </h2>
             <p className="text-muted-text font-space text-lg">
@@ -37,6 +38,8 @@ const Footer = () => {
             <p className="text-muted-text font-space text-sm leading-relaxed">
               Innovating the future with cutting-edge technology and creative solutions.
             </p>
+
+            <p className="text-muted-text font-space text-sm leading-relaxed">Site Views: <img src="https://hitscounter.dev/api/hit?url=drestein.in&label=&icon=bookmark-star&color=%23ab296a&message=&style=flat&tz=UTC" loading="lazy" decoding="async"/></p>
           </div>
 
           {/* Column 2: Social Links */}

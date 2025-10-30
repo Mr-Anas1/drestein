@@ -29,32 +29,32 @@ const EventDetailPage = () => {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
 
   // Fetch event data from Firestore
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!params.id) return;
+useEffect(() => {
+  const fetchEvent = async () => {
+    if (!params.id) return;
 
-      try {
-        setLoading(true);
-        const eventDoc = doc(db, "events", params.id);
-        const eventSnapshot = await getDoc(eventDoc);
+    try {
+      setLoading(true);
+      const eventDoc = doc(db, "events", params.id);
+      const eventSnapshot = await getDoc(eventDoc);
 
-        if (eventSnapshot.exists()) {
-          const eventData = { id: eventSnapshot.id, ...eventSnapshot.data() };
-          setEvent(eventData);
-        } else {
-          console.log("No event found with this ID");
-          setEvent(null);
-        }
-      } catch (error) {
-        console.error("Error fetching event:", error);
+      if (eventSnapshot.exists()) {
+        const eventData = { id: eventSnapshot.id, ...eventSnapshot.data() };
+        setEvent(eventData);
+      } else {
+        console.log("No event found with this ID");
         setEvent(null);
-      } finally {
-        setLoading(false);
       }
-    };
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      setEvent(null);
+      setLoading(false);
+    }
+  };
 
-    fetchEvent();
-  }, [params.id]);
+  fetchEvent();
+}, [params.id]);
 
   // Handle registration
   // const handleRegistration = async () => {
@@ -165,7 +165,7 @@ const EventDetailPage = () => {
               fill
               style={{ objectFit: "cover" }}
               alt={event.title}
-              priority
+              loading="lazy"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
@@ -197,17 +197,35 @@ const EventDetailPage = () => {
                 </div>
               )}
 
-              {event.date && (
+              {(event.startDate || event.date) && (
                 <div className="flex items-center gap-3 text-muted-text font-space">
                   <Calendar className="w-5 h-5 text-primary" />
-                  <span>{event.date}</span>
+                  <span>
+                    {(() => {
+                      const start = String(event.startDate || event.date || '').trim();
+                      const end = String(event.endDate || '').trim();
+                      if (start && end && end !== start) {
+                        return `${start} - ${end}`;
+                      }
+                      return start;
+                    })()}
+                  </span>
                 </div>
               )}
 
-              {event.time && (
+              {(event.time || event.endTime) && (
                 <div className="flex items-center gap-3 text-muted-text font-space">
                   <Clock className="w-5 h-5 text-primary" />
-                  <span>{event.time}</span>
+                  <span>
+                    {(() => {
+                      const start = String(event.time || '').trim();
+                      const end = String(event.endTime || '').trim();
+                      if (start && end && end !== start) {
+                        return `${start} - ${end}`;
+                      }
+                      return start || end;
+                    })()}
+                  </span>
                 </div>
               )}
             </div>

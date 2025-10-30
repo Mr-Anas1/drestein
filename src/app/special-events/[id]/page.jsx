@@ -24,36 +24,51 @@ import { getDepartmentName } from "@/constants/departments";
 const SpecialEventDetailPage = () => {
   const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  
+    const { user, isAuthenticated } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/special-events?id=${params.id}`);
-
-        if (!response.ok) {
-          throw new Error("Event not found");
-        }
-
-        const data = await response.json();
-        setEvent(data);
-      } catch (err) {
-        console.error("Error fetching event:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (params.id) {
-      fetchEvent();
+useEffect(() => {
+  const fetchEvent = async () => {
+    try {
+      if (!params.id) return;
+      setLoading(true);
+      const res = await fetch(`/api/special-events?id=${encodeURIComponent(params.id)}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Event not found');
+      const data = await res.json();
+      setEvent(data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching event:", err);
+      setError(err.message);
+      setLoading(false);
     }
-  }, [params.id]);
+  };
+
+  fetchEvent();
+}, [params.id]);
+
+useEffect(() => {
+  const checkRegistration = async () => {
+    try {
+      if (!user || !event?.id) return;
+      const res = await fetch(`/api/registrations?userUid=${encodeURIComponent(user.uid)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = Array.isArray(data?.participants) ? data.participants : [];
+      const match = list.find((r) => r.eventId === event.id || r.eventId === params.id);
+      setIsRegistered(!!match);
+    } catch (_e) {
+      setIsRegistered(false);
+    }
+  };
+
+  checkRegistration();
+}, [user, event?.id, params.id]);
 
   const isExpired = (() => {
     const raw = event?.expiryDate;
@@ -92,6 +107,34 @@ const SpecialEventDetailPage = () => {
     );
   }
 
+  // Build friendly filename and Cloudinary attachment URL for competition file
+  const competitionFileName = (() => {
+    const base = String(event?.title || 'competition-file')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    const url = String(event?.competitionPptUrl || '');
+    const urlExtMatch = url.match(/\.([a-z0-9]{1,6})(?:$|[?#])/i);
+    const ext = urlExtMatch ? `.${urlExtMatch[1].toLowerCase()}` : '';
+    return `${base || 'competition-file'}${ext}`;
+  })();
+
+  const competitionDownloadUrl = (() => {
+    const url = String(event?.competitionPptUrl || '');
+    if (!url) return '';
+    const uploadMarker = '/upload/';
+    const idx = url.indexOf(uploadMarker);
+    if (idx !== -1) {
+      const before = url.slice(0, idx + uploadMarker.length);
+      const after = url.slice(idx + uploadMarker.length);
+      if (!/(^|\/)fl_attachment/.test(after)) {
+        const safeName = encodeURIComponent(competitionFileName);
+        return `${before}fl_attachment:${safeName}/${after}`;
+      }
+    }
+    return url;
+  })();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background">
       <Header />
@@ -121,6 +164,7 @@ const SpecialEventDetailPage = () => {
               fill
               style={{ objectFit: "cover" }}
               alt={event.title}
+              loading="lazy"
             />
           </div>
 
@@ -136,7 +180,7 @@ const SpecialEventDetailPage = () => {
                 </span>
                 {event.department && (
                   <span className="bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-audiowide uppercase">
-                    {getDepartmentName(event.department)}
+                    {getDepartmentName(event.department) || event.department}
                   </span>
                 )}
               </div>
@@ -160,8 +204,8 @@ const SpecialEventDetailPage = () => {
                   <Users className="w-5 h-5 text-primary" />
                   <span>
                     {event.type === "team"
-                      ? `Team Event (Max ${event.maxTeamSize || 4} members)`
-                      : "Individual Event"}
+                      ? `Team (Max ${event.maxTeamSize || 4} members)`
+                      : "Individual"}
                   </span>
                 </div>
               )}
@@ -173,20 +217,40 @@ const SpecialEventDetailPage = () => {
                 </div>
               )}
 
-              {event.date && (
+              {(event.startDate || event.date) && (
                 <div className="flex items-center gap-3 text-muted-text font-space">
                   <Calendar className="w-5 h-5 text-primary" />
-                  <span>{event.date}</span>
+                  <span>
+                    {(() => {
+                      const start = String(event.startDate || event.date || '').trim();
+                      const end = String(event.endDate || '').trim();
+                      if (start && end && end !== start) {
+                        return `${start} - ${end}`;
+                      }
+                      return start;
+                    })()}
+                  </span>
                 </div>
               )}
 
-              {event.time && (
+              {(event.time || event.endTime) && (
                 <div className="flex items-center gap-3 text-muted-text font-space">
                   <Clock className="w-5 h-5 text-primary" />
-                  <span>{event.time}</span>
+                  <span>
+                    {(() => {
+                      const start = String(event.time || '').trim();
+                      const end = String(event.endTime || '').trim();
+                      if (start && end && end !== start) {
+                        return `${start} - ${end}`;
+                      }
+                      return start || end;
+                    })()}
+                  </span>
                 </div>
               )}
             </div>
+
+            
 
             {/* Register Button */}
             <button
@@ -209,8 +273,12 @@ const SpecialEventDetailPage = () => {
               <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
               <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
             </div>
+
+            
           </div>
         </div>
+
+        
 
         {/* Info Box for Special Event Pricing */}
         <div className="mb-8 bg-gradient-to-r from-secondary/10 via-accent/10 to-secondary/10 border-2 border-secondary/30 rounded-2xl p-6 backdrop-blur-sm">
@@ -249,8 +317,97 @@ const SpecialEventDetailPage = () => {
             <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">
               {event.description || event.fullDescription}
             </p>
+
+            {event.competitionPptUrl && (
+              <div className="pt-2">
+                <a
+                  href={competitionDownloadUrl || event.competitionPptUrl}
+                  className="inline-flex items-center justify-center w-full md:w-auto gap-2 px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-audiowide text-sm md:text-base hover:from-hover-primary hover:to-primary transition-colors duration-300"
+                  download={competitionFileName}
+                >
+                  <FileText className="w-5 h-5" />
+                  Download Requirements
+                </a>
+              </div>
+            )}
           </div>
         )}
+
+        {/* Download button moved to top section */}
+
+        {/* Display GForm link only for registered users */}
+        {isAuthenticated && isRegistered && event.competitionGformLink && (
+          <div className="bg-background-soft border border-border rounded-2xl p-8 mb-8">
+            <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-primary" />
+              Google Form Link
+            </h2>
+            <a
+              href={event.competitionGformLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-hover-primary font-space"
+            >
+              Access Form
+            </a>
+          </div>
+        )}
+
+        {(() => {
+          const sections = Array.isArray(event.competitionCustomSections)
+            ? event.competitionCustomSections
+            : ((event.competitionCustomHeading || event.competitionCustomText)
+                ? [{ heading: event.competitionCustomHeading || '', text: event.competitionCustomText || '', afterRegistration: false }]
+                : []);
+          const publicSections = sections.filter(s => !s.afterRegistration && ((s.heading||'').trim() || (s.text||'').trim()));
+          if (publicSections.length === 0) return null;
+          return (
+            <div className="space-y-6 mb-8">
+              {publicSections.map((s, idx) => (
+                <div key={`pub-${idx}`} className="bg-background-soft border border-border rounded-2xl p-8">
+                  {s.heading && (
+                    <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+                      <FileText className="w-6 h-6 text-primary" />
+                      {s.heading}
+                    </h2>
+                  )}
+                  {s.text && (
+                    <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">{s.text}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
+        {(() => {
+          const sections = Array.isArray(event.competitionCustomSections)
+            ? event.competitionCustomSections
+            : ((event.competitionCustomHeading || event.competitionCustomText)
+                ? [{ heading: event.competitionCustomHeading || '', text: event.competitionCustomText || '', afterRegistration: false }]
+                : []);
+          const privateSections = sections.filter(s => !!s.afterRegistration && ((s.heading||'').trim() || (s.text||'').trim()));
+          if (isAuthenticated && isRegistered && privateSections.length > 0) {
+            return (
+              <div className="space-y-6 mb-8">
+                {privateSections.map((s, idx) => (
+                  <div key={`priv-${idx}`} className="bg-background-soft border border-border rounded-2xl p-8">
+                    {s.heading && (
+                      <h2 className="font-audiowide text-2xl text-white mb-4 flex items-center gap-2">
+                        <FileText className="w-6 h-6 text-primary" />
+                        {s.heading}
+                      </h2>
+                    )}
+                    {s.text && (
+                      <p className="text-muted-text text-md md:text-lg font-space leading-relaxed whitespace-pre-line">{s.text}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Rules */}
@@ -299,22 +456,29 @@ const SpecialEventDetailPage = () => {
         </div>
 
         {/* Contact Info */}
-        {((event.studentCoordinators && event.studentCoordinators.length > 0) || 
-          (event.facultyCoordinator && event.facultyCoordinator.name) || 
-          event.contactEmail || event.contactPhone) && (
+        {(() => {
+          const filteredStudent = (event.studentCoordinators || []).filter(c =>
+            (c?.name || '').trim() || (c?.phone || '').trim() || (c?.email || '').trim()
+          );
+          const filteredFaculty = (event.facultyCoordinators || []).filter(c =>
+            (c?.name || '').trim() || (c?.phone || '').trim() || (c?.email || '').trim()
+          );
+          const hasAny = filteredStudent.length > 0 || filteredFaculty.length > 0 || (event.facultyCoordinator && event.facultyCoordinator.name) || event.contactEmail || event.contactPhone;
+          if (!hasAny) return null;
+          return (
           <div className="mt-8 bg-background-soft border border-border rounded-2xl p-8">
             <h2 className="font-audiowide text-2xl text-white mb-6">
               Contact Information
             </h2>
             <div className="space-y-6">
               {/* Student Coordinators */}
-              {event.studentCoordinators && event.studentCoordinators.length > 0 && (
+              {filteredStudent.length > 0 && (
                 <div>
                   <p className="font-audiowide text-sm text-primary mb-3">
                     Student Coordinators
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {event.studentCoordinators.map((coordinator, index) => (
+                    {filteredStudent.map((coordinator, index) => (
                       <div key={index} className="bg-background rounded-lg p-4 space-y-2">
                         <p className="text-white font-space font-semibold">{coordinator.name}</p>
                         <div className="space-y-1">
@@ -344,13 +508,13 @@ const SpecialEventDetailPage = () => {
               )}
 
               {/* Faculty Coordinators */}
-              {event.facultyCoordinators && event.facultyCoordinators.length > 0 && (
+              {filteredFaculty.length > 0 && (
                 <div>
                   <p className="font-audiowide text-sm text-secondary mb-3">
                     Faculty Coordinators
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {event.facultyCoordinators.map((coordinator, index) => (
+                    {filteredFaculty.map((coordinator, index) => (
                       <div key={index} className="bg-background rounded-lg p-4 space-y-2">
                         <p className="text-white font-space font-semibold">{coordinator.name}</p>
                         <div className="space-y-1">
@@ -438,7 +602,8 @@ const SpecialEventDetailPage = () => {
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
 
       <Footer />

@@ -15,7 +15,7 @@ const page = () => {
                 <p className='text-muted-text text-center font-space text-lg mb-10'>Browse departments and jump to their events.</p>
 
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8'>
-                    {DEPARTMENTS.map((dept) => (
+                    {DEPARTMENTS.filter(d => d.id !== 'OTHERS').map((dept) => (
                         <div
                             key={dept.id}
                             className='group rounded-2xl p-[1px] bg-gradient-to-r from-primary/30 to-secondary/30 hover:from-primary/60 hover:to-secondary/60 transition-all duration-300 hover:-translate-y-0.5'
@@ -27,6 +27,7 @@ const page = () => {
                                         src={dept.image}
                                         alt={dept.name}
                                         fill
+                                        loading="lazy"
                                         className='object-cover group-hover:scale-110 transition-transform duration-300'
                                     />
                                     <div className='absolute inset-0 bg-gradient-to-t from-background-soft via-background-soft/50 to-transparent'></div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlignJustify, X, Ticket, ShoppingCart } from "lucide-react";
+import { AlignJustify, X, Ticket, ShoppingCart, CheckCircle } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,54 +54,66 @@ const Header = () => {
   }, [menuDisplay]);
 
   return (
-    <div className="flex justify-between items-center px-4 md:px-6 lg:px-12 h-20 border-b border-gray-600">
+    <div className="flex justify-between items-center px-2 md:px-2 lg:px-4 h-22 border-b border-gray-600">
       <div className="flex items-center gap-2">
         <h1
           className="text-4xl font-audiowide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer"
           onClick={() => router.push("/")}
         >
           <div className="w-[160px] sm:w-[180px] md:w-[200px] lg:w-[250px]">
-            <img src="/new-logo.png" alt="saveetha-logo" />
+            <img src="/logo.png" alt="saveetha-logo" loading="lazy" decoding="async" />
           </div>
         </h1>
         
         {/* Excellence Logo */}
-        <div className="w-[50px] sm:w-[55px] md:w-[60px] lg:w-[70px] flex-shrink-0">
-          <img src="/excellence.png" alt="excellence-logo" className="w-full h-auto object-contain" />
+        <div className="w-[40px] sm:w-[50px] md:w-[60px] lg:w-[80px] flex-shrink-0">
+          <img src="/excellence.png" alt="excellence-logo" className="w-full h-auto object-contain" loading="lazy" decoding="async" />
         </div>
+
+       <div className="w-[30px] sm:w-[40px] md:w-[50px] lg:w-[60px] flex flex-col items-center justify-center flex-shrink-0">
+        <img
+          src="/drestein-logo.png"
+          alt="drestein-logo"
+          className="w-full h-auto object-contain animate-spin [animation-duration:6s]"
+          loading="lazy" decoding="async"
+        />
+      </div>
+{/* 
+        <h2 className="text-white font-azonix text-2xl hidden md:block">DRESTEIN</h2> */}
+
       </div>
 
       <div className="flex items-center">
         <div className="hidden items-center gap-3 xl:gap-4 xl:flex">
           <a
             onClick={() => router.push("/")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s  xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             Home
           </a>
           <a
             onClick={() => router.push("/departments")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s  xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             Departments
           </a>
           <a
             onClick={() => router.push("/events")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             Events
           </a>
 
           <a
             onClick={() => router.push("/special-events")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             Special Events
           </a>
 
           <a
             onClick={() => router.push("/about")}
-            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-4 cursor-pointer text-sm xl:text-base"
+            className="text-white font-audiowide hover:text-primary transition duration-300s px-3 xl:px-1 cursor-pointer text-sm xl:text-base"
           >
             About
           </a>
@@ -149,6 +161,7 @@ const Header = () => {
                     src={studentProfile?.photoURL || user?.photoURL}
                     alt="avatar"
                     className="w-8 h-8 rounded-full border border-border object-cover"
+                    loading="lazy" decoding="async"
                   />
                 )}
                 {/* <span className="text-white font-space text-sm hidden lg:inline">
@@ -163,8 +176,9 @@ const Header = () => {
                   </div>
                   <button
                     onClick={() => { setAccountOpen(false); router.push('/my-registrations'); }}
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm"
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-background text-white text-sm flex items-center gap-2"
                   >
+                    <CheckCircle size={16} />
                     My Registrations
                   </button>
                   <button

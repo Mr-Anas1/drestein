@@ -31,6 +31,7 @@ const Sponsors = () => {
                                 src={sponser}
                                 alt={`sponsor-${index}`}
                                 fill
+                                loading="lazy"
                                 className="object-contain"
                                 sizes="(max-width: 768px) 96px, 128px"
                             />

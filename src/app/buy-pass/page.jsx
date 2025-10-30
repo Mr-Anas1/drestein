@@ -18,6 +18,8 @@ export default function BuyPassPage() {
   const [cartTotal, setCartTotal] = useState(0);
   const [loadingCart, setLoadingCart] = useState(false);
   const [generalPassInCart, setGeneralPassInCart] = useState(false);
+  const [hasEventPass, setHasEventPass] = useState(false);
+  const [loadingPassStatus, setLoadingPassStatus] = useState(false);
 
   const passes = [
     {
@@ -39,6 +41,7 @@ export default function BuyPassPage() {
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchCart();
+      checkUserPass();
     }
   }, [isAuthenticated, user]);
 
@@ -76,9 +79,33 @@ export default function BuyPassPage() {
     }
   };
 
+  const checkUserPass = async () => {
+    if (!user) return;
+    try {
+      setLoadingPassStatus(true);
+      const token = await auth.currentUser?.getIdToken?.();
+      const res = await fetch('/api/user/check-pass', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setHasEventPass(Boolean(data?.hasEventPass));
+      }
+    } catch (e) {
+      console.error('Error checking pass status:', e);
+    } finally {
+      setLoadingPassStatus(false);
+    }
+  };
+
   const addGeneralPassToCart = async () => {
     if (!isAuthenticated) {
       alert('Please login to add items to cart');
+      return;
+    }
+
+    if (hasEventPass) {
+      alert('You have already purchased a pass.');
       return;
     }
 
@@ -110,7 +137,7 @@ export default function BuyPassPage() {
   const removeGeneralPassFromCart = async () => {
     try {
       const token = await auth.currentUser?.getIdToken?.();
-      // Find the general pass cart item
+      // OPTIMIZED: Fetch cart once to find general pass item
       const response = await fetch(`/api/special-events/register?userUid=${user.uid}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -124,7 +151,9 @@ export default function BuyPassPage() {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
           });
-          fetchCart(); // Refresh cart
+          // Update state directly to avoid another fetch
+          setGeneralPassInCart(false);
+          setCartTotal(cart.reduce((sum, item) => sum + (item.eventPrice || 0), 0));
         }
       }
     } catch (error) {
@@ -149,6 +178,10 @@ export default function BuyPassPage() {
   };
 
   const handleBuyPass = (pass) => {
+    if (pass?.id === 'general' && hasEventPass) {
+      alert('You have already purchased a pass.');
+      return;
+    }
     setSelectedPass(pass);
     setShowModal(true);
   };
@@ -241,7 +274,12 @@ export default function BuyPassPage() {
 
               {isAuthenticated ? (
                 <div className="space-y-3">
-                  {!generalPassInCart ? (
+                  {hasEventPass ? (
+                    <div className="bg-primary/10 border-2 border-primary text-primary font-audiowide py-3.5 rounded-lg text-center flex items-center justify-center gap-2">
+                      <Check size={18} />
+                      Already Purchased
+                    </div>
+                  ) : !generalPassInCart ? (
                     <>
                       <button
                         onClick={addGeneralPassToCart}

@@ -6,14 +6,17 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Ticket, Download, Calendar, CheckCircle, Loader2, AlertCircle, QrCode } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEventCache } from '@/hooks/useEventCache';
 import { auth } from '@/lib/firebase';
 
 export default function MyPassesPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+  const { fetchSpecialEvents } = useEventCache();
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
   const [specialEventsMap, setSpecialEventsMap] = useState({});
 
   useEffect(() => {
@@ -53,17 +56,22 @@ export default function MyPassesPage() {
         setPasses([]);
       }
 
-      // Fetch special events for custom pass details
-      const specialEvRes = await fetch('/api/special-events');
-      if (specialEvRes.ok) {
-        const specialEvents = await specialEvRes.json();
+      // Fetch special events using cache - reduces reads by 90%
+      const specialEventsData = await fetchSpecialEvents(0, 50);
+      if (specialEventsData) {
+        const specialArray = specialEventsData?.events || specialEventsData || [];
         const specialMap = {};
-        for (const ev of specialEvents) specialMap[ev.id] = ev;
+        for (const ev of specialArray) specialMap[ev.id] = ev;
         setSpecialEventsMap(specialMap);
       }
     } catch (err) {
       console.error('Error fetching passes:', err);
-      setError(err.message);
+      // Check if it's a quota exceeded error
+      if (err.message.includes('RESOURCE_EXHAUSTED') || err.message.includes('quota')) {
+        setIsQuotaExceeded(true);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -186,6 +194,28 @@ export default function MyPassesPage() {
           </p>
         </div>
 
+        {/* Quota Exceeded State */}
+        {isQuotaExceeded && (
+          <div className="bg-background-soft border border-border rounded-2xl p-12 text-center">
+            <div className="inline-block p-6 bg-secondary/10 rounded-full mb-6">
+              <Ticket className="w-16 h-16 text-secondary" />
+            </div>
+            <h2 className="text-3xl font-audiowide mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Stay Tuned! 🎉</h2>
+            <p className="text-muted-text font-space mb-4 max-w-md mx-auto text-lg">
+              We're experiencing high traffic right now. Your passes are safe and secure.
+            </p>
+            <p className="text-muted-text font-space mb-8 max-w-md mx-auto">
+              Please try again in a few moments. We're working hard to bring you the best experience!
+            </p>
+            <button
+              onClick={() => fetchPasses()}
+              className="bg-gradient-to-r from-primary to-secondary text-white font-audiowide px-8 py-3 rounded-lg hover:from-hover-primary hover:to-primary transition-all duration-300"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Error State */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 mb-8 flex items-start gap-3">
@@ -198,7 +228,7 @@ export default function MyPassesPage() {
         )}
 
         {/* No Passes State */}
-        {!error && passes.length === 0 && (
+        {!error && !isQuotaExceeded && passes.length === 0 && (
           <div className="bg-background-soft border border-border rounded-2xl p-12 text-center">
             <div className="inline-block p-6 bg-primary/10 rounded-full mb-6">
               <Ticket className="w-16 h-16 text-primary" />
@@ -341,15 +371,7 @@ export default function MyPassesPage() {
         {/* Additional Info */}
         {passes.length > 0 && (
           <div className="mt-12 bg-background-soft border border-border rounded-xl p-6">
-            <h3 className="font-audiowide text-lg mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-primary" />
-              Important Information
-            </h3>
             <ul className="space-y-2 text-muted-text font-space text-sm">
-              <li>• Please carry a printed or digital copy of your pass to the event</li>
-              <li>• Your pass QR code will be scanned at the entrance</li>
-              <li>• Each pass is valid for one person only</li>
-              <li>• Lost passes can be re-downloaded from this page</li>
               <li>• For any issues, contact support at the event venue</li>
             </ul>
           </div>

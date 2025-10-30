@@ -16,8 +16,17 @@ const Events = () => {
         setLoading(true);
         const response = await fetch('/api/events');
         const data = await response.json();
+        
+        // Handle new API response format with pagination
+        const eventsArray = data?.events || data || [];
+        
+        // Ensure it's an array
+        if (!Array.isArray(eventsArray)) {
+          throw new Error('Invalid events format');
+        }
+        
         // Get the first 4 events to display on home page
-        setEvents(data.slice(0, 4));
+        setEvents(eventsArray.slice(0, 4));
       } catch (error) {
         console.error('Error fetching events:', error);
       } finally {
@@ -35,7 +44,7 @@ const Events = () => {
           Events
         </h1>
       </Reveal>
-      <div className="flex md:flex-row flex-col mx-12 mt-10  justify-center items-center gap-12">
+      <div className="flex md:flex-row flex-col mx-12 mt-10 justify-center items-stretch gap-12">
         {loading ? (
           <div className="py-12">
             <LoadingSpinner size="lg" text="Loading events..." />
@@ -43,14 +52,16 @@ const Events = () => {
         ) : events.length > 0 ? (
           events.map((event, index) => (
             <Reveal effect="fade-up" delay={index * 100} key={event.id || index}>
-              <EventBox
-                img={event.img}
-                title={event.title}
-                description={event.description}
-                link={`/events/${event.id}`}
-                id={event.id}
-                event={event}
-              />
+              <div className="w-full md:w-72 h-full">
+                <EventBox
+                  img={event.img}
+                  title={event.title}
+                  description={event.description}
+                  link={`/events/${event.id}`}
+                  id={event.id}
+                  event={event}
+                />
+              </div>
             </Reveal>
           ))
         ) : (

@@ -4,6 +4,15 @@
 @import "slick-carousel/slick/slick.css";
 @import "slick-carousel/slick/slick-theme.css";
 
+@font-face {
+  font-family: 'Azonix';
+  src: url('/fonts/Azonix.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+
 body {
   overflow-x: hidden;
 }
@@ -25,6 +34,7 @@ body {
 
   --font-space: "Space Grotesk";
   --font-audiowide: "Audiowide";
+  --font-azonix: "Azonix";
 }
 
 

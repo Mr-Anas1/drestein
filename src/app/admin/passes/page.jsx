@@ -42,6 +42,7 @@ const AdminPassesPage = () => {
       setLoading(true);
       const { auth } = await import('@/lib/firebase');
       const token = await auth.currentUser?.getIdToken?.();
+<<<<<<< HEAD
       if (!token) {
         console.error('No auth token available');
         setLoading(false);
@@ -51,6 +52,10 @@ const AdminPassesPage = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+=======
+      const response = await fetch('/api/admin/passes', {
+        headers: { Authorization: `Bearer ${token}` },
+>>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
       });
       const data = await response.json();
       if (response.ok) {
@@ -65,6 +70,7 @@ const AdminPassesPage = () => {
     }
   };
 
+<<<<<<< HEAD
   const filteredPasses = passes.filter(pass => {
     // Apply filter
     let passesFilter = true;
@@ -86,6 +92,35 @@ const AdminPassesPage = () => {
     
     return passesFilter && matchesSearch;
   });
+=======
+  // Apply filters based on selection
+  const filteredPasses = passes
+    .filter(pass => {
+      if (filter === 'verified') return !!pass.paymentVerified;
+      if (filter === 'pending') return !pass.paymentVerified;
+      if (filter === 'general') return pass.passType === 'general';
+      if (filter === 'custom') return pass.passType === 'custom';
+      return true; // 'all'
+    })
+    .filter(pass => {
+      const q = searchQuery.trim().toLowerCase();
+      if (!q) return true;
+      const email = String(pass.userEmail || '').toLowerCase();
+      const uid = String(pass.userUid || '').toLowerCase();
+      const passName = String(pass.passName || pass.passType || '').toLowerCase();
+      const orderId = String(pass.orderId || '').toLowerCase();
+      const passId = String(pass.id || '').toLowerCase();
+      const userName = String(pass.userName || '').toLowerCase();
+      return (
+        email.includes(q) ||
+        uid.includes(q) ||
+        passName.includes(q) ||
+        orderId.includes(q) ||
+        passId.includes(q) ||
+        userName.includes(q)
+      );
+    });
+>>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
 
   const stats = {
     total: passes.length,
@@ -135,41 +170,44 @@ const AdminPassesPage = () => {
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-background-soft border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Ticket className="w-8 h-8 text-primary" />
-              <span className="text-3xl font-audiowide text-white">{stats.total}</span>
+        {/* Stats Cards - hidden for department admins */}
+        {!isDepartmentAdmin && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-background-soft border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-2">
+                <Ticket className="w-8 h-8 text-primary" />
+                <span className="text-3xl font-audiowide text-white">{stats.total}</span>
+              </div>
+              <p className="text-muted-text font-space text-sm">Total Passes</p>
             </div>
-            <p className="text-muted-text font-space text-sm">Total Passes</p>
-          </div>
 
-          <div className="bg-background-soft border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle className="w-8 h-8 text-green-500" />
-              <span className="text-3xl font-audiowide text-white">{stats.verified}</span>
+            <div className="bg-background-soft border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-2">
+                <CheckCircle className="w-8 h-8 text-green-500" />
+                <span className="text-3xl font-audiowide text-white">{stats.verified}</span>
+              </div>
+              <p className="text-muted-text font-space text-sm">Verified</p>
             </div>
-            <p className="text-muted-text font-space text-sm">Verified</p>
-          </div>
 
-          <div className="bg-background-soft border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Clock className="w-8 h-8 text-yellow-500" />
-              <span className="text-3xl font-audiowide text-white">{stats.pending}</span>
+            <div className="bg-background-soft border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-2">
+                <Clock className="w-8 h-8 text-yellow-500" />
+                <span className="text-3xl font-audiowide text-white">{stats.pending}</span>
+              </div>
+              <p className="text-muted-text font-space text-sm">Pending</p>
             </div>
-            <p className="text-muted-text font-space text-sm">Pending</p>
-          </div>
 
-          <div className="bg-background-soft border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className="w-8 h-8 text-secondary" />
-              <span className="text-3xl font-audiowide text-white">₹{stats.revenue}</span>
+            <div className="bg-background-soft border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-2">
+                <DollarSign className="w-8 h-8 text-secondary" />
+                <span className="text-3xl font-audiowide text-white">₹{stats.revenue}</span>
+              </div>
+              <p className="text-muted-text font-space text-sm">Total Revenue</p>
             </div>
-            <p className="text-muted-text font-space text-sm">Total Revenue</p>
           </div>
-        </div>
+        )}
 
+<<<<<<< HEAD
         {/* Search and Filters */}
         <div className="mb-6 space-y-4">
           {/* Search Bar */}
@@ -192,6 +230,10 @@ const AdminPassesPage = () => {
           </div>
 
           {/* Filters */}
+=======
+        {/* Filters + Search */}
+        <div className="mb-6 flex flex-col gap-4">
+>>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
           <div className="flex items-center gap-4">
             <Filter className="w-5 h-5 text-muted-text" />
             <div className="flex gap-2 flex-wrap">
@@ -209,6 +251,18 @@ const AdminPassesPage = () => {
                 </button>
               ))}
             </div>
+<<<<<<< HEAD
+=======
+          </div>
+          <div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by pass id, name, email, user id, pass name or order id"
+              className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+            />
+>>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
           </div>
         </div>
 
@@ -237,7 +291,7 @@ const AdminPassesPage = () => {
                     Status
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
-                    Date
+                    Pass ID
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-audiowide text-muted-text uppercase tracking-wider">
                     Actions
@@ -270,10 +324,15 @@ const AdminPassesPage = () => {
                     return (
                     <tr key={pass.id} className="hover:bg-background transition-colors">
                       <td className="px-6 py-4">
+<<<<<<< HEAD
                         <div className="text-white font-mono text-xs">{pass.id?.substring(0, 8)}...</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-white font-space text-sm">{pass.userEmail || pass.userUid}</div>
+=======
+                        <div className="text-white font-space text-sm">{pass.userName || '—'}</div>
+                        <div className="text-muted-text font-space text-xs">{pass.userEmail || pass.userUid}</div>
+>>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-white font-space text-sm">{pass.rollNo || 'N/A'}</div>
@@ -306,9 +365,13 @@ const AdminPassesPage = () => {
                         )}
                       </td>
                       <td className="px-6 py-4">
+<<<<<<< HEAD
                         <span className="text-muted-text font-space text-sm">
                           {purchasedDate ? purchasedDate.toLocaleDateString() : 'N/A'}
                         </span>
+=======
+                        <span className="text-white font-mono text-xs">{pass.id}</span>
+>>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
                       </td>
                       <td className="px-6 py-4">
                         <button
@@ -410,6 +473,7 @@ const AdminPassesPage = () => {
               )}
 
               <div className="bg-background-soft border border-border rounded-lg p-4">
+<<<<<<< HEAD
                 <p className="text-muted-text text-sm mb-1">Purchased At</p>
                 <p className="text-white font-space">
                   {(() => {
@@ -430,6 +494,10 @@ const AdminPassesPage = () => {
                     return date ? date.toLocaleString() : 'N/A';
                   })()}
                 </p>
+=======
+                <p className="text-muted-text text-sm mb-1">Pass ID</p>
+                <p className="text-white font-mono text-sm">{selectedPass.id}</p>
+>>>>>>> ffc06cfc258975157f64e00022710777fbdef9fd
               </div>
             </div>
           </div>
