@@ -320,6 +320,60 @@ const About = () => {
                 </div>
             </div>
 
+            {/* Media Team Section */}
+            <div className="py-16 px-6 md:px-12">
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="font-audiowide text-center text-3xl md:text-4xl bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent mb-8">
+                        MEDIA TEAM
+                    </h2>
+                    <div className="bg-background border border-border rounded-2xl p-8 md:p-12">
+                        <div className="w-20 h-20 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-6 flex items-center justify-center">
+                            <span className="text-white font-audiowide text-2xl">📹</span>
+                        </div>
+
+                        <h3 className="font-audiowide text-center text-2xl text-white mb-4">
+                            CORE MEDIA TEAM
+                        </h3>
+
+                        <p className="text-muted-text text-center font-space text-lg leading-relaxed mb-6">
+                            Our dedicated media team captures and showcases the essence of DRESTEIN through compelling visuals and engaging content.
+                            With expertise in photography, videography, and multimedia production, they bring the festival to life for everyone.
+                        </p>
+
+                        <div className="border-t border-border pt-6">
+                            <div className="flex flex-wrap justify-center gap-6 mb-6">
+                                {[
+                                    // Order and roles as requested
+                                    { name: "DHARMENDRA A", dept: "BME", role: "Editor", contact: "9345714869", img: "/dharmendra.jpg" },
+                                    { name: "S STAR ASHIL", dept: "CSE", role: "Editor", contact: "8122885827", img: "/star.jpg" },
+                                    { name: "S.ROHITH", dept: "AIML", role: "Editor", contact: "7845012876", img: "/rohit.jpg" },
+                                    { name: "RATHISH B", dept: "IT", role: "Editor", contact: "9940062171", img: "/ratish.jpg" },
+                                    { name: "OBELESH R", dept: "CSE", role: "Videography", contact: "8438701965", img: "/obelesh.jpg" },
+                                    { name: "R SIBHIRAAJ", dept: "AIDS", role: "Videography", contact: "7305702433", img: "/sibhi.jpg" },
+                                    { name: "A.P. Jones Benedict", dept: "CSE", role: "Videography", contact: "8668141112", img: "/jones.jpg" },
+                                ].map((member, index) => (
+                                    <div key={index} className="text-center group cursor-pointer w-40 p-2">
+                                        <div className="w-16 h-16 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                            <img src={member.img} alt={member.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <h4 className="font-audiowide text-sm text-white mb-1 group-hover:text-secondary transition-colors duration-300">{member.name}</h4>
+                                        <p className="text-secondary font-space text-xs">{member.dept}</p>
+                                        <p className="text-muted-text font-space text-xs">{member.role}</p>
+                                        <div className="flex items-center justify-center gap-1 mt-2">
+                                            <span className="text-accent text-xs">📞</span>
+                                            <a href={`tel:${member.contact}`} className="text-accent font-space text-xs hover:text-white transition-colors duration-300">
+                                                {member.contact}
+                                            </a>
+                                        </div>
+                                        {/* <p className="text-accent font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">View Profile →</p> */}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* DSC Coordinators Section */}
             <div className="py-16 px-6 md:px-12">
                 <div className="max-w-7xl mx-auto">

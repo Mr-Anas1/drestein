@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Search, Loader, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { X, Search, Loader, AlertCircle, CheckCircle, Clock, XCircle, Trash2, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuth } from 'firebase/auth';
 
@@ -12,18 +12,12 @@ const ViewUserDetailsModal = ({ onClose }) => {
   const [error, setError] = useState('');
   const [userDetails, setUserDetails] = useState(null);
   const [searched, setSearched] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      setError('Please enter an email address');
-      return;
-    }
-
+  const fetchUserDetails = async (emailToSearch) => {
     setLoading(true);
     setError('');
-    setUserDetails(null);
-    setSearched(false);
 
     try {
       // Get the ID token from the current Firebase user
@@ -35,7 +29,7 @@ const ViewUserDetailsModal = ({ onClose }) => {
 
       const token = await currentUser.getIdToken();
       const response = await fetch(
-        `/api/admin/user-details?email=${encodeURIComponent(email)}`,
+        `/api/admin/user-details?email=${encodeURIComponent(emailToSearch)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -56,6 +50,24 @@ const ViewUserDetailsModal = ({ onClose }) => {
       setSearched(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      setError('Please enter an email address');
+      return;
+    }
+
+    setUserDetails(null);
+    setSearched(false);
+    await fetchUserDetails(email);
+  };
+
+  const handleRefresh = async () => {
+    if (email.trim()) {
+      await fetchUserDetails(email);
     }
   };
 
@@ -88,6 +100,41 @@ const ViewUserDetailsModal = ({ onClose }) => {
 
   const formatAmount = (amount) => {
     return `₹${(amount || 0).toFixed(2)}`;
+  };
+
+  const handleDeleteRegistration = async (registrationId) => {
+    setDeleting(true);
+    try {
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken?.();
+
+      const response = await fetch(`/api/registrations?id=${registrationId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        // Refresh user details after deletion
+        setUserDetails(prev => ({
+          ...prev,
+          registrations: prev.registrations.filter(r => r.id !== registrationId),
+          specialEventRegistrations: prev.specialEventRegistrations.filter(r => r.id !== registrationId),
+          summary: {
+            ...prev.summary,
+            totalRegistrations: prev.summary.totalRegistrations - 1,
+          }
+        }));
+        setDeleteConfirm(null);
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to delete registration');
+      }
+    } catch (err) {
+      console.error('Error deleting registration:', err);
+      setError('Failed to delete registration');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -129,6 +176,17 @@ const ViewUserDetailsModal = ({ onClose }) => {
                   {loading ? <Loader size={18} className="animate-spin" /> : <Search size={18} />}
                   Search
                 </button>
+                {searched && userDetails && (
+                  <button
+                    type="button"
+                    onClick={handleRefresh}
+                    disabled={loading}
+                    className="bg-background border border-border text-white px-4 py-2 rounded-lg font-audiowide hover:bg-background-soft transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
+                    title="Refresh data"
+                  >
+                    {loading ? <Loader size={18} className="animate-spin" /> : <RefreshCw size={18} />}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -222,11 +280,20 @@ const ViewUserDetailsModal = ({ onClose }) => {
                     {userDetails.registrations.map((reg) => (
                       <div key={reg.id} className="bg-background-soft border border-border rounded p-3">
                         <div className="flex justify-between items-start mb-2">
-                          <div>
+                          <div className="flex-1">
                             <p className="font-audiowide text-white">{reg.eventDetails?.title || 'Unknown Event'}</p>
                             <p className="text-muted-text font-space text-sm">{reg.eventDetails?.venue || 'N/A'}</p>
                           </div>
-                          {getStatusBadge(reg.status)}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(reg.status)}
+                            <button
+                              onClick={() => setDeleteConfirm({ id: reg.id, title: reg.eventDetails?.title || 'Event' })}
+                              className="text-red-500 hover:text-red-400 transition-colors p-1"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 font-space text-sm text-muted-text">
                           <p>Pass ID: <span className="text-white">{reg.id}</span></p>
@@ -248,11 +315,20 @@ const ViewUserDetailsModal = ({ onClose }) => {
                     {userDetails.specialEventRegistrations.map((reg) => (
                       <div key={reg.id} className="bg-background-soft border border-border rounded p-3">
                         <div className="flex justify-between items-start mb-2">
-                          <div>
+                          <div className="flex-1">
                             <p className="font-audiowide text-white">{reg.specialEventDetails?.title || 'Unknown Event'}</p>
                             <p className="text-muted-text font-space text-sm">{reg.specialEventDetails?.location || 'N/A'}</p>
                           </div>
-                          {getStatusBadge(reg.status)}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(reg.status)}
+                            <button
+                              onClick={() => setDeleteConfirm({ id: reg.id, title: reg.specialEventDetails?.title || 'Event' })}
+                              className="text-red-500 hover:text-red-400 transition-colors p-1"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 font-space text-sm text-muted-text">
                           <p>Pass ID: <span className="text-white">{reg.id}</span></p>
@@ -316,6 +392,33 @@ const ViewUserDetailsModal = ({ onClose }) => {
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={() => setDeleteConfirm(null)}>
+            <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-audiowide text-xl text-white mb-4">Confirm Delete</h3>
+              <p className="text-muted-text font-space mb-6">
+                Are you sure you want to delete the registration for "{deleteConfirm.title}"? This action cannot be undone.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => handleDeleteRegistration(deleteConfirm.id)}
+                  disabled={deleting}
+                  className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg font-audiowide hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-audiowide hover:bg-background transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

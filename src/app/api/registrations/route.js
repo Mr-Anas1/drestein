@@ -94,7 +94,7 @@ export async function POST(request) {
       );
     }
 
-    const { eventId, name, email, transactionId, userUid } =
+    const { eventId, name, email, transactionId, userUid, isSpecialEvent, isAdminAdding, rollNo, college, teamMembers } =
       await request.json();
 
     // Make transactionId optional
@@ -105,11 +105,21 @@ export async function POST(request) {
       );
     }
 
-    if (decoded.uid !== userUid) {
-      return NextResponse.json(
-        { error: "Unauthorized: UID mismatch" },
-        { status: 403 }
-      );
+    // Verify the userUid matches the authenticated user
+    // This ensures users can only register themselves, unless they're an admin
+    if (decoded.uid !== userUid && !isAdminAdding) {
+      // Check if the authenticated user is an admin
+      const db = getAdminDB();
+      const userDoc = await db.collection("users").doc(decoded.uid).get();
+      const userData = userDoc.data();
+      
+      // Only allow if user is admin or super_admin
+      if (!userData || (userData.role !== 'admin' && userData.role !== 'super_admin')) {
+        return NextResponse.json(
+          { error: "Unauthorized: You can only register yourself" },
+          { status: 403 }
+        );
+      }
     }
 
     const db = getAdminDB();
@@ -117,7 +127,9 @@ export async function POST(request) {
     // Fetch the event to determine category (event vs workshop)
     let eventSnap;
     try {
-      eventSnap = await db.collection("events").doc(eventId).get();
+      // Check if this is a special event or regular event
+      const collectionName = isSpecialEvent ? "specialEvents" : "events";
+      eventSnap = await db.collection(collectionName).doc(eventId).get();
       if (!eventSnap.exists) {
         return NextResponse.json({ error: "Event not found" }, { status: 404 });
       }
@@ -161,8 +173,11 @@ export async function POST(request) {
     const isWorkshop =
       String(eventData.category || "").toLowerCase() === "workshop";
 
-    // If not a workshop, require a verified Event Pass
-    if (!isWorkshop) {
+    // Check if the current user is an admin (admin adding participant for someone else)
+    const isAdminAddingParticipant = isAdminAdding === true || decoded.uid !== userUid;
+
+    // If not a workshop and not admin-added, require a verified Event Pass
+    if (!isWorkshop && !isAdminAddingParticipant) {
       try {
         // Check student's hasEventPass flag (single read)
         const studentDoc = await db.collection("students").doc(userUid).get();
@@ -187,17 +202,28 @@ export async function POST(request) {
       }
     }
 
-    // Duplicate check by uid per event - with better error handling
+    // Duplicate check - by email for admin-added participants, by uid for regular registrations
     let dupSnap;
     try {
       console.log("Attempting to query registrations collection...");
-      console.log("Query parameters:", { eventId, userUid });
-
-      dupSnap = await db
-        .collection("registrations")
-        .where("eventId", "==", eventId)
-        .where("userUid", "==", userUid)
-        .get();
+      
+      if (isAdminAddingParticipant) {
+        // For admin-added participants, check by email to prevent duplicates
+        console.log("Query parameters (admin adding):", { eventId, email });
+        dupSnap = await db
+          .collection("registrations")
+          .where("eventId", "==", eventId)
+          .where("email", "==", email.toLowerCase().trim())
+          .get();
+      } else {
+        // For regular registrations, check by userUid
+        console.log("Query parameters (regular):", { eventId, userUid });
+        dupSnap = await db
+          .collection("registrations")
+          .where("eventId", "==", eventId)
+          .where("userUid", "==", userUid)
+          .get();
+      }
 
       console.log(
         "Query successful, found",
@@ -236,6 +262,7 @@ export async function POST(request) {
       );
     }
 
+    // For admin-added participants, set status to confirmed and paid
     const registrationData = {
       eventId,
       name: name.trim(),
@@ -246,9 +273,13 @@ export async function POST(request) {
         : {}),
       userUid,
       registeredAt: FieldValue.serverTimestamp(),
-      status: "pending_payment",
-      paymentStatus: "pending",
-      paymentVerified: false,
+      status: isAdminAddingParticipant ? "confirmed" : "pending_payment",
+      paymentStatus: isAdminAddingParticipant ? "paid" : "pending",
+      paymentVerified: isAdminAddingParticipant ? true : false,
+      ...(isSpecialEvent && { isSpecialEvent: true }),
+      ...(rollNo && { rollNo: rollNo.trim() }),
+      ...(college && { college: college.trim() }),
+      ...(teamMembers && Array.isArray(teamMembers) && { teamMembers }),
     };
 
     let regRef;
@@ -347,24 +378,81 @@ export async function GET(request) {
 
 export async function PATCH(request) {
   try {
-    const { registrationId, status, adminNotes } = await request.json();
-
-    if (!registrationId || !status) {
+    const url = new URL(request.url);
+    const pathSegments = url.pathname.split('/');
+    const registrationIdFromPath = pathSegments[pathSegments.length - 1];
+    
+    let body = {};
+    try {
+      body = await request.json();
+    } catch (parseErr) {
+      console.error("Error parsing request body:", parseErr);
       return NextResponse.json(
-        { error: "Registration ID and status are required" },
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+    
+    const { registrationId, status, adminNotes, name, email, rollNo, college, teamMembers } = body;
+
+    // Determine registration ID from either path or body
+    const actualRegistrationId = registrationIdFromPath !== 'registrations' ? registrationIdFromPath : registrationId;
+
+    if (!actualRegistrationId) {
+      return NextResponse.json(
+        { error: "Registration ID is required" },
         { status: 400 }
       );
     }
 
     const db = getAdminDB();
 
-    const registrationRef = db.collection("registrations").doc(registrationId);
+    const registrationRef = db.collection("registrations").doc(actualRegistrationId);
     const registrationSnap = await registrationRef.get();
 
     if (!registrationSnap.exists) {
       return NextResponse.json(
         { error: "Registration not found" },
         { status: 404 }
+      );
+    }
+
+    // If updating participant details (name, email, rollNo, college, teamMembers)
+    if (name || email || rollNo || college || teamMembers !== undefined) {
+      const updateData = {};
+      
+      if (name && typeof name === 'string') {
+        updateData.name = name.trim();
+      }
+      if (email && typeof email === 'string') {
+        updateData.email = email.toLowerCase().trim();
+      }
+      if (rollNo && typeof rollNo === 'string') {
+        updateData.rollNo = rollNo.trim();
+      }
+      if (college && typeof college === 'string') {
+        updateData.college = college.trim();
+      }
+      if (Array.isArray(teamMembers)) {
+        updateData.teamMembers = teamMembers;
+      }
+      
+      updateData.updatedAt = FieldValue.serverTimestamp();
+
+      await registrationRef.update(updateData);
+      
+      return NextResponse.json({
+        id: actualRegistrationId,
+        message: "Participant updated successfully",
+        ...updateData,
+      }, { status: 200 });
+    }
+
+    // Otherwise, update status (for payment approval/rejection)
+    if (!status) {
+      return NextResponse.json(
+        { error: "Status is required for status updates" },
+        { status: 400 }
       );
     }
 
@@ -402,9 +490,10 @@ export async function PATCH(request) {
       status: updateData.status,
     });
   } catch (error) {
-    console.error("Error updating registration status:", error);
+    console.error("Error in PATCH handler:", error);
+    console.error("Error stack:", error?.stack);
     return NextResponse.json(
-      { error: error?.message || "Failed to update registration status" },
+      { error: error?.message || "Failed to update registration" },
       { status: 500 }
     );
   }

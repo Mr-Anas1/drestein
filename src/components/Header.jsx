@@ -299,24 +299,17 @@ const Header = () => {
               <button
                 onClick={() => {
                   setMenuDisplay(false);
-                  setAccountOpen(false);
                   router.push("/my-passes");
                 }}
                 className="w-3/4 flex items-center justify-center gap-2 py-2 rounded-md hover:bg-gray-800 text-lg font-medium transition-colors duration-300"
               >
-                <Ticket size={16} />
+                <Ticket size={18} />
                 My Passes
               </button>
-              <button
-                onClick={() => {
-                  setMenuDisplay(false);
-                  router.push("/buy-pass");
-                }}
-                className="w-3/4 flex items-center justify-center gap-2 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary hover:from-hover-primary hover:to-primary text-white font-semibold transition-colors duration-300"
-              >
-                <Ticket size={18} />
-                Buy Pass
-              </button>
+              <div className="w-3/4 px-3 py-2 text-xs text-muted-text text-center border-t border-gray-700 mt-2">
+                <div className="text-gray-400">Signed in as</div>
+                <div className="text-white truncate font-space text-sm">{user?.email}</div>
+              </div>
               <button
                 onClick={() => {
                   setMenuDisplay(false);

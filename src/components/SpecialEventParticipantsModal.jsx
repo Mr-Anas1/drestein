@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Users, Mail, User, Calendar, Download, UserCheck, Search, Plus, Trash2 } from 'lucide-react';
+import { X, Users, Mail, User, Calendar, Download, UserCheck, Search, Plus, Trash2, Edit2 } from 'lucide-react';
 import { getAuth } from 'firebase/auth';
 
 export default function SpecialEventParticipantsModal({ event, onClose }) {
@@ -13,6 +13,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
     const [showAddModal, setShowAddModal] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [editingParticipant, setEditingParticipant] = useState(null);
 
     useEffect(() => {
         fetchParticipants();
@@ -57,10 +58,10 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
             const teamMembers = (p.teamMembers || []).join(' ').toLowerCase();
 
             return name.includes(query) ||
-                   email.includes(query) ||
-                   rollNo.includes(query) ||
-                   college.includes(query) ||
-                   teamMembers.includes(query);
+                email.includes(query) ||
+                rollNo.includes(query) ||
+                college.includes(query) ||
+                teamMembers.includes(query);
         });
 
         setFilteredParticipants(filtered);
@@ -96,7 +97,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
         try {
             const auth = getAuth();
             const token = await auth.currentUser?.getIdToken?.();
-            
+
             const response = await fetch(`/api/registrations?id=${participantId}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` },
@@ -216,7 +217,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                 </div>
                             </div>
 
-                            <div className="overflow-y-auto max-h-96 custom-scrollbar">
+                            <div className="overflow-y-auto max-h-[50vh] custom-scrollbar">
                                 <table className="w-full">
                                     <thead className="bg-background sticky top-0">
                                         <tr>
@@ -242,57 +243,65 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                             </tr>
                                         ) : (
                                             filteredParticipants.map((participant, index) => (
-                                            <tr key={participant.id} className="border-t border-border hover:bg-background/50">
-                                                <td className="p-4 text-muted-text font-space text-sm">
-                                                    {index + 1}
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <User size={16} className="text-primary" />
-                                                        <span className="text-white font-space">{participant.name || 'N/A'}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
-                                                    <span className="text-white font-space text-sm">{participant.rollNo || '-'}</span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <span className="text-white font-space text-sm">{participant.college || '-'}</span>
-                                                </td>
-                                                <td className="p-4">
-                                                    {participant.teamMembers && participant.teamMembers.length > 0 ? (
-                                                        <div className="flex flex-col gap-1">
-                                                            {participant.teamMembers.map((member, idx) => (
-                                                                <div key={idx} className="flex items-center gap-1">
-                                                                    <UserCheck size={12} className="text-accent" />
-                                                                    <span className="text-muted-text font-space text-xs">{member}</span>
-                                                                </div>
-                                                            ))}
+                                                <tr key={participant.id} className="border-t border-border hover:bg-background/50">
+                                                    <td className="p-4 text-muted-text font-space text-sm">
+                                                        {index + 1}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <User size={16} className="text-primary" />
+                                                            <span className="text-white font-space">{participant.name || 'N/A'}</span>
                                                         </div>
-                                                    ) : (
-                                                        <span className="text-muted-text font-space text-xs italic">Individual</span>
-                                                    )}
-                                                </td>
-                                                
-                                                <td className="p-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-audiowide ${
-                                                        participant.status === 'confirmed' || participant.paymentStatus === 'paid'
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className="text-white font-space text-sm">{participant.rollNo || '-'}</span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className="text-white font-space text-sm">{participant.college || '-'}</span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        {participant.teamMembers && participant.teamMembers.length > 0 ? (
+                                                            <div className="flex flex-col gap-1">
+                                                                {participant.teamMembers.map((member, idx) => (
+                                                                    <div key={idx} className="flex items-center gap-1">
+                                                                        <UserCheck size={12} className="text-accent" />
+                                                                        <span className="text-muted-text font-space text-xs">{member}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-muted-text font-space text-xs italic">Individual</span>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="p-4">
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-audiowide ${participant.status === 'confirmed' || participant.paymentStatus === 'paid'
                                                             ? 'bg-green-500/20 text-green-500'
                                                             : 'bg-yellow-500/20 text-yellow-500'
-                                                    }`}>
-                                                        {participant.status === 'confirmed' || participant.paymentStatus === 'paid' ? 'Confirmed' : 'Pending'}
-                                                    </span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <button
-                                                        onClick={() => setDeleteConfirm(participant)}
-                                                        className="text-red-500 hover:text-red-400 transition-colors"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        )))}
+                                                            }`}>
+                                                            {participant.status === 'confirmed' || participant.paymentStatus === 'paid' ? 'Confirmed' : 'Pending'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => setEditingParticipant(participant)}
+                                                                className="text-blue-500 hover:text-blue-400 transition-colors"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit2 size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setDeleteConfirm(participant)}
+                                                                className="text-red-500 hover:text-red-400 transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )))}
                                     </tbody>
                                 </table>
                             </div>
@@ -300,14 +309,14 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                     )}
                 </div>
 
-                <div className="mt-6 flex justify-end">
+                {/* <div className="mt-6 flex justify-end">
                     <button
                         onClick={onClose}
                         className="bg-background-soft border border-border text-white px-6 py-2 rounded-lg font-audiowide hover:bg-background transition-colors duration-300"
                     >
                         Close
                     </button>
-                </div>
+                </div> */}
 
                 {/* Delete Confirmation Modal */}
                 {deleteConfirm && (
@@ -341,9 +350,24 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                     <AddParticipantModal
                         event={event}
                         onClose={() => setShowAddModal(false)}
-                        onAdded={() => {
+                        onAdded={async () => {
                             setShowAddModal(false);
-                            fetchParticipants();
+                            // Small delay to ensure backend has processed the addition
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            await fetchParticipants();
+                        }}
+                    />
+                )}
+
+                {/* Edit Participant Modal */}
+                {editingParticipant && (
+                    <EditParticipantModal
+                        participant={editingParticipant}
+                        onClose={() => setEditingParticipant(null)}
+                        onUpdated={async () => {
+                            setEditingParticipant(null);
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            await fetchParticipants();
                         }}
                     />
                 )}
@@ -377,10 +401,7 @@ function AddParticipantModal({ event, onClose, onAdded }) {
         try {
             const auth = getAuth();
             const token = await auth.currentUser?.getIdToken?.();
-            
-            // Generate a unique userUid for the participant based on email
-            // This allows them to view their registration if they later sign in with the same email
-            const userUid = `participant_${formData.email.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now()}`;
+            const adminUid = auth.currentUser?.uid;
 
             const response = await fetch('/api/registrations', {
                 method: 'POST',
@@ -392,22 +413,22 @@ function AddParticipantModal({ event, onClose, onAdded }) {
                     eventId: event.id,
                     name: formData.name,
                     email: formData.email,
-                    userUid: userUid,
+                    userUid: adminUid,
                     isSpecialEvent: true,
+                    isAdminAdding: true,
                     rollNo: formData.rollNo || undefined,
                     college: formData.college || undefined,
                     teamMembers: formData.teamMembers ? formData.teamMembers.split(',').map(m => m.trim()) : undefined,
-                    status: 'confirmed',
-                    paymentStatus: 'paid',
-                    paymentVerified: true,
-                    amount: event.price || 0,
                 }),
             });
 
             if (response.ok) {
+                const data = await response.json();
+                console.log('Participant added successfully:', data);
                 onAdded();
             } else {
                 const data = await response.json();
+                console.error('Failed to add participant:', data);
                 setError(data.error || 'Failed to add participant');
             }
         } catch (err) {
@@ -498,6 +519,170 @@ function AddParticipantModal({ event, onClose, onAdded }) {
                             className="flex-1 bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all disabled:opacity-50"
                         >
                             {loading ? 'Adding...' : 'Add Participant'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-audiowide hover:bg-background transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// Edit Participant Modal Component
+function EditParticipantModal({ participant, onClose, onUpdated }) {
+    const [formData, setFormData] = useState({
+        name: participant.name || '',
+        email: participant.email || '',
+        rollNo: participant.rollNo || '',
+        college: participant.college || '',
+        teamMembers: participant.teamMembers ? participant.teamMembers.join(', ') : '',
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.name || !formData.email) {
+            setError('Name and email are required');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            const auth = getAuth();
+            const token = await auth.currentUser?.getIdToken?.();
+
+            const response = await fetch(`/api/registrations/${participant.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    rollNo: formData.rollNo || undefined,
+                    college: formData.college || undefined,
+                    teamMembers: formData.teamMembers ? formData.teamMembers.split(',').map(m => m.trim()) : undefined,
+                }),
+            });
+
+            if (response.ok) {
+                try {
+                    const data = await response.json();
+                    console.log('Participant updated successfully:', data);
+                    onUpdated();
+                } catch (parseErr) {
+                    console.error('Error parsing response:', parseErr);
+                    console.log('Response status:', response.status);
+                    console.log('Response text:', await response.text());
+                    setError('Failed to parse server response');
+                }
+            } else {
+                try {
+                    const data = await response.json();
+                    console.error('Failed to update participant:', data);
+                    setError(data.error || 'Failed to update participant');
+                } catch (parseErr) {
+                    console.error('Error parsing error response:', parseErr);
+                    setError('Server error - please try again');
+                }
+            }
+        } catch (err) {
+            console.error('Error updating participant:', err);
+            setError('Failed to update participant');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={onClose}>
+            <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                <h3 className="font-audiowide text-xl text-white mb-4">Edit Participant</h3>
+
+                {error && (
+                    <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-2 rounded-lg mb-4 text-sm font-space">
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Name *</label>
+                        <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="Participant name"
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Email *</label>
+                        <input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="participant@example.com"
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Roll No</label>
+                        <input
+                            type="text"
+                            value={formData.rollNo}
+                            onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
+                            placeholder="Roll number"
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">College</label>
+                        <input
+                            type="text"
+                            value={formData.college}
+                            onChange={(e) => setFormData({ ...formData, college: e.target.value })}
+                            placeholder="College name"
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Team Members (comma-separated)</label>
+                        <input
+                            type="text"
+                            value={formData.teamMembers}
+                            onChange={(e) => setFormData({ ...formData, teamMembers: e.target.value })}
+                            placeholder="Member1, Member2, Member3"
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div className="flex gap-4 pt-4">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all disabled:opacity-50"
+                        >
+                            {loading ? 'Updating...' : 'Update Participant'}
                         </button>
                         <button
                             type="button"

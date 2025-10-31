@@ -8,11 +8,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { getDepartmentById } from "@/constants/departments";
 import { Calendar, MapPin, Users, Clock, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DepartmentPage() {
   const params = useParams();
   const deptId = params.id?.toUpperCase();
   const department = getDepartmentById(deptId);
+  const { studentProfile } = useAuth();
 
   const [events, setEvents] = useState([]);
   const [specialEvents, setSpecialEvents] = useState([]);
@@ -50,8 +52,45 @@ export default function DepartmentPage() {
           throw new Error('Invalid special events format');
         }
         
-        setEvents(eventsArray);
-        setSpecialEvents(specialArray);
+        // Filter events based on user's student status
+        const userIsStudent = studentProfile?.isStudent !== false; // Default to true if not specified
+        
+        const filteredEvents = eventsArray.filter(e => {
+          const forStudents = e.isForStudents !== false; // Default true if not specified
+          const forNonStudents = e.isForNonStudents === true;
+
+          // If both checkboxes are checked or neither is checked, show to everyone
+          if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
+            return true;
+          }
+
+          // If only one checkbox is checked, filter based on user status
+          if (userIsStudent) {
+            return forStudents;
+          } else {
+            return forNonStudents;
+          }
+        });
+
+        const filteredSpecialEvents = specialArray.filter(e => {
+          const forStudents = e.isForStudents !== false; // Default true if not specified
+          const forNonStudents = e.isForNonStudents === true;
+
+          // If both checkboxes are checked or neither is checked, show to everyone
+          if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
+            return true;
+          }
+
+          // If only one checkbox is checked, filter based on user status
+          if (userIsStudent) {
+            return forStudents;
+          } else {
+            return forNonStudents;
+          }
+        });
+        
+        setEvents(filteredEvents);
+        setSpecialEvents(filteredSpecialEvents);
       } catch (err) {
         console.error("Error fetching events:", err);
         const errorMsg = err.message || '';
@@ -71,7 +110,7 @@ export default function DepartmentPage() {
     if (deptId) {
       fetchEvents();
     }
-  }, [deptId]);
+  }, [deptId, studentProfile]);
 
   if (!department) {
     return (

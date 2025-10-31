@@ -117,10 +117,18 @@ export async function GET(request) {
     }
 
     // Fetch all registrations for this userUid
-    const registrationsSnap = await db
+    let registrationsSnap = await db
       .collection("registrations")
       .where("userUid", "==", userUid)
       .get();
+
+    // If no registrations found by userUid, try by email (for admin-added participants)
+    if (registrationsSnap.empty) {
+      registrationsSnap = await db
+        .collection("registrations")
+        .where("email", "==", normalizedEmail)
+        .get();
+    }
 
     // Map registrations from the already fetched data
     const registrations = registrationsSnap.docs.map((doc) => ({

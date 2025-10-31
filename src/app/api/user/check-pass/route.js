@@ -60,17 +60,18 @@ export async function GET(request) {
       });
     }
     
-    // Fallback: check passes collection
+    // Fallback: check passes collection for general or any active pass
     const passSnap = await db
       .collection("passes")
       .where("userUid", "==", decoded.uid)
       .where("paymentVerified", "==", true)
       .where("status", "==", "active")
-      .limit(1)
       .get();
     
     if (!passSnap.empty) {
-      const passDoc = passSnap.docs[0];
+      // Check if user has any general pass
+      const generalPass = passSnap.docs.find(doc => doc.data().passType === 'general');
+      const passDoc = generalPass || passSnap.docs[0];
       const passDetails = { id: passDoc.id, ...passDoc.data() };
       
       // Update student flag
