@@ -5,9 +5,10 @@ import Header from '@/components/Header';
 import CustomDropdown from '@/components/CustomDropdown';
 import { DEPARTMENTS } from '@/constants/departments';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, Trash2, Eye, Users, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Users, ArrowLeft, Download } from 'lucide-react';
 import Image from 'next/image';
 import { getDepartmentName } from '@/constants/departments';
+import { exportSpecialEventsToCSV } from '@/lib/csvExport';
 import AddSpecialEventModal from '@/components/AddSpecialEventModal';
 import EditSpecialEventModal from '@/components/EditSpecialEventModal';
 import SpecialEventParticipantsModal from '@/components/SpecialEventParticipantsModal';
@@ -207,18 +208,26 @@ const AdminSpecialEventsPage = () => {
             </p>
           </div>
 
+          <div className="flex items-center gap-4 mt-4 md:mt-0 flex-wrap">
+            {/* Only super admins can add special events */}
+            {isSuperAdmin && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 flex items-center gap-2"
+              >
+                <Plus size={20} />
+                Add Special Event
+              </button>
+            )}
 
-
-          {/* Only super admins can add special events */}
-          {isSuperAdmin && (
             <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 flex items-center gap-2 mt-4 md:mt-0"
+              onClick={() => exportSpecialEventsToCSV(filteredSpecialEvents)}
+              className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2"
             >
-              <Plus size={20} />
-              Add Special Event
+              <Download size={20} />
+              Export CSV
             </button>
-          )}
+          </div>
         </div>
 
         {/* Department Filter for Super Admin */}

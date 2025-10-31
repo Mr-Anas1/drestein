@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Users, Mail, User, Calendar, Download, UserCheck, Search } from 'lucide-react';
+import { X, Users, Mail, User, Calendar, Download, UserCheck, Search, Plus, Trash2 } from 'lucide-react';
+import { getAuth } from 'firebase/auth';
 
 export default function SpecialEventParticipantsModal({ event, onClose }) {
     const [participants, setParticipants] = useState([]);
@@ -9,6 +10,9 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         fetchParticipants();
@@ -87,7 +91,31 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
         window.URL.revokeObjectURL(url);
     };
 
-    // no registration date in UI or CSV
+    const deleteParticipant = async (participantId) => {
+        setDeleting(true);
+        try {
+            const auth = getAuth();
+            const token = await auth.currentUser?.getIdToken?.();
+            
+            const response = await fetch(`/api/registrations?id=${participantId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.ok) {
+                setParticipants(participants.filter(p => p.id !== participantId));
+                setDeleteConfirm(null);
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Failed to delete participant');
+            }
+        } catch (err) {
+            console.error('Error deleting participant:', err);
+            alert('Failed to delete participant');
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -104,6 +132,13 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-lg font-audiowide transition-colors duration-300 flex items-center gap-2"
+                        >
+                            <Plus size={16} />
+                            Add
+                        </button>
                         {participants.length > 0 && (
                             <button
                                 onClick={exportToCSV}
@@ -191,6 +226,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">College</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Team Members</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Status</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -246,6 +282,15 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                                         {participant.status === 'confirmed' || participant.paymentStatus === 'paid' ? 'Confirmed' : 'Pending'}
                                                     </span>
                                                 </td>
+                                                <td className="p-4">
+                                                    <button
+                                                        onClick={() => setDeleteConfirm(participant)}
+                                                        className="text-red-500 hover:text-red-400 transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </td>
                                             </tr>
                                         )))}
                                     </tbody>
@@ -263,6 +308,206 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                         Close
                     </button>
                 </div>
+
+                {/* Delete Confirmation Modal */}
+                {deleteConfirm && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={() => setDeleteConfirm(null)}>
+                        <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                            <h3 className="font-audiowide text-xl text-white mb-4">Confirm Delete</h3>
+                            <p className="text-muted-text font-space mb-6">
+                                Are you sure you want to delete "{deleteConfirm.name}" from this event? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => deleteParticipant(deleteConfirm.id)}
+                                    disabled={deleting}
+                                    className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg font-audiowide hover:bg-red-600 transition-colors disabled:opacity-50"
+                                >
+                                    {deleting ? 'Deleting...' : 'Delete'}
+                                </button>
+                                <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    className="flex-1 bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-audiowide hover:bg-background transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Add Participant Modal */}
+                {showAddModal && (
+                    <AddParticipantModal
+                        event={event}
+                        onClose={() => setShowAddModal(false)}
+                        onAdded={() => {
+                            setShowAddModal(false);
+                            fetchParticipants();
+                        }}
+                    />
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Add Participant Modal Component
+function AddParticipantModal({ event, onClose, onAdded }) {
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        rollNo: '',
+        college: '',
+        teamMembers: '',
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.name || !formData.email) {
+            setError('Name and email are required');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            const auth = getAuth();
+            const token = await auth.currentUser?.getIdToken?.();
+            
+            // Generate a unique userUid for the participant based on email
+            // This allows them to view their registration if they later sign in with the same email
+            const userUid = `participant_${formData.email.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now()}`;
+
+            const response = await fetch('/api/registrations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    eventId: event.id,
+                    name: formData.name,
+                    email: formData.email,
+                    userUid: userUid,
+                    isSpecialEvent: true,
+                    rollNo: formData.rollNo || undefined,
+                    college: formData.college || undefined,
+                    teamMembers: formData.teamMembers ? formData.teamMembers.split(',').map(m => m.trim()) : undefined,
+                    status: 'confirmed',
+                    paymentStatus: 'paid',
+                    paymentVerified: true,
+                    amount: event.price || 0,
+                }),
+            });
+
+            if (response.ok) {
+                onAdded();
+            } else {
+                const data = await response.json();
+                setError(data.error || 'Failed to add participant');
+            }
+        } catch (err) {
+            console.error('Error adding participant:', err);
+            setError('Failed to add participant');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={onClose}>
+            <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-audiowide text-xl text-white">Add Participant</h3>
+                    <button onClick={onClose} className="text-muted-text hover:text-white">
+                        <X size={24} />
+                    </button>
+                </div>
+
+                {error && (
+                    <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4 font-space text-sm">
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Name *</label>
+                        <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Email *</label>
+                        <input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Roll No</label>
+                        <input
+                            type="text"
+                            value={formData.rollNo}
+                            onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">College</label>
+                        <input
+                            type="text"
+                            value={formData.college}
+                            onChange={(e) => setFormData({ ...formData, college: e.target.value })}
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">Team Members (comma-separated)</label>
+                        <input
+                            type="text"
+                            value={formData.teamMembers}
+                            onChange={(e) => setFormData({ ...formData, teamMembers: e.target.value })}
+                            placeholder="Member1, Member2, Member3"
+                            className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div className="flex gap-4 pt-4">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all disabled:opacity-50"
+                        >
+                            {loading ? 'Adding...' : 'Add Participant'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-audiowide hover:bg-background transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );

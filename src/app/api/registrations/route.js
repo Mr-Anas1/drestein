@@ -409,3 +409,50 @@ export async function PATCH(request) {
     );
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const decoded = await verifyAuth(request);
+    if (!decoded) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const registrationId = searchParams.get("id");
+
+    if (!registrationId) {
+      return NextResponse.json(
+        { error: "Registration ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const db = getAdminDB();
+    const registrationRef = db.collection("registrations").doc(registrationId);
+    const registrationSnap = await registrationRef.get();
+
+    if (!registrationSnap.exists) {
+      return NextResponse.json(
+        { error: "Registration not found" },
+        { status: 404 }
+      );
+    }
+
+    // Delete the registration
+    await registrationRef.delete();
+
+    return NextResponse.json({
+      message: "Registration deleted successfully",
+      registrationId,
+    });
+  } catch (error) {
+    console.error("Error deleting registration:", error);
+    return NextResponse.json(
+      { error: error?.message || "Failed to delete registration" },
+      { status: 500 }
+    );
+  }
+}

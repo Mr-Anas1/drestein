@@ -5,7 +5,8 @@ import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { DEPARTMENTS, getDepartmentName } from '@/constants/departments'
 import CustomDropdown from '@/components/CustomDropdown'
-import { Plus, LogOut, Users, Ticket } from 'lucide-react'
+import { Plus, LogOut, Users, Ticket, Search, Download } from 'lucide-react'
+import { exportEventsToCSV } from '@/lib/csvExport'
 // Note: Avoid cached hooks on admin to always reflect latest writes
 
 // Import extracted components
@@ -14,6 +15,7 @@ import EditEventModal from '@/components/EditEventModal'
 import DeleteConfirmModal from '@/components/DeleteConfirmModal'
 import EventsTable from '@/components/EventsTable'
 import StatsCards from '@/components/StatsCards'
+import ViewUserDetailsModal from '@/components/ViewUserDetailsModal'
 
 const AdminDashboard = () => {
     const { user, userRole, loading: authLoading, logout, isSuperAdmin, isDepartmentAdmin, userDepartment } = useAuth()
@@ -28,6 +30,7 @@ const AdminDashboard = () => {
     const [eventToDelete, setEventToDelete] = useState(null)
     const [selectedDepartment, setSelectedDepartment] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
+    const [showViewUserDetailsModal, setShowViewUserDetailsModal] = useState(false)
 
     // Authentication check - only allow super_admin and department_admin
     useEffect(() => {
@@ -214,6 +217,24 @@ const AdminDashboard = () => {
                             </button>
                         )}
 
+                        {isSuperAdmin && (
+                            <button
+                                onClick={() => setShowViewUserDetailsModal(true)}
+                                className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2"
+                            >
+                                <Search size={20} />
+                                View Details
+                            </button>
+                        )}
+
+                        <button
+                            onClick={() => exportEventsToCSV(filteredEvents)}
+                            className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2"
+                        >
+                            <Download size={20} />
+                            Export CSV
+                        </button>
+
                         <button
                             onClick={handleLogout}
                             className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2"
@@ -291,6 +312,12 @@ const AdminDashboard = () => {
                         setSelectedEvent(null)
                     }}
                     onEventUpdated={fetchEvents}
+                />
+            )}
+
+            {showViewUserDetailsModal && (
+                <ViewUserDetailsModal
+                    onClose={() => setShowViewUserDetailsModal(false)}
                 />
             )}
         </div>

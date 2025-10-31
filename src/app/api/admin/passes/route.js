@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 function getAdminDB() {
   if (!getApps().length) {
@@ -96,6 +96,99 @@ export async function GET(request) {
     console.error("[ADMIN PASSES GET] Error:", e);
     return NextResponse.json(
       { error: e?.message || "Failed to fetch passes" },
+      { status: 500 }
+    );
+  }
+}
+
+// Add a new pass (admin only)
+export async function POST(request) {
+  try {
+    const decoded = await verifyAuth(request);
+    if (!decoded) {
+      return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    }
+
+    const isAdmin = await checkAdminRole(decoded.uid);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
+    const { userName, userEmail, userUid, orderId, passType, passName, passPrice, paymentVerified, paymentStatus, status, customEvents } = await request.json();
+
+    if (!userName || !userEmail || !userUid || !orderId || !passPrice) {
+      return NextResponse.json(
+        { error: "User name, email, user ID, order ID, and price are required" },
+        { status: 400 }
+      );
+    }
+
+    const db = getAdminDB();
+    
+    const passData = {
+      userName,
+      userEmail: userEmail.toLowerCase().trim(),
+      userUid,
+      orderId,
+      passType: passType || "general",
+      passName: passName || "General Pass",
+      passPrice: parseFloat(passPrice),
+      paymentVerified: paymentVerified !== false,
+      paymentStatus: paymentStatus || "approved",
+      status: status || "active",
+      purchasedAt: FieldValue.serverTimestamp(),
+      createdBy: decoded.uid,
+      createdAt: FieldValue.serverTimestamp(),
+    };
+
+    // Add custom events if provided
+    if (customEvents && customEvents.length > 0) {
+      passData.customEvents = customEvents;
+    }
+
+    const docRef = await db.collection("passes").add(passData);
+
+    return NextResponse.json(
+      { id: docRef.id, message: "Pass added successfully", ...passData },
+      { status: 201 }
+    );
+  } catch (e) {
+    console.error("[ADMIN PASSES POST] Error:", e);
+    return NextResponse.json(
+      { error: e?.message || "Failed to add pass" },
+      { status: 500 }
+    );
+  }
+}
+
+// Delete a pass (admin only)
+export async function DELETE(request) {
+  try {
+    const decoded = await verifyAuth(request);
+    if (!decoded) {
+      return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    }
+
+    const isAdmin = await checkAdminRole(decoded.uid);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const passId = searchParams.get("id");
+
+    if (!passId) {
+      return NextResponse.json({ error: "Pass ID is required" }, { status: 400 });
+    }
+
+    const db = getAdminDB();
+    await db.collection("passes").doc(passId).delete();
+
+    return NextResponse.json({ message: "Pass deleted successfully" });
+  } catch (e) {
+    console.error("[ADMIN PASSES DELETE] Error:", e);
+    return NextResponse.json(
+      { error: e?.message || "Failed to delete pass" },
       { status: 500 }
     );
   }
