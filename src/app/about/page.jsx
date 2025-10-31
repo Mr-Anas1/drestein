@@ -320,6 +320,132 @@ const About = () => {
                 </div>
             </div>
 
+            {/* Media Team Section */}
+            <div className="py-16 px-6 md:px-12">
+                <div className="max-w-6xl mx-auto">
+                    <h2 className="font-audiowide text-center text-3xl md:text-4xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-8">
+                        MEDIA TEAM
+                    </h2>
+                    <div className="bg-background border border-border rounded-2xl p-8 md:p-12">
+                        <div className="w-20 h-20 bg-gradient-to-r from-primary to-accent rounded-full mx-auto mb-6 flex items-center justify-center">
+                            <span className="text-white font-audiowide text-2xl">📸</span>
+                        </div>
+
+                        <h3 className="font-audiowide text-center text-2xl text-white mb-4">
+                            CAPTURING THE MOMENTS
+                        </h3>
+
+                        <p className="text-muted-text text-center font-space text-lg leading-relaxed mb-6">
+                            Our dedicated Media Team works tirelessly to capture every memorable moment of DRESTEIN.
+                            From photography to videography, they ensure that the spirit and energy of the event is preserved and shared with everyone.
+                        </p>
+
+                        <div className="flex flex-wrap justify-center gap-4 mb-8">
+                            <span className="px-4 py-2 bg-primary/20 text-primary rounded-full font-space text-sm">Photography</span>
+                            <span className="px-4 py-2 bg-accent/20 text-accent rounded-full font-space text-sm">Videography</span>
+                            <span className="px-4 py-2 bg-primary/20 text-primary rounded-full font-space text-sm">Content Creation</span>
+                        </div>
+
+                        <div className="border-t border-border pt-6">
+                            <div className="flex flex-wrap justify-center gap-6 mb-6">
+                                <div className="text-center group">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/dharmendra.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                    </div>
+                                    <h4 className="font-audiowide text-sm text-white mb-1 group-hover:text-accent transition-colors duration-300">DHARMENDRA A</h4>
+                                    <p className="text-primary font-space text-xs">CORE MEDIA TEAM</p>
+                                    <p className="text-accent font-space text-xs mt-1">BME</p>
+                                    <p className="text-muted-text font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <a href="mailto:dmendra745@gmail.com" className="hover:text-primary">dmendra745@gmail.com</a>
+                                    </p>
+                                    <p className="text-muted-text font-space text-xs">9345714869</p>
+                                </div>
+
+                                <div className="text-center group">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/star.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                    </div>
+                                    <h4 className="font-audiowide text-sm text-white mb-1 group-hover:text-accent transition-colors duration-300">S STAR ASHIL</h4>
+                                    <p className="text-primary font-space text-xs">CORE MEDIA TEAM</p>
+                                    <p className="text-accent font-space text-xs mt-1">CSE</p>
+                                    <p className="text-muted-text font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <a href="mailto:starashil2006@gmail.com" className="hover:text-primary">starashil2006@gmail.com</a>
+                                    </p>
+                                    <p className="text-muted-text font-space text-xs">8122885827</p>
+                                </div>
+
+
+                                <div className="text-center group">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-primary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/obelesh.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                    </div>
+                                    <h4 className="font-audiowide text-sm text-white mb-1 group-hover:text-primary transition-colors duration-300">OBELESH R</h4>
+                                    <p className="text-primary font-space text-xs">CORE MEDIA TEAM</p>
+                                    <p className="text-accent font-space text-xs mt-1">CSE</p>
+                                    <p className="text-muted-text font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <a href="mailto:obeleshrajendran041206@gmail.com" className="hover:text-primary">obeleshrajendran041206@gmail.com</a>
+                                    </p>
+                                    <p className="text-muted-text font-space text-xs">8438701965</p>
+                                </div>
+                                <div className="text-center group">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-accent to-primary rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/jones.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                    </div>
+                                    <h4 className="font-audiowide text-sm text-white mb-1 group-hover:text-accent transition-colors duration-300">A.P. JONES BENEDICT</h4>
+                                    <p className="text-primary font-space text-xs">CORE MEDIA TEAM</p>
+                                    <p className="text-accent font-space text-xs mt-1">CSE</p>
+                                    <p className="text-muted-text font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <a href="mailto:Benedictapjones@gmail.com" className="hover:text-primary">Benedictapjones@gmail.com</a>
+                                    </p>
+                                    <p className="text-muted-text font-space text-xs">8668141112</p>
+                                </div>
+                                <div className="text-center group">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-primary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/sibhi.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                    </div>
+                                    <h4 className="font-audiowide text-sm text-white mb-1 group-hover:text-primary transition-colors duration-300">R SIBHIRAAJ</h4>
+                                    <p className="text-primary font-space text-xs">CORE MEDIA TEAM</p>
+                                    <p className="text-accent font-space text-xs mt-1">AIDS</p>
+                                    <p className="text-muted-text font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <a href="mailto:sibhiraaj12@gmail.com" className="hover:text-primary">sibhiraaj12@gmail.com</a>
+                                    </p>
+                                    <p className="text-muted-text font-space text-xs">7305702433</p>
+                                </div>
+
+                                <div className="text-center group">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-primary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/ratish.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                    </div>
+                                    <h4 className="font-audiowide text-sm text-white mb-1 group-hover:text-primary transition-colors duration-300">RATHISH B</h4>
+                                    <p className="text-primary font-space text-xs">CORE MEDIA TEAM</p>
+                                    <p className="text-accent font-space text-xs mt-1">IT</p>
+                                    <p className="text-muted-text font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <a href="mailto:rathishrd992@gmail.com" className="hover:text-primary">rathishrd992@gmail.com</a>
+                                    </p>
+                                    <p className="text-muted-text font-space text-xs">9940062171</p>
+                                </div>
+
+                                <div className="text-center group">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-primary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                        <img src="/rohit.jpg" alt="headshot" className="w-full h-full object-cover" />
+                                    </div>
+                                    <h4 className="font-audiowide text-sm text-white mb-1 group-hover:text-primary transition-colors duration-300">S.ROHITH</h4>
+                                    <p className="text-primary font-space text-xs">CORE MEDIA TEAM</p>
+                                    <p className="text-accent font-space text-xs mt-1">AIML</p>
+                                    <p className="text-muted-text font-space text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <a href="mailto:rohithsaravanan86@gmail.com" className="hover:text-primary">rohithsaravanan86@gmail.com</a>
+                                    </p>
+                                    <p className="text-muted-text font-space text-xs">7845012876</p>
+                                </div>
+                            </div>
+                            <p className="text-muted-text text-center font-space text-sm">
+                                Captured by the <span className="text-primary font-audiowide">DRESTEIN Media Team</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* DSC Coordinators Section */}
             <div className="py-16 px-6 md:px-12">
                 <div className="max-w-7xl mx-auto">
@@ -343,7 +469,7 @@ const About = () => {
                             { dept: "CSE", name: "Mr. GOKUL SHARAN R", contact: "9791486718" },
                             { dept: "CYB SEC", name: "Mr. RAGUL RAAJAN T", contact: "9488001452" },
                             { dept: "ECE", name: "Mr. ABINANDHAN G", contact: "6383796369" },
-                            { dept: "EEE", name: "Mr. VISVANTH", contact: "9840928549" },
+                            { dept: "EEE", name: "Mr. VISVANTH P.S", contact: "9840928549" },
                             { dept: "EIE", name: "Mr. JEGINTHAN", contact: "6374470752" },
                             { dept: "IoT", name: "Ms. RAJALAKSHMI R", contact: "9488610743" },
                             { dept: "MECH", name: "Mr. VISAKAN G", contact: "7094998410" },

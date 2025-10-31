@@ -244,7 +244,7 @@ const page = () => {
                             </h3>
                             <div className="space-y-2 text-md md:text-lg">
                                 <p className="text-muted-text font-space leading-relaxed">
-                                    <span className="text-primary font-semibold">SEC Students:</span> Can attend all events on this page <span className="text-primary font-semibold">free of cost</span>.
+                                    <span className="text-primary font-semibold">SEC Students:</span> Can attend all the events on this page <span className="text-primary font-semibold">free of cost</span>.
                                 </p>
                                 <p className="text-muted-text font-space leading-relaxed">
                                     <span className="text-primary font-semibold">Other College Students:</span> Require a <span className="text-primary font-semibold">Common Pass (₹300)</span> for common events and a <span className="text-primary font-semibold">Custom Pass</span> for premium events. Visit <a href="/special-events" className="text-primary hover:underline">Special Events & Workshops</a> for premium selections.

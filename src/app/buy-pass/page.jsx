@@ -236,7 +236,8 @@ export default function BuyPassPage() {
         ) : (
           <>
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
-              {passes.map((pass) => (
+              {/* Only show general pass if user hasn't purchased any pass */}
+              {(!isAuthenticated || !hasEventPass) && passes.map((pass) => (
                 <div
                   key={pass.id}
                   className="relative bg-background-soft border border-primary rounded-2xl p-8 hover:shadow-xl hover:shadow-primary/20 transition-all duration-300"
@@ -273,12 +274,7 @@ export default function BuyPassPage() {
 
                   {isAuthenticated ? (
                     <div className="space-y-3">
-                      {hasEventPass ? (
-                        <div className="bg-primary/10 border-2 border-primary text-primary font-audiowide py-3.5 rounded-lg text-center flex items-center justify-center gap-2">
-                          <Check size={18} />
-                          Already Purchased
-                        </div>
-                      ) : !generalPassInCart ? (
+                      {!generalPassInCart ? (
                         <>
                           <button
                             onClick={addGeneralPassToCart}
