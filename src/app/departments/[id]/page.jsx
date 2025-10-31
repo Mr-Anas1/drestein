@@ -6,13 +6,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
-import { getDepartmentById, DEPARTMENTS } from "@/constants/departments";
-import { Calendar, MapPin, Users, Clock, ArrowRight, Info } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { getDepartmentById } from "@/constants/departments";
+import { Calendar, MapPin, Users, Clock, ArrowRight } from "lucide-react";
 
 export default function DepartmentPage() {
   const params = useParams();
-  const { studentProfile } = useAuth();
   const deptId = params.id?.toUpperCase();
   const department = getDepartmentById(deptId);
 
@@ -51,87 +49,9 @@ export default function DepartmentPage() {
         if (!Array.isArray(specialArray)) {
           throw new Error('Invalid special events format');
         }
-
-        // Normalize department ids to canonical DEPARTMENTS ids
-        const normalizeDept = (val) => {
-          const raw = String(val || '').trim();
-          if (!raw) return raw;
-          const upper = raw.toUpperCase();
-          const alias = {
-            CYB: 'CSE-CYB',
-            IOT: 'CSE-IOT',
-            MED: 'MED-ELE',
-            BME: 'BIO-MED',
-            OTH: 'OTHERS',
-            SH: 'S&H',
-            'S & H': 'S&H',
-          };
-          const aliasMapped = alias[upper] || upper;
-          const match = DEPARTMENTS.find(
-            d => d.id === aliasMapped || String(d.code || '').toUpperCase() === aliasMapped
-          );
-          return match ? match.id : aliasMapped;
-        };
-
-        // Helper to check if event is expired
-        const isEventExpired = (event) => {
-          if (!event.expiryDate) return false;
-          const expiryDate = new Date(event.expiryDate);
-          return expiryDate < new Date();
-        };
-
-        // Filter events based on user's student status
-        const userIsStudent = studentProfile?.isStudent !== false; // Default to true if not specified
-
-        const filteredEvents = eventsArray.filter(e => {
-          const forStudents = e.isForStudents !== false; // Default true if not specified
-          const forNonStudents = e.isForNonStudents === true;
-
-          // If both checkboxes are checked or neither is checked, show to everyone
-          if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
-            return true;
-          }
-
-          // If only one checkbox is checked, filter based on user status
-          if (userIsStudent) {
-            return forStudents;
-          } else {
-            return forNonStudents;
-          }
-        });
-
-        const filteredSpecial = specialArray.filter(e => {
-          const forStudents = e.isForStudents !== false; // Default true if not specified
-          const forNonStudents = e.isForNonStudents === true;
-
-          // If both checkboxes are checked or neither is checked, show to everyone
-          if ((forStudents && forNonStudents) || (!forStudents && !forNonStudents)) {
-            return true;
-          }
-
-          // If only one checkbox is checked, filter based on user status
-          if (userIsStudent) {
-            return forStudents;
-          } else {
-            return forNonStudents;
-          }
-        });
-
-        const normalizedEvents = filteredEvents.map(e => ({
-          ...e,
-          department: normalizeDept(e.department),
-          departments: Array.isArray(e.departments) ? e.departments.map(normalizeDept) : undefined,
-          isExpired: isEventExpired(e),
-        }));
-        const normalizedSpecial = filteredSpecial.map(e => ({
-          ...e,
-          department: normalizeDept(e.department),
-          departments: Array.isArray(e.departments) ? e.departments.map(normalizeDept) : undefined,
-          isExpired: isEventExpired(e),
-        }));
         
-        setEvents(normalizedEvents);
-        setSpecialEvents(normalizedSpecial);
+        setEvents(eventsArray);
+        setSpecialEvents(specialArray);
       } catch (err) {
         console.error("Error fetching events:", err);
         const errorMsg = err.message || '';
@@ -208,34 +128,8 @@ export default function DepartmentPage() {
         </div>
       </div>
 
-      {/* Info Box for Student/Non-Student Access */}
-      <div className="py-8 px-6 md:px-12 max-w-7xl mx-auto">
-        <div className="max-w-4xl mx-auto mb-12 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-2 border-primary/30 rounded-2xl p-6 backdrop-blur-sm">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 mt-1">
-              <div className="bg-primary/20 p-3 rounded-full">
-                <Info className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-audiowide text-xl text-white mb-3 flex items-center gap-2">
-                🎫 Events Access Information
-              </h3>
-              <div className="space-y-2 text-md md:text-lg">
-                <p className="text-muted-text font-space leading-relaxed">
-                  <span className="text-primary font-semibold">SEC Students:</span> Can attend all the events on this page <span className="text-primary font-semibold">free of cost</span>.
-                </p>
-                <p className="text-muted-text font-space leading-relaxed">
-                  <span className="text-primary font-semibold">Other College Students:</span> Require a <span className="text-primary font-semibold">Common Pass (₹300)</span> for common events and a <span className="text-primary font-semibold">Custom Pass</span> for premium events. Visit <a href="/special-events" className="text-primary hover:underline">Special Events & Workshops</a> for premium selections.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Events Section */}
-      <div className="py-8 px-6 md:px-12 max-w-7xl mx-auto">
+      <div className="py-16 px-6 md:px-12 max-w-7xl mx-auto">
         {loading ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>

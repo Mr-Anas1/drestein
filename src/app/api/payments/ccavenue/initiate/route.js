@@ -89,34 +89,7 @@ export async function POST(request) {
     // Save pending order in Firestore
     const db = getAdminDB();
     const { FieldValue } = await import("firebase-admin/firestore");
-    
-    // Generate sequential passId (drestein1000, drestein1001, etc.)
-    let passId = "drestein1000"; // Default starting ID
-    try {
-      // Query for passes with IDs starting with "drestein" to find the highest number
-      const passesSnapshot = await db.collection("passes")
-        .orderBy("__name__", "desc")
-        .limit(100)
-        .get();
-      
-      let maxNumber = 999; // Start from 999 so first ID will be 1000
-      passesSnapshot.forEach(doc => {
-        const id = doc.id;
-        if (id.startsWith("drestein")) {
-          const numPart = parseInt(id.replace("drestein", ""), 10);
-          if (!isNaN(numPart) && numPart > maxNumber) {
-            maxNumber = numPart;
-          }
-        }
-      });
-      
-      passId = `drestein${maxNumber + 1}`;
-      console.log(`[CCA INIT] Generated passId: ${passId}`);
-    } catch (err) {
-      console.error(`[CCA INIT] Error generating passId, using default:`, err);
-    }
-    
-    console.log(`[CCA INIT] Creating pass for userUid: ${userUid}, orderId: ${orderId}, passType: ${passType}, passId: ${passId}`);
+    console.log(`[CCA INIT] Creating pass for userUid: ${userUid}, orderId: ${orderId}, passType: ${passType}`);
     
     const passData = {
       userUid,
@@ -143,10 +116,8 @@ export async function POST(request) {
       passData.includesGeneralPass = true;
     }
 
-    // Use set() with custom passId instead of add()
-    const passRef = db.collection("passes").doc(passId);
-    await passRef.set(passData);
-    console.log(`[CCA INIT] ✅ Pass created with ID: ${passId}, userUid: ${userUid}, passType: ${passType}`);
+    const passRef = await db.collection("passes").add(passData);
+    console.log(`[CCA INIT] ✅ Pass created with ID: ${passRef.id}, userUid: ${userUid}, passType: ${passType}`);
 
     // Build plaintext (MUST match CCAvenue format)
     // ✅ Include merchant_param1 as fallback for sandbox obfuscation bug
@@ -158,7 +129,7 @@ export async function POST(request) {
       `&redirect_url=${REDIRECT_URL}` +
       `&cancel_url=${CANCEL_URL}` +
       `&language=EN` +
-      `&merchant_param1=${passId}` +    // Pass ID for callback lookup
+      `&merchant_param1=${orderId}` +   // Fallback for callback when order_id is obfuscated
       `&merchant_param2=${userUid}`;    // Track user in callback
 
     // Encrypt using corrected method

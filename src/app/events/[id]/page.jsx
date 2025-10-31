@@ -179,7 +179,7 @@ const EventDetailPage = () => {
                 </span>
                 {event.department && (
                   <span className="bg-secondary/20 text-secondary px-3 py-1 rounded-full text-xs font-audiowide uppercase">
-                    {getDepartmentName(event.department) || event.department}
+                    {getDepartmentName(event.department)}
                   </span>
                 )}
               </div>

@@ -6,7 +6,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { DEPARTMENTS } from '@/constants/departments';
 import CustomDropdown from '@/components/CustomDropdown';
 import Link from 'next/link';
-import { ArrowRight, Info } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { auth } from '@/lib/firebase';
 
@@ -222,33 +222,6 @@ const SpecialEventsPage = () => {
         <p className='text-muted-text text-center font-space text-lg mb-8'>
           Special competitions, workshops, and exclusive events
         </p>
-
-        {/* Info Box for Custom Pass */}
-        <div className="max-w-4xl mx-auto mb-12 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-2 border-primary/30 rounded-2xl p-6 backdrop-blur-sm">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 mt-1">
-              <div className="bg-primary/20 p-3 rounded-full">
-                <Info className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-audiowide text-xl text-white mb-3 flex items-center gap-2">
-                🎟️ Custom Pass Information
-              </h3>
-              <div className="space-y-2 text-md md:text-lg">
-                <p className="text-muted-text font-space leading-relaxed">
-                  <span className="text-primary font-semibold">SEC Students:</span> Can attend all premium events <span className="text-primary font-semibold">free of cost</span>! Just fill out the Google Form shared by your mentor.
-                </p>
-                <p className="text-muted-text font-space leading-relaxed">
-                  <span className="text-primary font-semibold">Other College Students:</span> Create a <span className="text-primary font-semibold">Custom Pass</span> to attend specific events and workshops. Pick the events you love and join in on the fun!
-                </p>
-                <p className="text-muted-text font-space leading-relaxed">
-                  <span className="text-primary font-semibold">Note:</span> Workshops and special events may require separate registration even for custom pass holders.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* {isSuperAdmin && (
           <div className="flex justify-center mb-6">

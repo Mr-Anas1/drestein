@@ -7,7 +7,6 @@ import CursorEffect from "@/components/CursorEffect";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProfileGuard from "@/components/ProfileGuard";
 import PageLoader from "@/components/PageLoader";
-import LoadingScreen from "@/components/LoadingScreen";
 import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -36,7 +35,6 @@ export default function RootLayout({ children }) {
           <ProfileGuard>
             <Suspense fallback={null}>
               <PageLoader />
-              <LoadingScreen />
             </Suspense>
             <SmoothFollower />
             <AnimatedBackground />

@@ -215,62 +215,79 @@ export async function POST(req) {
     const orderStatus = params.get("order_status");
     const trackingId = params.get("tracking_id");
     const amount = params.get("amount");
-    const orderId = params.get("order_id");
     
-    // ✅ Extract passId from merchant_param1 (new format: drestein1000, drestein1001, etc.)
-    let passId = params.get("merchant_param1");
-    let passIdSource = "merchant_param1";
+    // ✅ Extract orderId with multiple fallbacks for CCAvenue sandbox bug
+    let orderId = params.get("order_id");
+    let orderIdSource = "order_id";
+    
+    if (!orderId) {
+      orderId = params.get("merchant_param1");
+      orderIdSource = "merchant_param1";
+    }
+    
+    // ✅ Fallback: Find any value that looks like an order ID (13+ digits)
+    if (!orderId) {
+      const allParams = Object.fromEntries(params);
+      orderId = Object.values(allParams).find(v => /^\d{13,}$/.test(v));
+      if (orderId) {
+        orderIdSource = "regex_pattern_match";
+        console.log(`[CCA CALLBACK] ⚠️ Found orderId via regex pattern match: ${orderId}`);
+      }
+    }
     
     // ✅ Also extract userUid from merchant_param2 if available
     const userUidFromParams = params.get("merchant_param2");
 
-    console.log(`[CCA CALLBACK] PassId: ${passId} (source: ${passIdSource}), Order: ${orderId}, Status: ${orderStatus}`);
+    console.log(`[CCA CALLBACK] Order: ${orderId} (source: ${orderIdSource}), Status: ${orderStatus}`);
     console.log("[CCA CALLBACK] All params:", Object.fromEntries(params));
 
     // Update pass in Firestore
     const db = getAdminDB();
-    if (!passId) {
-      console.error("[CCA CALLBACK] ❌ CRITICAL: passId is null/undefined!");
-      console.error("[CCA CALLBACK] This means merchant_param1 wasn't returned in the response");
+    if (!orderId) {
+      console.error("[CCA CALLBACK] ❌ CRITICAL: orderId is null/undefined!");
+      console.error("[CCA CALLBACK] This means CCAvenue didn't return order_id in the response");
+      console.error("[CCA CALLBACK] Check if the parameter name is different or if encryption is wrong");
       
-      // Try to find pass by orderId as fallback
-      if (orderId) {
-        console.log(`[CCA CALLBACK] Attempting fallback: searching by orderId: ${orderId}`);
-        const snapByOrder = await db.collection("passes").where("orderId", "==", orderId).limit(1).get();
-        if (!snapByOrder.empty) {
-          console.log(`[CCA CALLBACK] ✅ Found pass by orderId`);
-          const passRef = snapByOrder.docs[0].ref;
-          const foundPassId = snapByOrder.docs[0].id;
-          const passData = snapByOrder.docs[0].data();
+      // Try to find pass by tracking_id as fallback
+      if (trackingId) {
+        console.log(`[CCA CALLBACK] Attempting fallback: searching by trackingId: ${trackingId}`);
+        const snapByTracking = await db.collection("passes").where("trackingId", "==", trackingId).limit(1).get();
+        if (!snapByTracking.empty) {
+          console.log(`[CCA CALLBACK] ✅ Found pass by trackingId`);
+          // Continue with this pass
+          const passRef = snapByTracking.docs[0].ref;
+          const passId = snapByTracking.docs[0].id;
+          const passData = snapByTracking.docs[0].data();
           const success = orderStatus?.toLowerCase() === "success";
           
-          await updatePassAndStudent(db, passRef, foundPassId, passData, success, orderStatus, trackingId, params);
+          await updatePassAndStudent(db, passRef, passId, passData, success, orderStatus, trackingId, params);
         } else {
-          console.error(`[CCA CALLBACK] ❌ No pass found by orderId either`);
+          console.error(`[CCA CALLBACK] ❌ No pass found by trackingId either`);
         }
       }
       
       // Redirect anyway to show status to user
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://drestein.vercel.app";
       return NextResponse.redirect(
-        `${baseUrl}/payment/result?orderId=${encodeURIComponent(orderId || trackingId || "unknown")}&status=${encodeURIComponent(orderStatus || "")}`,
+        `${baseUrl}/payment/result?orderId=${encodeURIComponent(trackingId || "unknown")}&status=${encodeURIComponent(orderStatus || "")}`,
         302
       );
     }
     
-    if (passId) {
-      console.log(`[CCA CALLBACK] Looking up pass with passId: ${passId}`);
-      const passRef = db.collection("passes").doc(passId);
-      const passDoc = await passRef.get();
+    if (orderId) {
+      console.log(`[CCA CALLBACK] Searching for pass with orderId: ${orderId}`);
+      const snap = await db.collection("passes").where("orderId", "==", orderId).limit(1).get();
       
-      if (passDoc.exists) {
-        const passData = passDoc.data();
+      if (!snap.empty) {
+        const passRef = snap.docs[0].ref;
+        const passId = snap.docs[0].id;
+        const passData = snap.docs[0].data();
         const success = orderStatus?.toLowerCase() === "success";
         
         console.log(`[CCA CALLBACK] Found pass ${passId} with userUid: ${passData.userUid || 'MISSING'}`);
         await updatePassAndStudent(db, passRef, passId, passData, success, orderStatus, trackingId, params);
       } else {
-        console.warn("[CCA CALLBACK] No pass found for passId:", passId);
+        console.warn("[CCA CALLBACK] No pass found for orderId:", orderId);
       }
     }
 

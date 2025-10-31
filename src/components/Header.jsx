@@ -271,7 +271,6 @@ const Header = () => {
             </button>
           ) : (
             <div className="flex flex-col items-center w-full space-y-3">
-
               <button
                 onClick={() => {
                   setMenuDisplay(false);
@@ -318,22 +317,6 @@ const Header = () => {
                 <Ticket size={18} />
                 Buy Pass
               </button>
-              {/* Account Info Section */}
-              <div className="w-3/4  border border-gray-700 rounded-lg p-4 flex items-center gap-3">
-                {(studentProfile?.photoURL || user?.photoURL) && (
-                  <img
-                    src={studentProfile?.photoURL || user?.photoURL}
-                    alt="avatar"
-                    className="w-12 h-12 rounded-full border border-border object-cover"
-                    loading="lazy" decoding="async"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs text-muted-text">Signed in as</div>
-                  <div className="text-white text-sm truncate">{user?.email}</div>
-                </div>
-              </div>
-
               <button
                 onClick={() => {
                   setMenuDisplay(false);
