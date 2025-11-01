@@ -162,7 +162,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden flex flex-col">
                     {loading ? (
                         <div className="flex items-center justify-center h-64">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -178,7 +178,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                             <p className="font-space text-sm">Registrations will appear here once users purchase this event</p>
                         </div>
                     ) : (
-                        <div className="bg-background-soft border border-border rounded-xl overflow-hidden">
+                        <div className="bg-background-soft border border-border rounded-xl overflow-hidden flex-1 flex flex-col">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4">
                                 <div>
                                     <h4 className="font-audiowide text-white">
@@ -196,99 +196,101 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                     <Search size={16} className="absolute left-3 top-3 text-muted-text" />
                                 </div>
                             </div>
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="bg-background-soft text-left">
-                                        <th className="p-4 font-audiowide text-sm text-muted-text">#</th>
-                                        <th className="p-4 font-audiowide text-sm text-muted-text">Participant</th>
-                                        <th className="p-4 font-audiowide text-sm text-muted-text">Roll No</th>
-                                        <th className="p-4 font-audiowide text-sm text-muted-text">College</th>
-                                        <th className="p-4 font-audiowide text-sm text-muted-text">Team</th>
-                                        <th className="p-4 font-audiowide text-sm text-muted-text">Status</th>
-                                        {isSuperAdmin && (
-                                            <th className="p-4 font-audiowide text-sm text-muted-text">Actions</th>
-                                        )}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredParticipants.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="7" className="p-8 text-center">
-                                                <div className="flex flex-col items-center justify-center">
-                                                    <Search size={48} className="mb-4 opacity-50" />
-                                                    <p className="font-audiowide text-lg">No results found</p>
-                                                    <p className="font-space text-sm">Try a different search term</p>
-                                                </div>
-                                            </td>
+                            <div className="overflow-y-auto flex-1">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-background-soft text-left">
+                                            <th className="p-4 font-audiowide text-sm text-muted-text">#</th>
+                                            <th className="p-4 font-audiowide text-sm text-muted-text">Participant</th>
+                                            <th className="p-4 font-audiowide text-sm text-muted-text">Roll No</th>
+                                            <th className="p-4 font-audiowide text-sm text-muted-text">College</th>
+                                            <th className="p-4 font-audiowide text-sm text-muted-text">Team</th>
+                                            <th className="p-4 font-audiowide text-sm text-muted-text">Status</th>
+                                            {isSuperAdmin && (
+                                                <th className="p-4 font-audiowide text-sm text-muted-text">Actions</th>
+                                            )}
                                         </tr>
-                                    ) : (
-                                        filteredParticipants.map((participant, index) => (
-                                            <tr key={participant.id} className="border-t border-border hover:bg-background/50">
-                                                <td className="p-4 text-muted-text font-space text-sm">{index + 1}</td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <User size={16} className="text-primary" />
-                                                        <span className="text-white font-space">{participant.name || 'N/A'}</span>
+                                    </thead>
+                                    <tbody>
+                                        {filteredParticipants.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="p-8 text-center">
+                                                    <div className="flex flex-col items-center justify-center">
+                                                        <Search size={48} className="mb-4 opacity-50" />
+                                                        <p className="font-audiowide text-lg">No results found</p>
+                                                        <p className="font-space text-sm">Try a different search term</p>
                                                     </div>
                                                 </td>
-                                                <td className="p-4">
-                                                    <span className="text-white font-space text-sm">{participant.rollNo || '-'}</span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <span className="text-white font-space text-sm">{participant.college || '-'}</span>
-                                                </td>
-                                                <td className="p-4">
-                                                    {participant.teamMembers && participant.teamMembers.length > 0 ? (
-                                                        <div className="flex flex-col gap-1">
-                                                            {participant.teamMembers.map((member, idx) => (
-                                                                <div key={idx} className="flex items-center gap-1">
-                                                                    <UserCheck size={12} className="text-accent" />
-                                                                    <span className="text-muted-text font-space text-xs">{member}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-muted-text font-space text-xs italic">Individual</span>
-                                                    )}
-                                                </td>
-                                                <td className="p-4">
-                                                    <span
-                                                        className={`px-2 py-1 rounded-full text-xs font-audiowide ${
-                                                            participant.status === 'confirmed' || participant.paymentStatus === 'paid'
-                                                                ? 'bg-green-500/20 text-green-500'
-                                                                : 'bg-yellow-500/20 text-yellow-500'
-                                                        }`}
-                                                    >
-                                                        {participant.status === 'confirmed' || participant.paymentStatus === 'paid'
-                                                            ? 'Confirmed'
-                                                            : 'Pending'}
-                                                    </span>
-                                                </td>
-                                                {isSuperAdmin && (
+                                            </tr>
+                                        ) : (
+                                            filteredParticipants.map((participant, index) => (
+                                                <tr key={participant.id} className="border-t border-border hover:bg-background/50">
+                                                    <td className="p-4 text-muted-text font-space text-sm">{index + 1}</td>
                                                     <td className="p-4">
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => setEditingParticipant(participant)}
-                                                                className="text-blue-500 hover:text-blue-400 transition-colors"
-                                                                title="Edit"
-                                                            >
-                                                                <Edit2 size={16} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setDeleteConfirm(participant)}
-                                                                className="text-red-500 hover:text-red-400 transition-colors"
-                                                                title="Delete"
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
+                                                        <div className="flex items-center gap-2">
+                                                            <User size={16} className="text-primary" />
+                                                            <span className="text-white font-space">{participant.name || 'N/A'}</span>
                                                         </div>
                                                     </td>
-                                                )}
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                                    <td className="p-4">
+                                                        <span className="text-white font-space text-sm">{participant.rollNo || '-'}</span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className="text-white font-space text-sm">{participant.college || '-'}</span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        {participant.teamMembers && participant.teamMembers.length > 0 ? (
+                                                            <div className="flex flex-col gap-1">
+                                                                {participant.teamMembers.map((member, idx) => (
+                                                                    <div key={idx} className="flex items-center gap-1">
+                                                                        <UserCheck size={12} className="text-accent" />
+                                                                        <span className="text-muted-text font-space text-xs">{member}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-muted-text font-space text-xs italic">Individual</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span
+                                                            className={`px-2 py-1 rounded-full text-xs font-audiowide ${
+                                                                participant.status === 'confirmed' || participant.paymentStatus === 'paid'
+                                                                    ? 'bg-green-500/20 text-green-500'
+                                                                    : 'bg-yellow-500/20 text-yellow-500'
+                                                            }`}
+                                                        >
+                                                            {participant.status === 'confirmed' || participant.paymentStatus === 'paid'
+                                                                ? 'Confirmed'
+                                                                : 'Pending'}
+                                                        </span>
+                                                    </td>
+                                                    {isSuperAdmin && (
+                                                        <td className="p-4">
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => setEditingParticipant(participant)}
+                                                                    className="text-blue-500 hover:text-blue-400 transition-colors"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Edit2 size={16} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setDeleteConfirm(participant)}
+                                                                    className="text-red-500 hover:text-red-400 transition-colors"
+                                                                    title="Delete"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </div>
