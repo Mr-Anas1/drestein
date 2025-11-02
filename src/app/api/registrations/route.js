@@ -486,7 +486,7 @@ export async function PATCH(request) {
 
     return NextResponse.json({
       message: `Registration ${status} successfully`,
-      registrationId,
+      registrationId: actualRegistrationId,
       status: updateData.status,
     });
   } catch (error) {
