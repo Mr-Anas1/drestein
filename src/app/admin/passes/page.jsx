@@ -229,11 +229,10 @@ const AdminPassesPage = () => {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-4 py-2 rounded-lg font-audiowide text-sm transition-all duration-300 ${
-                    filter === f
-                      ? 'bg-gradient-to-r from-primary to-secondary text-white'
-                      : 'bg-background-soft border border-border text-muted-text hover:border-primary'
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-audiowide text-sm transition-all duration-300 ${filter === f
+                    ? 'bg-gradient-to-r from-primary to-secondary text-white'
+                    : 'bg-background-soft border border-border text-muted-text hover:border-primary'
+                    }`}
                 >
                   {f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
@@ -293,11 +292,10 @@ const AdminPassesPage = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-audiowide ${
-                            pass.passType === 'custom'
+                          <span className={`px-3 py-1 rounded-full text-xs font-audiowide ${pass.passType === 'custom'
                               ? 'bg-secondary/20 text-secondary'
                               : 'bg-primary/20 text-primary'
-                          }`}>
+                            }`}>
                             {pass.passName || pass.passType}
                           </span>
                         </div>
@@ -552,7 +550,7 @@ function AddPassModal({ onClose, onAdded }) {
 
   const handleSearchEvents = async (query) => {
     setSearchQuery(query);
-    
+
     if (!query.trim()) {
       setSearchResults([]);
       return;
@@ -706,7 +704,7 @@ function AddPassModal({ onClose, onAdded }) {
           {passType === 'custom' && (
             <div>
               <label className="block text-white font-audiowide text-sm mb-3">Search & Select Events *</label>
-              
+
               <div className="mb-4">
                 <input
                   type="text"

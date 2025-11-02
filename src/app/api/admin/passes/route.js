@@ -61,7 +61,10 @@ export async function GET(request) {
     }
 
     const db = getAdminDB();
-    const passesSnapshot = await db.collection("passes").orderBy("purchasedAt", "desc").get();
+    const passesSnapshot = await db.collection("passes")
+      .orderBy("purchasedAt", "desc")
+      .limit(50)
+      .get();
 
     const passes = [];
     for (const doc of passesSnapshot.docs) {
