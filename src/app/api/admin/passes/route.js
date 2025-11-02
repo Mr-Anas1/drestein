@@ -61,38 +61,56 @@ export async function GET(request) {
     }
 
     const db = getAdminDB();
+    // Support both new and legacy docs:
+    // - New: paymentStatus == "approved"
+    // - Legacy: paymentVerified == true
+    const [approvedSnap, verifiedSnap] = await Promise.all([
+      db.collection("passes").where("paymentStatus", "==", "approved").get(),
+      db.collection("passes").where("paymentVerified", "==", true).get(),
+    ]);
     const passesSnapshot = await db.collection("passes")
       .orderBy("purchasedAt", "desc")
       .limit(50)
       .get();
 
-    const passes = [];
-    for (const doc of passesSnapshot.docs) {
-      const passData = doc.data();
-      
-      // Try to get user email and name
-      let userEmail = null;
-      let userName = null;
-      if (passData.userUid) {
-        try {
-          const studentDoc = await db.collection("students").doc(passData.userUid).get();
-          if (studentDoc.exists) {
-            const studentData = studentDoc.data();
-            userEmail = studentData.email;
-            userName = studentData.name || studentData.displayName || null;
-          }
-        } catch (e) {
-          console.error("Error fetching user email:", e);
-        }
-      }
+    const passMap = new Map();
 
-      passes.push({
-        id: doc.id,
-        ...passData,
-        userEmail,
-        userName,
-      });
-    }
+    const collect = async (snap) => {
+      for (const doc of snap.docs) {
+        const passData = doc.data();
+        // Enrich with userEmail/userName
+        let userEmail = null;
+        let userName = null;
+        if (passData.userUid) {
+          try {
+            const studentDoc = await db.collection("students").doc(passData.userUid).get();
+            if (studentDoc.exists) {
+              const studentData = studentDoc.data();
+              userEmail = studentData.email;
+              userName = studentData.name || studentData.displayName || null;
+            }
+          } catch (e) {
+            console.error("Error fetching user email:", e);
+          }
+        }
+        passMap.set(doc.id, {
+          id: doc.id,
+          ...passData,
+          userEmail,
+          userName,
+        });
+      }
+    };
+
+    await collect(approvedSnap);
+    await collect(verifiedSnap);
+
+    // Convert to array and sort by purchasedAt desc
+    const passes = Array.from(passMap.values()).sort((a, b) => {
+      const aTime = a.purchasedAt?.toMillis ? a.purchasedAt.toMillis() : (a.purchasedAt ? new Date(a.purchasedAt).getTime() : 0);
+      const bTime = b.purchasedAt?.toMillis ? b.purchasedAt.toMillis() : (b.purchasedAt ? new Date(b.purchasedAt).getTime() : 0);
+      return bTime - aTime;
+    });
 
     return NextResponse.json({ passes });
   } catch (e) {

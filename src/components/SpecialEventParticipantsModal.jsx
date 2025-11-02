@@ -510,13 +510,14 @@ function EditParticipantModal({ participant, onClose, onUpdated }) {
             const auth = getAuth();
             const token = await auth.currentUser?.getIdToken?.();
 
-            const response = await fetch(`/api/registrations/${participant.id}`, {
+            const response = await fetch(`/api/registrations`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
+                    registrationId: participant.id,
                     name: formData.name,
                     email: formData.email,
                     rollNo: formData.rollNo || undefined,

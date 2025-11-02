@@ -463,6 +463,9 @@ export async function PUT(request) {
 
     await docRef.update(updateData);
 
+    // Clear all caches after update to ensure fresh data
+    clearAllCaches();
+
     return NextResponse.json({ message: "Special event updated successfully" });
   } catch (error) {
     console.error("Error updating special event:", error);
