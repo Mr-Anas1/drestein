@@ -273,12 +273,7 @@ export default function BuyPassPage() {
 
                   {isAuthenticated ? (
                     <div className="space-y-3">
-                      {hasEventPass ? (
-                        <div className="bg-primary/10 border-2 border-primary text-primary font-audiowide py-3.5 rounded-lg text-center flex items-center justify-center gap-2">
-                          <Check size={18} />
-                          Already Purchased
-                        </div>
-                      ) : !generalPassInCart ? (
+                      {!generalPassInCart ? (
                         <>
                           <button
                             onClick={addGeneralPassToCart}
@@ -308,6 +303,7 @@ export default function BuyPassPage() {
                         </>
                       )}
                     </div>
+
                   ) : (
                     <button
                       onClick={() => handleBuyPass(pass)}

@@ -345,7 +345,7 @@ const About = () => {
                                 {[
                                     // Order and roles as requested
                                     { name: "DHARMENDRA A", dept: "BME", role: "Editor", contact: "9345714869", img: "/dharmendra.jpg" },
-                                    { name: "S STAR ASHIL", dept: "CSE", role: "Editor", contact: "8122885827", img: "/star.jpg" },
+                                    { name: "S STAR ASHIL", dept: "CSE", role: "Editor", contact: "8122885827", img: "/star-ashil.jpg" },
                                     { name: "S.ROHITH", dept: "AIML", role: "Editor", contact: "7845012876", img: "/rohit.jpg" },
                                     { name: "RATHISH B", dept: "IT", role: "Editor", contact: "9940062171", img: "/ratish.jpg" },
                                     { name: "OBELESH R", dept: "CSE", role: "Videography", contact: "8438701965", img: "/obelesh.jpg" },
@@ -394,7 +394,7 @@ const About = () => {
                             { dept: "BIO-MED", name: "Ms. SHERENA JENICE J", contact: "9566533465" },
                             { dept: "CHEM", name: "Mr. HARISHANKAR E", contact: "8807051192" },
                             { dept: "CIVIL", name: "Mr. ARUN KUMAR", contact: "8072582553" },
-                            { dept: "CSE", name: "Mr. GOKUL SHARAN R", contact: "9791486718" },
+                            { dept: "CSE", name: "Mr. PRAVEEN ", contact: "8015809116" },
                             { dept: "CYB SEC", name: "Mr. RAGUL RAAJAN T", contact: "9488001452" },
                             { dept: "ECE", name: "Mr. ABINANDHAN G", contact: "6383796369" },
                             { dept: "EEE", name: "Mr. VISVANTH P.S", contact: "9840928549" },
