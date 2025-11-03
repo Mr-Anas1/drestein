@@ -140,21 +140,21 @@ const SpecialEventDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background">
       <Header />
       {params.id === 'YDWrdDuodUYm72qLJZN0' && (
-      <div className="bg-yellow-500/20 border-y border-yellow-500 text-yellow-100 py-2 overflow-hidden relative">
+      <div className="border-y border-green-500 text-green-100 py-2 overflow-hidden relative">
         <div className="animate-marquee whitespace-nowrap">
           <p className="font-space text-sm flex items-center gap-2 inline-block">
-            <Info className="w-4 h-4 flex-shrink-0 inline-block" />
-            <span>
+            <Info className="w-4 h-4 flex-shrink-0 inline-block text-green-400" />
+            <span className="text-green-400 font-bold">
               Submission deadline extended to{' '}
-              <span className="font-bold pr-24">5th November 2025</span>
+              <span className="font-bold pr-24 text-green-400">5th November 2025</span>
             </span>
-            <span>
+            <span className="text-green-400 font-bold">
               Submission deadline extended to{' '}
-              <span className="font-bold pr-24">5th November 2025</span>
+              <span className="font-bold pr-24 text-green-400">5th November 2025</span>
             </span>
-            <span>
+            <span className="text-green-400 font-bold">
               Submission deadline extended to{' '}
-              <span className="font-bold pr-24">5th November 2025</span>
+              <span className="font-bold pr-24  text-green-400">5th November 2025</span>
             </span>
            
 

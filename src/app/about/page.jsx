@@ -350,7 +350,7 @@ const About = () => {
                                     { name: "RATHISH B", dept: "IT", role: "Editor", contact: "9940062171", img: "/ratish.jpg" },
                                     { name: "OBELESH R", dept: "CSE", role: "Videography", contact: "8438701965", img: "/obelesh.jpg" },
                                     { name: "R SIBHIRAAJ", dept: "AIDS", role: "Videography", contact: "7305702433", img: "/sibhi.jpg" },
-                                    { name: "A.P. Jones Benedict", dept: "CSE", role: "Videography", contact: "8668141112", img: "/jones.jpg" },
+                                    { name: "A.P. Jones Benedict", dept: "CSE", role: "Videography", contact: "8668141112", img: "/jones.JPG" },
                                 ].map((member, index) => (
                                     <div key={index} className="text-center group cursor-pointer w-40 p-2">
                                         <div className="w-16 h-16 bg-gradient-to-r from-secondary to-accent rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
