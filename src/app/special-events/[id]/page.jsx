@@ -185,9 +185,17 @@ const SpecialEventDetailPage = () => {
                   </span>
                 )}
               </div>
-              <h1 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
+              <h1 className="font-audiowide text-3xl md:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
                 {event.title}
               </h1>
+              {params.id === 'YDWrdDuodUYm72qLJZN0' && (
+                <div className="bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-100 p-3 rounded-r mb-4">
+                  <p className="font-space text-sm flex items-center gap-2">
+                    <Info className="w-4 h-4 flex-shrink-0" />
+                    <span>Submission deadline extended to <span className="font-bold">7th November 2025</span></span>
+                  </p>
+                </div>
+              )}
               {/* <p className="text-muted-text font-space text-lg">
                 {event.description}
               </p> */}
