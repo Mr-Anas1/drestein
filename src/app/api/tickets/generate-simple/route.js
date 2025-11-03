@@ -174,6 +174,43 @@ export async function POST(request) {
       };
     }
 
+    // For general pass (or custom that includes general), list registered common events
+    let registeredCommonEventTitles = null;
+    try {
+      const includesGeneral = passType === 'general' || passData.includesGeneralPass === true;
+      if (includesGeneral) {
+        // Fetch all registrations for user, then filter to confirmed/paid regular events
+        const regsSnap = await db
+          .collection('registrations')
+          .where('userUid', '==', decoded.uid)
+          .get();
+        const regs = regsSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(r => !r.isSpecialEvent)
+          .filter(r => (r.status === 'confirmed') || (r.paymentStatus === 'paid') || (r.paymentVerified === true));
+        const eventIds = [...new Set(regs.map(r => r.eventId).filter(Boolean))];
+        if (eventIds.length > 0) {
+          // Fetch event titles (batch without IN due to index limits: loop small sets)
+          const titles = [];
+          for (const evId of eventIds) {
+            try {
+              const evDoc = await db.collection('events').doc(evId).get();
+              if (evDoc.exists) {
+                const ev = evDoc.data();
+                titles.push(ev.title || ev.name || evId);
+              }
+            } catch {}
+          }
+          if (titles.length > 0) {
+            registeredCommonEventTitles = titles;
+          }
+        }
+      }
+    } catch (e) {
+      // Non-fatal
+      console.warn('[TICKET GEN SIMPLE] Failed to fetch registered common events:', e?.message);
+    }
+
     // Return ticket data as JSON
     return NextResponse.json({
       success: true,
@@ -192,7 +229,8 @@ export async function POST(request) {
         access: typeInfo.access,
         customEvents: typeInfo.customEvents || null,
         rollNo: student?.rollNo || null,
-        college: student?.college || null
+        college: student?.college || null,
+        registeredEvents: registeredCommonEventTitles
       }
     });
 

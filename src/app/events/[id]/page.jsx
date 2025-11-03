@@ -56,6 +56,28 @@ const EventDetailPage = () => {
     fetchEvent();
   }, [params.id]);
 
+  // Check if user already registered for this event
+  useEffect(() => {
+    const run = async () => {
+      try {
+        // We don't have auth context here; rely on server to return by userUid from local storage auth elsewhere
+        const { getAuth } = await import("firebase/auth");
+        const auth = getAuth();
+        const current = auth.currentUser;
+        if (!current || !params.id) return;
+        const res = await fetch(`/api/registrations?userUid=${encodeURIComponent(current.uid)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = Array.isArray(data?.participants) ? data.participants : [];
+        const found = list.find(r => r.eventId === params.id && (r.status === 'confirmed' || r.paymentStatus === 'paid' || r.paymentVerified === true));
+        setIsRegistered(!!found);
+      } catch (_) {
+        // ignore
+      }
+    };
+    run();
+  }, [params.id]);
+
   // Handle registration
   // const handleRegistration = async () => {
   //     if (isRegistered) {

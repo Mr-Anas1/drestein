@@ -47,6 +47,14 @@ async function checkAdminRole(uid) {
   return userData.role === "super_admin" || userData.role === "department_admin";
 }
 
+async function checkIsSuperAdmin(uid) {
+  const db = getAdminDB();
+  const userDoc = await db.collection("users").doc(uid).get();
+  if (!userDoc.exists) return false;
+  const userData = userDoc.data();
+  return userData.role === "super_admin";
+}
+
 // Get all passes (admin only)
 export async function GET(request) {
   try {
@@ -61,37 +69,165 @@ export async function GET(request) {
     }
 
     const db = getAdminDB();
-    const passesSnapshot = await db.collection("passes")
-      .orderBy("purchasedAt", "desc")
-      .limit(50)
-      .get();
 
-    const passes = [];
-    for (const doc of passesSnapshot.docs) {
+    const { searchParams } = new URL(request.url);
+    const statsOnly = searchParams.get("stats") === "true";
+    const q = searchParams.get("q");
+    const emailParam = searchParams.get("email");
+    const nameParam = searchParams.get("name");
+
+    let passes = [];
+
+    if (statsOnly) {
+      // Compute overall stats across the entire collection
+      const totalSnap = await db.collection("passes").get();
+      const approvedVerifiedSnap = await db
+        .collection("passes")
+        .where("paymentVerified", "==", true)
+        .where("paymentStatus", "==", "approved")
+        .get();
+
+      let revenue = 0;
+      for (const doc of approvedVerifiedSnap.docs) {
+        const data = doc.data();
+        const amount = Number(data.passPrice || data.amount || 0);
+        if (!Number.isNaN(amount)) revenue += amount;
+      }
+
+      const total = totalSnap.size;
+      const verified = approvedVerifiedSnap.size; // verified = approved + verified
+      const pending = Math.max(0, total - verified);
+
+      return NextResponse.json({
+        stats: { total, verified, pending, revenue },
+      });
+    }
+
+    async function enrichPass(doc, studentCache) {
       const passData = doc.data();
-      
-      // Try to get user email and name
-      let userEmail = null;
-      let userName = null;
-      if (passData.userUid) {
+      const userUid = passData.userUid;
+      let userEmail = passData.userEmail || null;
+      let userName = passData.userName || null;
+
+      if (userUid && (!userEmail || !userName)) {
         try {
-          const studentDoc = await db.collection("students").doc(passData.userUid).get();
-          if (studentDoc.exists) {
-            const studentData = studentDoc.data();
-            userEmail = studentData.email;
-            userName = studentData.name || studentData.displayName || null;
+          if (!studentCache.has(userUid)) {
+            const studentDoc = await db.collection("students").doc(userUid).get();
+            studentCache.set(userUid, studentDoc.exists ? studentDoc.data() : null);
+          }
+          const studentData = studentCache.get(userUid);
+          if (studentData) {
+            userEmail = userEmail || studentData.email || null;
+            userName = userName || studentData.name || studentData.displayName || null;
           }
         } catch (e) {
-          console.error("Error fetching user email:", e);
+          console.error("Error fetching user info:", e);
         }
       }
 
-      passes.push({
+      return {
         id: doc.id,
         ...passData,
         userEmail,
         userName,
+      };
+    }
+
+    // Helper to fetch passes by an array of userUids in batches of 10
+    async function fetchPassesByUserUids(userUids) {
+      const batches = [];
+      for (let i = 0; i < userUids.length; i += 10) {
+        batches.push(userUids.slice(i, i + 10));
+      }
+      const studentCache = new Map();
+      const results = [];
+      for (const batch of batches) {
+        const snap = await db
+          .collection("passes")
+          .where("userUid", "in", batch)
+          .get();
+        for (const doc of snap.docs) {
+          results.push(await enrichPass(doc, studentCache));
+        }
+      }
+      // Sort newest first
+      results.sort((a, b) => (b.purchasedAt?.toMillis?.() || 0) - (a.purchasedAt?.toMillis?.() || 0));
+      return results;
+    }
+
+    const searchEmail = (emailParam || (q && q.includes("@") ? q : null));
+    const searchName = nameParam || (q && !q.includes("@") ? q : null);
+
+    if (searchEmail) {
+      const normalizedEmail = searchEmail.toLowerCase().trim();
+
+      // 1) Find student by email to get uid
+      const studentsSnap = await db
+        .collection("students")
+        .where("email", "==", normalizedEmail)
+        .get();
+
+      const studentCache = new Map();
+      const foundUids = studentsSnap.docs.map((d) => {
+        studentCache.set(d.id, d.data());
+        return d.id;
       });
+
+      const results = [];
+      if (foundUids.length > 0) {
+        results.push(...(await fetchPassesByUserUids(foundUids)));
+      }
+
+      // 2) Also look for passes that directly store userEmail
+      const emailPassesSnap = await db
+        .collection("passes")
+        .where("userEmail", "==", normalizedEmail)
+        .get();
+      for (const doc of emailPassesSnap.docs) {
+        results.push(await enrichPass(doc, studentCache));
+      }
+
+      // De-duplicate by id
+      const unique = new Map();
+      for (const p of results) unique.set(p.id, p);
+      passes = Array.from(unique.values());
+
+      return NextResponse.json({ passes });
+    }
+
+    if (searchName) {
+      const nameQuery = searchName.trim();
+      if (!nameQuery) {
+        return NextResponse.json({ passes: [] });
+      }
+
+      const studentsSnap = await db
+        .collection("students")
+        .orderBy("name")
+        .startAt(nameQuery)
+        .endAt(nameQuery + "\uf8ff")
+        .limit(50)
+        .get();
+
+      if (studentsSnap.empty) {
+        return NextResponse.json({ passes: [] });
+      }
+
+      const userUids = studentsSnap.docs.map((d) => d.id);
+      passes = await fetchPassesByUserUids(userUids);
+      return NextResponse.json({ passes });
+    }
+
+    // Default: recent 50
+    const passesSnapshot = await db
+      .collection("passes")
+      .orderBy("purchasedAt", "desc")
+      .limit(50)
+      .get();
+
+    const studentCache = new Map();
+    for (const doc of passesSnapshot.docs) {
+      passes.push(await enrichPass(doc, studentCache));
     }
 
     return NextResponse.json({ passes });
@@ -172,9 +308,10 @@ export async function DELETE(request) {
       return NextResponse.json({ error: "Auth required" }, { status: 401 });
     }
 
-    const isAdmin = await checkAdminRole(decoded.uid);
-    if (!isAdmin) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    // Only super admin can delete passes
+    const isSuper = await checkIsSuperAdmin(decoded.uid);
+    if (!isSuper) {
+      return NextResponse.json({ error: "Super admin access required" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

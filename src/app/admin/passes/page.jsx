@@ -20,6 +20,9 @@ const AdminPassesPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [serverSearching, setServerSearching] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [overallStats, setOverallStats] = useState(null);
 
   // Authentication check
   useEffect(() => {
@@ -38,6 +41,9 @@ const AdminPassesPage = () => {
   useEffect(() => {
     if (user && (isSuperAdmin || isDepartmentAdmin)) {
       fetchPasses();
+      if (isSuperAdmin) {
+        fetchOverallStats();
+      }
     }
   }, [user, isSuperAdmin, isDepartmentAdmin]);
 
@@ -57,6 +63,50 @@ const AdminPassesPage = () => {
       console.error('Error fetching passes:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOverallStats = async () => {
+    try {
+      setStatsLoading(true);
+      const { auth } = await import('@/lib/firebase');
+      const token = await auth.currentUser?.getIdToken?.();
+      const response = await fetch('/api/admin/passes?stats=true', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setOverallStats(data.stats || null);
+      }
+    } catch (e) {
+      console.error('Error fetching overall stats:', e);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const searchServerPasses = async (query) => {
+    const q = (query ?? searchQuery).trim();
+    if (!q) {
+      await fetchPasses();
+      return;
+    }
+    setServerSearching(true);
+    try {
+      const { auth } = await import('@/lib/firebase');
+      const token = await auth.currentUser?.getIdToken?.();
+      const url = `/api/admin/passes?${q.includes('@') ? `email=${encodeURIComponent(q)}` : `name=${encodeURIComponent(q)}`}`;
+      const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await response.json();
+      if (response.ok) {
+        setPasses(data.passes || []);
+      } else {
+        console.error('Server search failed:', data?.error);
+      }
+    } catch (e) {
+      console.error('Error searching passes:', e);
+    } finally {
+      setServerSearching(false);
     }
   };
 
@@ -189,7 +239,9 @@ const AdminPassesPage = () => {
             <div className="bg-background-soft border border-border rounded-xl p-6">
               <div className="flex items-center justify-between mb-2">
                 <Ticket className="w-8 h-8 text-primary" />
-                <span className="text-3xl font-audiowide text-white">{stats.total}</span>
+                <span className="text-3xl font-audiowide text-white">
+                  {statsLoading ? '…' : (overallStats?.total ?? stats.total)}
+                </span>
               </div>
               <p className="text-muted-text font-space text-sm">Total Passes</p>
             </div>
@@ -197,7 +249,9 @@ const AdminPassesPage = () => {
             <div className="bg-background-soft border border-border rounded-xl p-6">
               <div className="flex items-center justify-between mb-2">
                 <CheckCircle className="w-8 h-8 text-green-500" />
-                <span className="text-3xl font-audiowide text-white">{stats.verified}</span>
+                <span className="text-3xl font-audiowide text-white">
+                  {statsLoading ? '…' : (overallStats?.verified ?? stats.verified)}
+                </span>
               </div>
               <p className="text-muted-text font-space text-sm">Verified</p>
             </div>
@@ -205,7 +259,9 @@ const AdminPassesPage = () => {
             <div className="bg-background-soft border border-border rounded-xl p-6">
               <div className="flex items-center justify-between mb-2">
                 <Clock className="w-8 h-8 text-yellow-500" />
-                <span className="text-3xl font-audiowide text-white">{stats.pending}</span>
+                <span className="text-3xl font-audiowide text-white">
+                  {statsLoading ? '…' : (overallStats?.pending ?? stats.pending)}
+                </span>
               </div>
               <p className="text-muted-text font-space text-sm">Pending</p>
             </div>
@@ -213,7 +269,9 @@ const AdminPassesPage = () => {
             <div className="bg-background-soft border border-border rounded-xl p-6">
               <div className="flex items-center justify-between mb-2">
                 <DollarSign className="w-8 h-8 text-secondary" />
-                <span className="text-3xl font-audiowide text-white">₹{stats.revenue}</span>
+                <span className="text-3xl font-audiowide text-white">
+                  {statsLoading ? '…' : `₹${overallStats?.revenue ?? stats.revenue}`}
+                </span>
               </div>
               <p className="text-muted-text font-space text-sm">Total Revenue</p>
             </div>
@@ -239,14 +297,35 @@ const AdminPassesPage = () => {
               ))}
             </div>
           </div>
-          <div>
+          <div className="flex gap-2">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by pass id, name, email, user id, pass name or order id"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  searchServerPasses();
+                }
+              }}
+              placeholder="Search by name or email (press Enter for full search)"
               className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
             />
+            <button
+              onClick={() => searchServerPasses()}
+              disabled={serverSearching}
+              className="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all disabled:opacity-50 whitespace-nowrap"
+            >
+              {serverSearching ? 'Searching…' : 'Search'}
+            </button>
+            {searchQuery && (
+              <button
+                onClick={() => { setSearchQuery(''); fetchPasses(); }}
+                className="bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-audiowide hover:bg-background"
+              >
+                Clear
+              </button>
+            )}
           </div>
         </div>
 

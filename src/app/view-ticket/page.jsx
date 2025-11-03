@@ -261,6 +261,23 @@ export default function ViewTicketPage() {
               </div>
             )}
 
+            {/* Registered Common Events List (for general pass) */}
+            {ticket.registeredEvents && ticket.registeredEvents.length > 0 && (
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 mb-12">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Registered Events:</h3>
+                <div className="grid gap-3">
+                  {ticket.registeredEvents.map((eventTitle, index) => (
+                    <div key={index} className="flex items-center gap-3 bg-white rounded-lg p-3 shadow-sm">
+                      <div className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <span className="text-gray-900 font-medium">{eventTitle}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             
           </div>
 

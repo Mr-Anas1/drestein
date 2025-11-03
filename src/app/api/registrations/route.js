@@ -177,13 +177,48 @@ export async function POST(request) {
     const isAdminAddingParticipant = isAdminAdding === true || decoded.uid !== userUid;
 
     // If not a workshop and not admin-added, require a verified Event Pass
+    // Also capture the active pass id to mark registration as confirmed
+    let activePassId = null;
     if (!isWorkshop && !isAdminAddingParticipant) {
       try {
-        // Check student's hasEventPass flag (single read)
+        // Check student's hasEventPass flag first (fast path)
         const studentDoc = await db.collection("students").doc(userUid).get();
         const studentData = studentDoc.data();
 
-        if (!studentData?.hasEventPass) {
+        let hasEventPass = !!studentData?.hasEventPass;
+
+        // Fallback: if flag not set, verify directly against passes collection
+        if (!hasEventPass) {
+          const passSnap = await db
+            .collection("passes")
+            .where("userUid", "==", userUid)
+            .where("paymentVerified", "==", true)
+            .where("status", "==", "active")
+            .get();
+          hasEventPass = !passSnap.empty;
+          if (hasEventPass) {
+            // Prefer general pass if present
+            const generalDoc = passSnap.docs.find(d => d.data()?.passType === 'general');
+            activePassId = (generalDoc || passSnap.docs[0])?.id || null;
+          }
+        } else {
+          // If flag set, try to pull pass id from student document
+          activePassId = studentData?.eventPassId || null;
+          if (!activePassId) {
+            const passSnap = await db
+              .collection("passes")
+              .where("userUid", "==", userUid)
+              .where("paymentVerified", "==", true)
+              .where("status", "==", "active")
+              .get();
+            if (!passSnap.empty) {
+              const generalDoc = passSnap.docs.find(d => d.data()?.passType === 'general');
+              activePassId = (generalDoc || passSnap.docs[0])?.id || null;
+            }
+          }
+        }
+
+        if (!hasEventPass) {
           return NextResponse.json(
             {
               error:
@@ -263,6 +298,23 @@ export async function POST(request) {
     }
 
     // For admin-added participants, set status to confirmed and paid
+    // Fetch student profile to enrich registration details (rollNo, college)
+    let studentRollNo = rollNo && String(rollNo).trim() ? String(rollNo).trim() : undefined;
+    let studentCollege = college && String(college).trim() ? String(college).trim() : undefined;
+    try {
+      if (!studentRollNo || !studentCollege) {
+        const studentDoc = await db.collection("students").doc(userUid).get();
+        if (studentDoc.exists) {
+          const s = studentDoc.data() || {};
+          if (!studentRollNo && s.rollNo) studentRollNo = String(s.rollNo).trim();
+          if (!studentCollege && s.college) studentCollege = String(s.college).trim();
+        }
+      }
+    } catch (e) {
+      // Non-fatal: continue without enrichment
+      console.warn("Could not enrich registration with student profile:", e?.message);
+    }
+
     const registrationData = {
       eventId,
       name: name.trim(),
@@ -273,12 +325,17 @@ export async function POST(request) {
         : {}),
       userUid,
       registeredAt: FieldValue.serverTimestamp(),
-      status: isAdminAddingParticipant ? "confirmed" : "pending_payment",
-      paymentStatus: isAdminAddingParticipant ? "paid" : "pending",
-      paymentVerified: isAdminAddingParticipant ? true : false,
+      status: isAdminAddingParticipant
+        ? "confirmed"
+        : (!isWorkshop && activePassId ? "confirmed" : "pending_payment"),
+      paymentStatus: isAdminAddingParticipant
+        ? "paid"
+        : (!isWorkshop && activePassId ? "paid" : "pending"),
+      paymentVerified: isAdminAddingParticipant ? true : (!isWorkshop && !!activePassId),
+      ...(activePassId ? { passId: activePassId } : {}),
       ...(isSpecialEvent && { isSpecialEvent: true }),
-      ...(rollNo && { rollNo: rollNo.trim() }),
-      ...(college && { college: college.trim() }),
+      ...(studentRollNo ? { rollNo: studentRollNo } : {}),
+      ...(studentCollege ? { college: studentCollege } : {}),
       ...(teamMembers && Array.isArray(teamMembers) && { teamMembers }),
     };
 

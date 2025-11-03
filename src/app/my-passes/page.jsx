@@ -18,6 +18,7 @@ export default function MyPassesPage() {
   const [error, setError] = useState(null);
   const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
   const [specialEventsMap, setSpecialEventsMap] = useState({});
+  const [registeredEventsByPass, setRegisteredEventsByPass] = useState({});
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -54,6 +55,42 @@ export default function MyPassesPage() {
         setPasses([data.pass]);
       } else {
         setPasses([]);
+      }
+
+      // Also fetch user's confirmed regular registrations and map titles per general pass
+      try {
+        const regsRes = await fetch(`/api/registrations?userUid=${user.uid}`);
+        if (regsRes.ok) {
+          const regsData = await regsRes.json();
+          const regs = Array.isArray(regsData?.participants) ? regsData.participants : [];
+          const confirmed = regs.filter(r => (r.status === 'confirmed') || (r.paymentStatus === 'paid') || (r.paymentVerified === true));
+          const evIds = [...new Set(confirmed.filter(r => !r.isSpecialEvent).map(r => r.eventId).filter(Boolean))];
+
+          // Fetch each event title using API: /api/events?id=
+          const titlesById = {};
+          for (const evId of evIds) {
+            try {
+              const evDocRes = await fetch(`/api/events?id=${encodeURIComponent(evId)}`, { cache: 'no-store' });
+              if (evDocRes.ok) {
+                const evDoc = await evDocRes.json();
+                titlesById[evId] = evDoc?.title || evDoc?.name || evId;
+              }
+            } catch {}
+          }
+
+          // For all general passes (and custom including general), attach same registered list
+          const generalTitles = confirmed.filter(r => !r.isSpecialEvent).map(r => titlesById[r.eventId]).filter(Boolean);
+          const regMap = {};
+          const allPasses = data.passes || (data.pass ? [data.pass] : []);
+          for (const p of allPasses) {
+            if (p && (p.passType === 'general' || p.includesGeneralPass)) {
+              regMap[p.id] = generalTitles;
+            }
+          }
+          setRegisteredEventsByPass(regMap);
+        }
+      } catch (_) {
+        // ignore registration enrichment failures
       }
 
       // Fetch special events using cache - reduces reads by 90%
@@ -325,6 +362,21 @@ export default function MyPassesPage() {
                               </div>
                             );
                           })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Registered Common Events (read-only, minimal UI) */}
+                    {(pass.passType === 'general' || pass.includesGeneralPass) && registeredEventsByPass[pass.id] && registeredEventsByPass[pass.id].length > 0 && (
+                      <div className="bg-background border border-border rounded-lg p-4 mb-6">
+                        <div className="text-sm text-muted-text font-space mb-3">Registered Events:</div>
+                        <div className="space-y-1">
+                          {registeredEventsByPass[pass.id].map((title, idx) => (
+                            <div key={`${pass.id}-${idx}`} className="flex items-center gap-2 text-sm">
+                              <span className="text-primary font-audiowide">{idx + 1}.</span>
+                              <span className="text-white font-space">{title}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}

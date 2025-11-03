@@ -19,6 +19,7 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
     const [checkingPass, setCheckingPass] = useState(false);
     const [hasVerifiedPass, setHasVerifiedPass] = useState(false);
     const [showPassModal, setShowPassModal] = useState(false);
+    const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
     // Close on Escape key
     useEffect(() => {
@@ -68,6 +69,26 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
         run();
     }, [isAuthenticated, user, event, showPassModal]);
 
+    // Check if user already registered this event; if so, show "Already registered"
+    useEffect(() => {
+        const checkDup = async () => {
+            try {
+                const isWorkshop = String(event?.category || '').toLowerCase() === 'workshop';
+                if (!isAuthenticated || !user?.uid || !event?.id) return;
+                // Fetch all registrations for this user and filter client-side
+                const res = await fetch(`/api/registrations?userUid=${encodeURIComponent(user.uid)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const regs = Array.isArray(data?.participants) ? data.participants : [];
+                const found = regs.some(r => r.eventId === event.id && (r.status === 'confirmed' || r.paymentStatus === 'paid' || r.paymentVerified === true));
+                if (found) setAlreadyRegistered(true);
+            } catch (_) {
+                // ignore
+            }
+        };
+        checkDup();
+    }, [isAuthenticated, user, event]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -85,6 +106,12 @@ export default function EventRegistrationModal({ event, onClose, onRegistrationS
         if (!isWorkshop && !hasVerifiedPass) {
             setLoading(false);
             setError('An active Event Pass is required to register for events.');
+            return;
+        }
+
+        if (alreadyRegistered) {
+            setLoading(false);
+            setError('You are already registered for this event.');
             return;
         }
 
