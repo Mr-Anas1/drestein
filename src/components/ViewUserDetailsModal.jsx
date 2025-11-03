@@ -7,13 +7,14 @@ import { getAuth } from 'firebase/auth';
 
 const ViewUserDetailsModal = ({ onClose }) => {
   const { user } = useAuth();
-  const [email, setEmail] = useState('');
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [userDetails, setUserDetails] = useState(null);
   const [searched, setSearched] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [nameResults, setNameResults] = useState([]);
 
   const fetchUserDetails = async (emailToSearch) => {
     setLoading(true);
@@ -28,14 +29,9 @@ const ViewUserDetailsModal = ({ onClose }) => {
       }
 
       const token = await currentUser.getIdToken();
-      const response = await fetch(
-        `/api/admin/user-details?email=${encodeURIComponent(emailToSearch)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/admin/user-details?email=${encodeURIComponent(emailToSearch)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -44,6 +40,38 @@ const ViewUserDetailsModal = ({ onClose }) => {
 
       const data = await response.json();
       setUserDetails(data);
+      setNameResults([]);
+      setSearched(true);
+    } catch (err) {
+      setError(err.message);
+      setSearched(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchByName = async (nameToSearch) => {
+    setLoading(true);
+    setError('');
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error('You must be logged in to use this feature');
+      const token = await currentUser.getIdToken();
+
+      const response = await fetch(`/api/admin/user-details?name=${encodeURIComponent(nameToSearch)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to search by name');
+      }
+
+      const data = await response.json();
+      const results = Array.isArray(data?.results) ? data.results : [];
+      setNameResults(results);
+      setUserDetails(null);
       setSearched(true);
     } catch (err) {
       setError(err.message);
@@ -55,19 +83,31 @@ const ViewUserDetailsModal = ({ onClose }) => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setError('Please enter an email address');
+    if (!query.trim()) {
+      setError('Please enter an email or name');
       return;
     }
 
     setUserDetails(null);
+    setNameResults([]);
     setSearched(false);
-    await fetchUserDetails(email);
+
+    const looksLikeEmail = /@/.test(query);
+    if (looksLikeEmail) {
+      await fetchUserDetails(query.trim());
+    } else {
+      await searchByName(query.trim());
+    }
   };
 
   const handleRefresh = async () => {
-    if (email.trim()) {
-      await fetchUserDetails(email);
+    if (query.trim()) {
+      const looksLikeEmail = /@/.test(query);
+      if (looksLikeEmail) {
+        await fetchUserDetails(query.trim());
+      } else {
+        await searchByName(query.trim());
+      }
     }
   };
 
@@ -157,14 +197,14 @@ const ViewUserDetailsModal = ({ onClose }) => {
           <form onSubmit={handleSearch} className="space-y-4">
             <div>
               <label className="block text-white font-audiowide text-sm mb-2">
-                Enter User Email
+                Enter Email or Name
               </label>
               <div className="flex gap-2">
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="user@example.com"
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="user@example.com or John"
                   className="flex-1 bg-background border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
                   disabled={loading}
                 />
@@ -199,6 +239,30 @@ const ViewUserDetailsModal = ({ onClose }) => {
           </form>
 
           {/* Results */}
+          {searched && nameResults.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-audiowide text-white">Select a user</h3>
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {nameResults.map((res, idx) => (
+                  <div key={idx} className="bg-background border border-border rounded-lg p-3 flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-white font-audiowide text-sm">{res.user?.name || 'N/A'}</p>
+                      <p className="text-muted-text font-space text-xs">{res.user?.email || 'No email'}</p>
+                      <p className="text-muted-text font-space text-xs">{res.user?.college || ''} {res.user?.rollNo ? `• ${res.user.rollNo}` : ''}</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => res?.user?.email && fetchUserDetails(res.user.email)}
+                      className="bg-background-soft border border-border text-white px-3 py-2 rounded-lg font-audiowide hover:bg-background transition-colors disabled:opacity-50"
+                    >
+                      View details
+                    </button>
+                  </div>) )}
+              </div>
+            </div>
+          )}
+
           {searched && userDetails && (
             <div className="space-y-6">
               {/* User Info */}
@@ -380,7 +444,7 @@ const ViewUserDetailsModal = ({ onClose }) => {
           )}
 
           {/* Empty State */}
-          {searched && !userDetails && !error && (
+          {searched && !userDetails && nameResults.length === 0 && !error && (
             <div className="text-center py-8">
               <p className="text-muted-text font-space">No results found</p>
             </div>
@@ -388,7 +452,7 @@ const ViewUserDetailsModal = ({ onClose }) => {
 
           {!searched && (
             <div className="text-center py-8">
-              <p className="text-muted-text font-space">Enter an email address and click search to view user details</p>
+              <p className="text-muted-text font-space">Enter an email or name and click search to view user details</p>
             </div>
           )}
         </div>

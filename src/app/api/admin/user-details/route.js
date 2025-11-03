@@ -73,157 +73,158 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const email = searchParams.get("email");
-
-    if (!email) {
-      return NextResponse.json(
-        { error: "Email parameter is required" },
-        { status: 400 }
-      );
-    }
+    const name = searchParams.get("name");
 
     const db = getAdminDB();
 
-    // Normalize email
-    const normalizedEmail = email.toLowerCase().trim();
+    async function buildDetailsForStudentDoc(studentDoc, fallbackEmail) {
+      const userUid = studentDoc.id;
+      const studentData = studentDoc.data();
 
-    // Fetch student from students collection first
-    const studentsSnap = await db
-      .collection("students")
-      .where("email", "==", normalizedEmail)
-      .get();
+      let userData = {};
+      try {
+        const userDocSnap = await db.collection("users").doc(userUid).get();
+        if (userDocSnap.exists) {
+          userData = userDocSnap.data();
+        }
+      } catch {}
 
-    if (studentsSnap.empty) {
-      return NextResponse.json(
-        { error: "No student found with this email" },
-        { status: 404 }
-      );
-    }
+      const normalizedEmailInner = (studentData.email || fallbackEmail || "").toLowerCase().trim();
 
-    // Get userUid and student data from students collection
-    const studentDoc = studentsSnap.docs[0];
-    const userUid = studentDoc.id;
-    const studentData = studentDoc.data();
-
-    // Try to find user in users collection for additional info (admin role, etc)
-    let userData = {};
-    try {
-      const userDocSnap = await db.collection("users").doc(userUid).get();
-      if (userDocSnap.exists) {
-        userData = userDocSnap.data();
-      }
-    } catch (e) {
-      // User might not exist in users collection, that's okay
-      console.log("User not found in users collection, continuing with student data");
-    }
-
-    // Fetch all registrations for this userUid
-    let registrationsSnap = await db
-      .collection("registrations")
-      .where("userUid", "==", userUid)
-      .get();
-
-    // If no registrations found by userUid, try by email (for admin-added participants)
-    if (registrationsSnap.empty) {
-      registrationsSnap = await db
+      let registrationsSnap = await db
         .collection("registrations")
+        .where("userUid", "==", userUid)
+        .get();
+
+      if (registrationsSnap.empty && normalizedEmailInner) {
+        registrationsSnap = await db
+          .collection("registrations")
+          .where("email", "==", normalizedEmailInner)
+          .get();
+      }
+
+      const registrations = registrationsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const regularRegistrations = registrations.filter((r) => !r.isSpecialEvent);
+      const specialEventRegistrations = registrations.filter((r) => r.isSpecialEvent);
+
+      const passesSnap = await db
+        .collection("passes")
+        .where("userUid", "==", userUid)
+        .get();
+      const passes = passesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      const eventIds = [...new Set(regularRegistrations.map((r) => r.eventId))];
+      const eventDetailsMap = {};
+      for (const eventId of eventIds) {
+        const eventDoc = await db.collection("events").doc(eventId).get();
+        if (eventDoc.exists) {
+          eventDetailsMap[eventId] = { id: eventId, ...eventDoc.data() };
+        }
+      }
+
+      const specialEventIds = [...new Set(specialEventRegistrations.map((r) => r.eventId))];
+      const specialEventDetailsMap = {};
+      for (const specialEventId of specialEventIds) {
+        const specialEventDoc = await db.collection("specialEvents").doc(specialEventId).get();
+        if (specialEventDoc.exists) {
+          specialEventDetailsMap[specialEventId] = { id: specialEventId, ...specialEventDoc.data() };
+        }
+      }
+
+      const enrichedRegistrations = regularRegistrations.map((reg) => ({
+        ...reg,
+        eventDetails: eventDetailsMap[reg.eventId] || null,
+      }));
+      const enrichedSpecialEventRegistrations = specialEventRegistrations.map((reg) => ({
+        ...reg,
+        specialEventDetails: specialEventDetailsMap[reg.eventId] || null,
+      }));
+
+      const totalAmount = [
+        ...enrichedRegistrations.map((r) => r.amount || 0),
+        ...enrichedSpecialEventRegistrations.map((r) => r.amount || 0),
+        ...passes.map((p) => p.passPrice || 0),
+      ].reduce((sum, amount) => sum + amount, 0);
+
+      return {
+        user: {
+          id: userUid,
+          uid: userUid,
+          email: normalizedEmailInner || null,
+          name: studentData.name || "",
+          rollNo: studentData.rollNo || null,
+          college: studentData.college || null,
+          photoURL: studentData.photoURL || null,
+          isStudent: studentData.isStudent || false,
+          hasEventPass: studentData.hasEventPass || false,
+          profileCompleted: studentData.profileCompleted || false,
+          ...userData,
+        },
+        registrations: enrichedRegistrations,
+        specialEventRegistrations: enrichedSpecialEventRegistrations,
+        passes,
+        summary: {
+          totalRegistrations: enrichedRegistrations.length,
+          totalSpecialEventRegistrations: enrichedSpecialEventRegistrations.length,
+          totalPasses: passes.length,
+          totalAmount,
+        },
+      };
+    }
+
+    if (email) {
+      const normalizedEmail = email.toLowerCase().trim();
+
+      const studentsSnap = await db
+        .collection("students")
         .where("email", "==", normalizedEmail)
         .get();
-    }
 
-    // Map registrations from the already fetched data
-    const registrations = registrationsSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    // Separate regular and special event registrations
-    const regularRegistrations = registrations.filter((r) => !r.isSpecialEvent);
-    const specialEventRegistrations = registrations.filter((r) => r.isSpecialEvent);
-
-    // Fetch all passes for this user
-    const passesSnap = await db
-      .collection("passes")
-      .where("userUid", "==", userUid)
-      .get();
-
-    const passes = passesSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    // Fetch event details for regular registrations
-    const eventIds = [...new Set(regularRegistrations.map((r) => r.eventId))];
-    const eventDetailsMap = {};
-
-    for (const eventId of eventIds) {
-      const eventDoc = await db.collection("events").doc(eventId).get();
-      if (eventDoc.exists) {
-        eventDetailsMap[eventId] = {
-          id: eventId,
-          ...eventDoc.data(),
-        };
+      if (studentsSnap.empty) {
+        return NextResponse.json(
+          { error: "No student found with this email" },
+          { status: 404 }
+        );
       }
+
+      const studentDoc = studentsSnap.docs[0];
+      const details = await buildDetailsForStudentDoc(studentDoc, normalizedEmail);
+      return NextResponse.json(details);
     }
 
-    // Fetch special event details
-    const specialEventIds = [...new Set(specialEventRegistrations.map((r) => r.eventId))];
-    const specialEventDetailsMap = {};
-
-    for (const specialEventId of specialEventIds) {
-      const specialEventDoc = await db.collection("specialEvents").doc(specialEventId).get();
-      if (specialEventDoc.exists) {
-        specialEventDetailsMap[specialEventId] = {
-          id: specialEventId,
-          ...specialEventDoc.data(),
-        };
+    if (name) {
+      const nameQuery = name.trim();
+      if (!nameQuery) {
+        return NextResponse.json(
+          { error: "Name parameter is empty" },
+          { status: 400 }
+        );
       }
+
+      const studentsSnap = await db
+        .collection("students")
+        .orderBy("name")
+        .startAt(nameQuery)
+        .endAt(nameQuery + "\uf8ff")
+        .limit(20)
+        .get();
+
+      if (studentsSnap.empty) {
+        return NextResponse.json({ results: [] });
+      }
+
+      const results = [];
+      for (const doc of studentsSnap.docs) {
+        const details = await buildDetailsForStudentDoc(doc);
+        results.push(details);
+      }
+      return NextResponse.json({ results });
     }
 
-    // Enrich registrations with event details
-    const enrichedRegistrations = regularRegistrations.map((reg) => ({
-      ...reg,
-      eventDetails: eventDetailsMap[reg.eventId] || null,
-    }));
-
-    // Enrich special event registrations with event details
-    const enrichedSpecialEventRegistrations = specialEventRegistrations.map((reg) => ({
-      ...reg,
-      specialEventDetails: specialEventDetailsMap[reg.eventId] || null,
-    }));
-
-    // Calculate totals
-    const totalAmount = [
-      ...enrichedRegistrations.map((r) => r.amount || 0),
-      ...enrichedSpecialEventRegistrations.map((r) => r.amount || 0),
-      ...passes.map((p) => p.passPrice || 0),
-    ].reduce((sum, amount) => sum + amount, 0);
-
-    return NextResponse.json({
-      user: {
-        id: userUid,
-        uid: userUid,
-        email: normalizedEmail,
-        // Student data from students collection
-        name: studentData.name || '',
-        rollNo: studentData.rollNo || null,
-        college: studentData.college || null,
-        photoURL: studentData.photoURL || null,
-        isStudent: studentData.isStudent || false,
-        hasEventPass: studentData.hasEventPass || false,
-        profileCompleted: studentData.profileCompleted || false,
-        // Admin/user data from users collection
-        ...userData,
-      },
-      registrations: enrichedRegistrations,
-      specialEventRegistrations: enrichedSpecialEventRegistrations,
-      passes,
-      summary: {
-        totalRegistrations: enrichedRegistrations.length,
-        totalSpecialEventRegistrations: enrichedSpecialEventRegistrations.length,
-        totalPasses: passes.length,
-        totalAmount,
-      },
-    });
+    return NextResponse.json(
+      { error: "Email or name parameter is required" },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("Error fetching user details:", error);
     return NextResponse.json(
