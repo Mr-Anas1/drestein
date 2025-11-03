@@ -321,6 +321,34 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                         }}
                     />
                 )}
+
+                {/* Delete Confirmation Modal */}
+                {deleteConfirm && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={() => setDeleteConfirm(null)}>
+                        <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                            <h3 className="font-audiowide text-xl text-white mb-4">Confirm Delete</h3>
+                            <p className="text-muted-text font-space mb-6">
+                                Are you sure you want to delete "{deleteConfirm.name}"? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => deleteParticipant(deleteConfirm.id)}
+                                    disabled={deleting}
+                                    className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg font-audiowide hover:bg-red-600 transition-colors disabled:opacity-50"
+                                >
+                                    {deleting ? 'Deleting...' : 'Delete'}
+                                </button>
+                                <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    disabled={deleting}
+                                    className="flex-1 bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-audiowide hover:bg-background transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
