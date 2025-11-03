@@ -72,12 +72,13 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
     const exportToCSV = () => {
         if (participants.length === 0) return;
 
-        const headers = ['Name', 'Email', 'Roll No', 'College', 'Team Members', 'Status'];
+        const headers = ['Name', 'Email', 'Phone', 'Roll No', 'College', 'Team Members', 'Status'];
         const csvContent = [
             headers.join(','),
             ...participants.map(p => [
                 `"${p.name || 'N/A'}"`,
                 `"${p.email || 'N/A'}"`,
+                `"${p.phone || 'N/A'}"`,
                 `"${p.rollNo || 'N/A'}"`,
                 `"${p.college || 'N/A'}"`,
                 `"${p.teamMembers ? p.teamMembers.join('; ') : 'Individual'}"`,
@@ -202,6 +203,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                         <tr className="bg-background-soft text-left">
                                             <th className="p-4 font-audiowide text-sm text-muted-text">#</th>
                                             <th className="p-4 font-audiowide text-sm text-muted-text">Participant</th>
+                                            <th className="p-4 font-audiowide text-sm text-muted-text">Phone</th>
                                             <th className="p-4 font-audiowide text-sm text-muted-text">Roll No</th>
                                             <th className="p-4 font-audiowide text-sm text-muted-text">College</th>
                                             <th className="p-4 font-audiowide text-sm text-muted-text">Team</th>
@@ -231,6 +233,9 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
                                                             <User size={16} className="text-primary" />
                                                             <span className="text-white font-space">{participant.name || 'N/A'}</span>
                                                         </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className="text-white font-space text-sm">{participant.phone || '-'}</span>
                                                     </td>
                                                     <td className="p-4">
                                                         <span className="text-white font-space text-sm">{participant.rollNo || '-'}</span>
@@ -358,6 +363,7 @@ export default function SpecialEventParticipantsModal({ event, onClose }) {
 function AddParticipantModal({ event, onClose, onAdded }) {
     const [formData, setFormData] = useState({
         name: '',
+        phone: '',
         email: '',
         rollNo: '',
         college: '',
@@ -370,6 +376,10 @@ function AddParticipantModal({ event, onClose, onAdded }) {
         e.preventDefault();
         if (!formData.name || !formData.email) {
             setError('Name and email are required');
+            return;
+        }
+        if (!formData.phone) {
+            setError('Phone is required');
             return;
         }
 
@@ -390,6 +400,7 @@ function AddParticipantModal({ event, onClose, onAdded }) {
                 body: JSON.stringify({
                     eventId: event.id,
                     name: formData.name,
+                    phone: formData.phone,
                     email: formData.email,
                     userUid: adminUid,
                     isSpecialEvent: true,
@@ -446,6 +457,17 @@ function AddParticipantModal({ event, onClose, onAdded }) {
                     </div>
 
                     <div>
+                    <label className="block text-white font-audiowide text-sm mb-2">Phone *</label>
+                    <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full bg-background-soft border border-border text-white px-4 py-2 rounded-lg font-space focus:outline-none focus:border-primary"
+                        disabled={loading}
+                    />
+                </div>
+
+                <div>
                         <label className="block text-white font-audiowide text-sm mb-2">Email *</label>
                         <input
                             type="email"

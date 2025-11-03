@@ -94,7 +94,7 @@ export async function POST(request) {
       );
     }
 
-    const { eventId, name, email, transactionId, userUid, isSpecialEvent, isAdminAdding, rollNo, college, teamMembers } =
+    const { eventId, name, email, transactionId, userUid, isSpecialEvent, isAdminAdding, rollNo, college, teamMembers, phone } =
       await request.json();
 
     // Make transactionId optional
@@ -301,6 +301,7 @@ export async function POST(request) {
     // Fetch student profile to enrich registration details (rollNo, college)
     let studentRollNo = rollNo && String(rollNo).trim() ? String(rollNo).trim() : undefined;
     let studentCollege = college && String(college).trim() ? String(college).trim() : undefined;
+    let studentPhone = phone && String(phone).trim() ? String(phone).trim() : undefined;
     try {
       if (!studentRollNo || !studentCollege) {
         const studentDoc = await db.collection("students").doc(userUid).get();
@@ -308,6 +309,7 @@ export async function POST(request) {
           const s = studentDoc.data() || {};
           if (!studentRollNo && s.rollNo) studentRollNo = String(s.rollNo).trim();
           if (!studentCollege && s.college) studentCollege = String(s.college).trim();
+          if (s.phone) studentPhone = String(s.phone).trim();
         }
       }
     } catch (e) {
@@ -337,6 +339,7 @@ export async function POST(request) {
       ...(studentRollNo ? { rollNo: studentRollNo } : {}),
       ...(studentCollege ? { college: studentCollege } : {}),
       ...(teamMembers && Array.isArray(teamMembers) && { teamMembers }),
+      ...(studentPhone ? { phone: studentPhone } : {}),
     };
 
     let regRef;

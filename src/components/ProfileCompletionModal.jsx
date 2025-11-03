@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, User, Mail, Building2, Hash, Loader2 } from 'lucide-react';
+import { X, User, Mail, Building2, Hash, Phone as PhoneIcon, Loader2 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 
 export default function ProfileCompletionModal({ onComplete }) {
@@ -10,6 +10,7 @@ export default function ProfileCompletionModal({ onComplete }) {
         isStudent: 'yes',
         rollNo: '',
         college: '',
+        phone: '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -35,6 +36,11 @@ export default function ProfileCompletionModal({ onComplete }) {
             }
         }
 
+        if (!formData.phone.trim()) {
+            setError('Phone number is required');
+            return;
+        }
+
         try {
             setLoading(true);
             const user = auth.currentUser;
@@ -56,6 +62,7 @@ export default function ProfileCompletionModal({ onComplete }) {
                     isStudent: formData.isStudent === 'yes',
                     rollNo: formData.isStudent === 'yes' ? formData.rollNo.trim() : null,
                     college: formData.isStudent === 'yes' ? formData.college.trim() : null,
+                    phone: formData.phone.trim(),
                 }),
             });
 

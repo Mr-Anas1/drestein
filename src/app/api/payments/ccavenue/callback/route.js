@@ -53,6 +53,7 @@ async function autoRegisterSpecialEvents(db, userUid, customEvents, passId) {
       userRollNo = studentData.rollNo || null;
       userCollege = studentData.college || null;
       isStudent = studentData.isStudent || false;
+      var userPhone = studentData.phone || null;
       console.log(`[CCA CALLBACK] ✅ Fetched user data - Name: ${userName}, Email: ${userEmail}, Roll: ${userRollNo}, College: ${userCollege}`);
     } else {
       console.warn(`[CCA CALLBACK] ⚠️ Student document not found for ${userUid}, using defaults`);
@@ -108,6 +109,11 @@ async function autoRegisterSpecialEvents(db, userUid, customEvents, passId) {
           registrationData.rollNo = userRollNo;
           registrationData.college = userCollege;
           registrationData.isStudent = true;
+        }
+
+        // Include phone if available
+        if (userPhone) {
+          registrationData.phone = String(userPhone);
         }
 
         await db.collection("registrations").add(registrationData);

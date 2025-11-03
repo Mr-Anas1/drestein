@@ -7,6 +7,7 @@ import { DEPARTMENTS, getDepartmentName } from '@/constants/departments'
 import CustomDropdown from '@/components/CustomDropdown'
 import { Plus, LogOut, Users, Ticket, Search, Download } from 'lucide-react'
 import { exportEventsToCSV } from '@/lib/csvExport'
+import { RefreshCw } from 'lucide-react'
 // Note: Avoid cached hooks on admin to always reflect latest writes
 
 // Import extracted components
@@ -31,6 +32,7 @@ const AdminDashboard = () => {
     const [selectedDepartment, setSelectedDepartment] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [showViewUserDetailsModal, setShowViewUserDetailsModal] = useState(false)
+    const [backfilling, setBackfilling] = useState(false)
 
     // Authentication check - only allow super_admin and department_admin
     useEffect(() => {
@@ -136,6 +138,25 @@ const AdminDashboard = () => {
         router.push('/admin/login')
     }
 
+    const runBackfillPhones = async () => {
+        try {
+            setBackfilling(true)
+            const { auth } = await import('@/lib/firebase')
+            const token = await auth.currentUser?.getIdToken?.()
+            const res = await fetch('/api/admin/backfill-phones', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Backfill failed')
+            alert(`Backfill complete. Updated: ${data.updated}, Skipped: ${data.skipped}, Errors: ${data.errors}`)
+        } catch (e) {
+            alert(e.message)
+        } finally {
+            setBackfilling(false)
+        }
+    }
+
     const confirmDelete = (event) => {
         setEventToDelete(event)
         setShowDeleteConfirm(true)
@@ -214,6 +235,17 @@ const AdminDashboard = () => {
                             >
                                 <Users size={20} />
                                 Manage Users
+                            </button>
+                        )}
+
+                        {isSuperAdmin && (
+                            <button
+                                onClick={runBackfillPhones}
+                                disabled={backfilling}
+                                className="bg-background-soft border border-border text-white px-4 py-3 rounded-lg font-audiowide hover:bg-background transition-colors duration-300 flex items-center gap-2 disabled:opacity-50"
+                            >
+                                <RefreshCw size={20} />
+                                {backfilling ? 'Backfilling…' : 'Backfill Phones'}
                             </button>
                         )}
 

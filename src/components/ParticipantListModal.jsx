@@ -43,11 +43,12 @@ export default function ParticipantListModal({ event, onClose }) {
     const exportToCSV = () => {
         if (participants.length === 0) return;
 
-        const headers = ['Name', 'Roll No', 'College', 'Team Members', 'Status'];
+        const headers = ['Name', 'Phone', 'Roll No', 'College', 'Team Members', 'Status'];
         const csvContent = [
             headers.join(','),
             ...participants.map(p => [
                 `"${p.name || 'N/A'}"`,
+                `"${p.phone || 'N/A'}"`,
                 `"${p.rollNo || 'N/A'}"`,
                 `"${p.college || 'N/A'}"`,
                 `"${p.teamMembers ? p.teamMembers.join('; ') : 'Individual'}"`,
@@ -183,6 +184,7 @@ export default function ParticipantListModal({ event, onClose }) {
                                         <tr>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">#</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Name</th>
+                                            <th className="text-left p-4 font-audiowide text-sm text-muted-text">Phone</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Roll No</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">College</th>
                                             <th className="text-left p-4 font-audiowide text-sm text-muted-text">Team Members</th>
@@ -203,6 +205,9 @@ export default function ParticipantListModal({ event, onClose }) {
                                                         <User size={16} className="text-primary" />
                                                         <span className="text-white font-space">{participant.name || 'N/A'}</span>
                                                     </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className="text-white font-space text-sm">{participant.phone || '-'}</span>
                                                 </td>
                                                 <td className="p-4">
                                                     <span className="text-white font-space text-sm">{participant.rollNo || '-'}</span>

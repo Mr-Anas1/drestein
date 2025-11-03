@@ -36,7 +36,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const { name, isStudent, rollNo, college } = await request.json();
+    const { name, isStudent, rollNo, college, phone } = await request.json();
 
     // Validation
     if (!name || !name.trim()) {
@@ -51,6 +51,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "College name is required for students" }, { status: 400 });
     }
 
+    if (!phone || !String(phone).trim()) {
+      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+    }
+
     const db = getAdminDB();
     const studentRef = db.collection("students").doc(decoded.uid);
 
@@ -58,6 +62,7 @@ export async function POST(request) {
     const updateData = {
       name: name.trim(),
       isStudent: isStudent === true,
+      phone: String(phone).trim(),
       profileCompleted: true,
       profileCompletedAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
