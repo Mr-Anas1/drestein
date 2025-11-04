@@ -208,6 +208,24 @@ export default function ProfileCompletionModal({ onComplete }) {
                         </>
                     )}
 
+                    {/* Phone Number - Required for all */}
+                    <div>
+                        <label className="block text-white font-audiowide text-sm mb-2">
+                            Phone Number *
+                        </label>
+                        <div className="relative">
+                            <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" size={20} />
+                            <input
+                                type="tel"
+                                value={formData.phone}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                placeholder="Enter your phone number"
+                                className="w-full bg-background-soft border border-border rounded-lg pl-10 pr-4 py-3 text-white font-space focus:outline-none focus:border-primary transition-colors"
+                                disabled={loading}
+                            />
+                        </div>
+                    </div>
+
                     {/* Submit Button */}
                     <button
                         type="submit"
