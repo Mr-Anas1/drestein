@@ -47,9 +47,9 @@ export default function PhoneNumberModal({ onComplete }) {
 			<div className="bg-background border border-border rounded-xl p-6 w-full max-w-md">
 				<div className="flex justify-between items-center mb-4">
 					<h3 className="font-audiowide text-white text-lg">Add Phone Number</h3>
-					<button onClick={() => onComplete?.()} className="text-muted-text hover:text-white">
+					{/* <button onClick={() => onComplete?.()} className="text-muted-text hover:text-white">
 						<X size={20} />
-					</button>
+					</button> */}
 				</div>
 				<p className="text-muted-text font-space text-sm mb-4">Please add your phone number to complete your profile.</p>
 				{error && (

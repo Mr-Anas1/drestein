@@ -30,8 +30,25 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${audiowide.variable} ${spaceGrotesk.variable}`}>
+      <head>
+      <Script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=G-1V374ZTE8L`}
+        />
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-1V374ZTE8L', {
+              page_path: window.location.pathname,
+            });
+          `}
+        </Script>
+      </head>
       <body>
         <AuthProvider>
+          <AnalyticsTracker />
           <ProfileGuard>
             <Suspense fallback={null}>
               <PageLoader />
