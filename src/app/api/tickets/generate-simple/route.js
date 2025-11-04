@@ -117,6 +117,56 @@ export async function POST(request) {
       access: 'All technical, non-technical, and cultural events'
     };
 
+    // For general pass, check registered events/workshops to get actual dates
+    if (passType === 'general') {
+      try {
+        const regsSnap = await db
+          .collection('registrations')
+          .where('userUid', '==', decoded.uid)
+          .get();
+        const regs = regsSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(r => !r.isSpecialEvent)
+          .filter(r => (r.status === 'confirmed') || (r.paymentStatus === 'paid') || (r.paymentVerified === true));
+        const eventIds = [...new Set(regs.map(r => r.eventId).filter(Boolean))];
+        
+        if (eventIds.length > 0) {
+          // Fetch events to get dates
+          const eventDates = [];
+          for (const evId of eventIds) {
+            try {
+              const evDoc = await db.collection('events').doc(evId).get();
+              if (evDoc.exists) {
+                const ev = evDoc.data();
+                // Try startDate, date, or startDate
+                const dateStr = ev.startDate || ev.date || null;
+                const endDateStr = ev.endDate || null;
+                if (dateStr) {
+                  if (endDateStr && endDateStr !== dateStr) {
+                    eventDates.push(`${dateStr} - ${endDateStr}`);
+                  } else {
+                    eventDates.push(dateStr);
+                  }
+                }
+              }
+            } catch {}
+          }
+          
+          // If we have specific dates, use them instead of general pass dates
+          if (eventDates.length > 0) {
+            const uniqueDates = [...new Set(eventDates)];
+            if (uniqueDates.length > 0) {
+              typeInfo.validDates = uniqueDates.join(', ');
+              typeInfo.eventDate = uniqueDates.join(', ');
+            }
+          }
+        }
+      } catch (e) {
+        // Non-fatal: fall back to general pass dates
+        console.warn('[TICKET GEN] Failed to fetch event dates:', e?.message);
+      }
+    }
+
     // Handle custom pass with special events
     if (passType === 'custom' && passData.customEvents && passData.customEvents.length > 0) {
       // Fetch special event details
@@ -172,6 +222,54 @@ export async function POST(request) {
         eventDate: 'November 7-8, 2025',
         access: 'All workshop sessions'
       };
+      
+      // For workshop pass, check registered workshops for actual dates
+      try {
+        const regsSnap = await db
+          .collection('registrations')
+          .where('userUid', '==', decoded.uid)
+          .get();
+        const regs = regsSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(r => !r.isSpecialEvent)
+          .filter(r => (r.status === 'confirmed') || (r.paymentStatus === 'paid') || (r.paymentVerified === true));
+        const eventIds = [...new Set(regs.map(r => r.eventId).filter(Boolean))];
+        
+        if (eventIds.length > 0) {
+          const eventDates = [];
+          for (const evId of eventIds) {
+            try {
+              const evDoc = await db.collection('events').doc(evId).get();
+              if (evDoc.exists) {
+                const ev = evDoc.data();
+                // Only include workshops
+                const isWorkshop = String(ev.category || '').toLowerCase() === 'workshop';
+                if (isWorkshop) {
+                  const dateStr = ev.startDate || ev.date || null;
+                  const endDateStr = ev.endDate || null;
+                  if (dateStr) {
+                    if (endDateStr && endDateStr !== dateStr) {
+                      eventDates.push(`${dateStr} - ${endDateStr}`);
+                    } else {
+                      eventDates.push(dateStr);
+                    }
+                  }
+                }
+              }
+            } catch {}
+          }
+          
+          if (eventDates.length > 0) {
+            const uniqueDates = [...new Set(eventDates)];
+            if (uniqueDates.length > 0) {
+              typeInfo.validDates = uniqueDates.join(', ');
+              typeInfo.eventDate = uniqueDates.join(', ');
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[TICKET GEN] Failed to fetch workshop dates:', e?.message);
+      }
     }
 
     // For general pass (or custom that includes general), list registered common events
