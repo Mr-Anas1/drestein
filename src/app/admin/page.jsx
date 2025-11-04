@@ -32,6 +32,7 @@ const AdminDashboard = () => {
     const [selectedDepartment, setSelectedDepartment] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [showViewUserDetailsModal, setShowViewUserDetailsModal] = useState(false)
+    const [overviewStats, setOverviewStats] = useState(null)
     const [backfilling, setBackfilling] = useState(false)
 
     // Authentication check - only allow super_admin and department_admin
@@ -53,6 +54,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         if (user && userRole) {
             fetchEvents()
+            fetchOverviewStats()
         }
     }, [user, userRole, isDepartmentAdmin, userDepartment])
 
@@ -114,6 +116,21 @@ const AdminDashboard = () => {
             console.error('Error fetching events:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchOverviewStats = async () => {
+        try {
+            const { auth } = await import('@/lib/firebase')
+            const token = await auth.currentUser?.getIdToken?.()
+            const res = await fetch('/api/admin/overview-stats', {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            if (!res.ok) return
+            const data = await res.json()
+            setOverviewStats(data)
+        } catch (e) {
+            // ignore
         }
     }
 
@@ -305,7 +322,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <StatsCards events={filteredEvents} />
+                <StatsCards events={filteredEvents} overviewStats={overviewStats} />
 
                 {/* Events Table */}
                 <EventsTable
