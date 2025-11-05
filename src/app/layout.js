@@ -9,6 +9,7 @@ import ProfileGuard from "@/components/ProfileGuard";
 import PageLoader from "@/components/PageLoader";
 import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script";
 
 const audiowide = Audiowide({
   weight: "400",
@@ -48,7 +49,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <AuthProvider>
-          <AnalyticsTracker />
+          <Analytics />
           <ProfileGuard>
             <Suspense fallback={null}>
               <PageLoader />
