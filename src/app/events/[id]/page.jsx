@@ -25,6 +25,32 @@ const EventDetailPage = () => {
   const router = useRouter();
   const [event, setEvent] = useState(null);
   const [isRegistered, setIsRegistered] = useState(false);
+  
+  // Check if registration has expired
+  const isExpired = React.useMemo(() => {
+    // Check expiryDate first (legacy)
+    if (event?.expiryDate) {
+      const raw = event.expiryDate;
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        const end = new Date(d);
+        if (String(raw).length <= 10 && /\d{4}-\d{2}-\d{2}/.test(String(raw))) {
+          end.setHours(23, 59, 59, 999);
+        }
+        if (new Date() > end) return true;
+      }
+    }
+    
+    // Check registrationDeadline (preferred)
+    if (event?.registrationDeadline) {
+      const deadline = new Date(event.registrationDeadline);
+      if (!isNaN(deadline.getTime())) {
+        return new Date() > deadline;
+      }
+    }
+    
+    return false;
+  }, [event?.expiryDate, event?.registrationDeadline]);
   const [loading, setLoading] = useState(true);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
 
@@ -147,16 +173,6 @@ const EventDetailPage = () => {
     );
   }
 
-  const isExpired = (() => {
-    const raw = event?.expiryDate;
-    if (!raw) return false;
-    const d = new Date(raw);
-    if (isNaN(d.getTime())) return false;
-    const end = new Date(d);
-    if (String(raw).length <= 10 && /\d{4}-\d{2}-\d{2}/.test(String(raw)))
-      end.setHours(23, 59, 59, 999);
-    return new Date() > end;
-  })();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-soft to-background">
@@ -262,18 +278,25 @@ const EventDetailPage = () => {
                 <p className="text-muted-text font-space text-sm mt-2">You have already registered for this event</p>
               </button>
             ) : (
-              <button
-                onClick={() => setShowRegistrationModal(true)}
-                className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center"
-              >
-                <p className="text-primary font-audiowide text-lg">Register Now</p>
-                <p className="text-muted-text font-space text-sm mt-2">Register for this event</p>
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => setShowRegistrationModal(true)}
+                  disabled={isExpired}
+                  className={`w-full ${isExpired 
+                    ? "bg-background-soft border border-border text-muted-text cursor-not-allowed" 
+                    : "bg-gradient-to-r from-primary to-secondary text-white hover:from-hover-primary hover:to-primary"
+                  } font-audiowide py-4 rounded-xl transition-all duration-300 ${!isExpired ? "transform hover:scale-105" : ""}`}
+                >
+                  {isExpired ? "Registration Closed" : "Register Now"}
+                </button>
+                {isExpired && event?.registrationDeadline && (
+                  <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 px-3 py-1.5 bg-gray-800 text-white text-sm rounded whitespace-nowrap">
+                    Registration closed on {new Date(event.registrationDeadline).toLocaleDateString()}
+                    <div className="absolute w-2 h-2 bg-gray-800 rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+                  </div>
+                )}
+              </div>
             )}
-            {/* <div className="w-full bg-primary/10 border border-primary/30 rounded-xl py-4 text-center">
-              <p className="text-primary font-audiowide text-lg">🎉 Registration Opens Soon!</p>
-              <p className="text-muted-text font-space text-sm mt-2">Stay tuned for updates</p>
-            </div> */}
           </div>
         </div>
 
@@ -511,15 +534,8 @@ const EventDetailPage = () => {
           allowBackdropClose={true}
           onClose={() => setShowRegistrationModal(false)}
           onRegistrationSuccess={() => {
+            setShowRegistrationModal(false);
             setIsRegistered(true);
-            setEvent((prev) =>
-              prev
-                ? {
-                  ...prev,
-                  participationCount: (prev.participationCount || 0) + 1,
-                }
-                : prev
-            );
           }}
         />
       )}
