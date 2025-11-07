@@ -248,7 +248,7 @@ export default function AddEventModal({ onClose, onEventAdded }) {
                 Multi-day Event
               </span>
             </label>
-            
+
             <label className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -262,7 +262,7 @@ export default function AddEventModal({ onClose, onEventAdded }) {
                 For Students
               </span>
             </label>
-            
+
             <label className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -278,7 +278,7 @@ export default function AddEventModal({ onClose, onEventAdded }) {
             </label>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {!formData.isMultiDay ? (
               <div>
                 <label className="block text-sm font-audiowide text-muted-text mb-2">
@@ -327,37 +327,6 @@ export default function AddEventModal({ onClose, onEventAdded }) {
               </>
             )}
 
-            <div className="flex items-end">
-              <label className="flex items-center cursor-pointer">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={formData.requiresPass}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        requiresPass: e.target.checked,
-                      }))
-                    }
-                  />
-                  <div
-                    className={`block w-14 h-8 rounded-full ${formData.requiresPass
-                      ? "bg-primary"
-                      : "bg-background-soft border border-border"
-                      }`}
-                  ></div>
-                  <div
-                    className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${formData.requiresPass ? "translate-x-6" : ""
-                      }`}
-                  ></div>
-                </div>
-                <div className="ml-3 text-white font-space text-sm">
-                  Requires Event Pass
-                </div>
-              </label>
-            </div>
-
             <div>
               <label className="block text-sm font-audiowide text-muted-text mb-2">
                 Start Time
@@ -366,9 +335,7 @@ export default function AddEventModal({ onClose, onEventAdded }) {
                 type="time"
                 required
                 value={formData.time}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, time: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, time: e.target.value }))}
                 className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
               />
             </div>
@@ -380,9 +347,7 @@ export default function AddEventModal({ onClose, onEventAdded }) {
               <input
                 type="time"
                 value={formData.endTime}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, endTime: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
                 className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
               />
             </div>
@@ -394,12 +359,10 @@ export default function AddEventModal({ onClose, onEventAdded }) {
               <input
                 type="date"
                 value={formData.expiryDate}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    expiryDate: e.target.value,
-                  }))
-                }
+                onChange={(e) => setFormData((prev) => ({
+                  ...prev,
+                  expiryDate: e.target.value,
+                }))}
                 className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
               />
             </div>
@@ -412,214 +375,212 @@ export default function AddEventModal({ onClose, onEventAdded }) {
                 type="text"
                 required
                 value={formData.venue}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, venue: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, venue: e.target.value }))}
                 className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-audiowide text-muted-text mb-2">
+                Event Image
+              </label>
+              <ImageUpload
+                currentImage={formData.img}
+                onImageUpload={(url) => setFormData((prev) => ({ ...prev, img: url }))}
+                disabled={loading}
               />
             </div>
           </div>
 
-          <div>
-            {/* <label className="block text-sm font-audiowide text-muted-text mb-2">Event Image</label> */}
-            <ImageUpload
-              currentImage={formData.img}
-              onImageUpload={(url) =>
-                setFormData((prev) => ({ ...prev, img: url }))
-              }
-              disabled={loading}
-            />
-          </div>
-
-          {/* Pass Requirement Info */}
+          
           {formData.requiresPass && (
-            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-              <p className="text-sm text-white font-space">
-                <strong className="font-audiowide">Event Pass Required:</strong>{" "}
-                Students will need to purchase an event pass to register for
-                this event. Workshops are free and don't require a pass.
-              </p>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-audiowide text-muted-text mb-2">
-              Rules
-            </label>
-            {formData.rules.map((rule, index) => (
-              <div key={index} className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={rule}
-                  onChange={(e) => updateRule(index, e.target.value)}
-                  className="flex-1 bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                  placeholder={`Rule ${index + 1}`}
-                />
-                {formData.rules.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeRule(index)}
-                    className="p-2 text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    <Minus size={16} />
-                  </button>
-                )}
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                <p className="text-sm text-white font-space">
+                  <strong className="font-audiowide">Event Pass Required:</strong>{" "}
+                  Students will need to purchase an event pass to register for
+                  this event. Workshops are free and don't require a pass.
+                </p>
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={addRule}
-              className="text-primary hover:text-primary-dark transition-colors font-space text-sm flex items-center gap-1"
-            >
-              <Plus size={16} />
-              Add Rule
-            </button>
-          </div>
+            )}
 
-          <div>
-            <label className="block text-sm font-audiowide text-muted-text mb-2">
-              Prizes
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {["1st Prize", "2nd Prize", "3rd Prize"].map((label, index) => (
-                <div key={index}>
-                  <label className="block text-xs text-muted-text mb-1">
-                    {label}
-                  </label>
+            <div>
+              <label className="block text-sm font-audiowide text-muted-text mb-2">
+                Rules
+              </label>
+              {formData.rules.map((rule, index) => (
+                <div key={index} className="flex gap-2 mb-2">
                   <input
                     type="text"
-                    value={formData.prizes[index]}
-                    onChange={(e) => {
-                      const newPrizes = [...formData.prizes];
-                      newPrizes[index] = e.target.value;
-                      setFormData((prev) => ({ ...prev, prizes: newPrizes }));
-                    }}
-                    className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                    placeholder={index === 0 ? "Required" : "Optional"}
+                    value={rule}
+                    onChange={(e) => updateRule(index, e.target.value)}
+                    className="flex-1 bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                    placeholder={`Rule ${index + 1}`}
                   />
+                  {formData.rules.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeRule(index)}
+                      className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      <Minus size={16} />
+                    </button>
+                  )}
                 </div>
               ))}
+              <button
+                type="button"
+                onClick={addRule}
+                className="text-primary hover:text-primary-dark transition-colors font-space text-sm flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Add Rule
+              </button>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-audiowide text-muted-text mb-2">
-              Student Coordinators
-            </label>
-            {formData.studentCoordinators.map((coordinator, index) => (
-              <div key={index} className="mb-4 p-4 bg-background-soft rounded-lg border border-border">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
-                  <input
-                    type="text"
-                    value={coordinator.name}
-                    onChange={(e) => updateStudentCoordinator(index, "name", e.target.value)}
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                    placeholder="Name"
-                  />
-                  <input
-                    type="tel"
-                    value={coordinator.phone}
-                    onChange={(e) => updateStudentCoordinator(index, "phone", e.target.value)}
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                    placeholder="Phone"
-                  />
-                  <input
-                    type="email"
-                    value={coordinator.email}
-                    onChange={(e) => updateStudentCoordinator(index, "email", e.target.value)}
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                    placeholder="Email"
-                  />
-                </div>
-                {formData.studentCoordinators.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeStudentCoordinator(index)}
-                    className="text-red-400 hover:text-red-300 transition-colors font-space text-sm flex items-center gap-1"
-                  >
-                    <Minus size={16} />
-                    Remove Coordinator
-                  </button>
-                )}
+            <div>
+              <label className="block text-sm font-audiowide text-muted-text mb-2">
+                Prizes
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {["1st Prize", "2nd Prize", "3rd Prize"].map((label, index) => (
+                  <div key={index}>
+                    <label className="block text-xs text-muted-text mb-1">
+                      {label}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.prizes[index]}
+                      onChange={(e) => {
+                        const newPrizes = [...formData.prizes];
+                        newPrizes[index] = e.target.value;
+                        setFormData((prev) => ({ ...prev, prizes: newPrizes }));
+                      }}
+                      className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                      placeholder={index === 0 ? "Required" : "Optional"}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={addStudentCoordinator}
-              className="text-primary hover:text-primary-dark transition-colors font-space text-sm flex items-center gap-1"
-            >
-              <Plus size={16} />
-              Add Student Coordinator
-            </button>
-          </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-audiowide text-muted-text mb-2">
-              Faculty Coordinators
-            </label>
-            {formData.facultyCoordinators.map((coordinator, index) => (
-              <div key={index} className="mb-4 p-4 bg-background-soft rounded-lg border border-border">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
-                  <input
-                    type="text"
-                    value={coordinator.name}
-                    onChange={(e) => updateFacultyCoordinator(index, "name", e.target.value)}
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                    placeholder="Name"
-                  />
-                  <input
-                    type="tel"
-                    value={coordinator.phone}
-                    onChange={(e) => updateFacultyCoordinator(index, "phone", e.target.value)}
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                    placeholder="Phone"
-                  />
-                  <input
-                    type="email"
-                    value={coordinator.email}
-                    onChange={(e) => updateFacultyCoordinator(index, "email", e.target.value)}
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
-                    placeholder="Email"
-                  />
+            <div>
+              <label className="block text-sm font-audiowide text-muted-text mb-2">
+                Student Coordinators
+              </label>
+              {formData.studentCoordinators.map((coordinator, index) => (
+                <div key={index} className="mb-4 p-4 bg-background-soft rounded-lg border border-border">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+                    <input
+                      type="text"
+                      value={coordinator.name}
+                      onChange={(e) => updateStudentCoordinator(index, "name", e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                      placeholder="Name"
+                    />
+                    <input
+                      type="tel"
+                      value={coordinator.phone}
+                      onChange={(e) => updateStudentCoordinator(index, "phone", e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                      placeholder="Phone"
+                    />
+                    <input
+                      type="email"
+                      value={coordinator.email}
+                      onChange={(e) => updateStudentCoordinator(index, "email", e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                      placeholder="Email"
+                    />
+                  </div>
+                  {formData.studentCoordinators.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeStudentCoordinator(index)}
+                      className="text-red-400 hover:text-red-300 transition-colors font-space text-sm flex items-center gap-1"
+                    >
+                      <Minus size={16} />
+                      Remove Coordinator
+                    </button>
+                  )}
                 </div>
-                {formData.facultyCoordinators.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeFacultyCoordinator(index)}
-                    className="text-red-400 hover:text-red-300 transition-colors font-space text-sm flex items-center gap-1"
-                  >
-                    <Minus size={16} />
-                    Remove Coordinator
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addFacultyCoordinator}
-              className="text-primary hover:text-primary-dark transition-colors font-space text-sm flex items-center gap-1"
-            >
-              <Plus size={16} />
-              Add Faculty Coordinator
-            </button>
-          </div>
+              ))}
+              <button
+                type="button"
+                onClick={addStudentCoordinator}
+                className="text-primary hover:text-primary-dark transition-colors font-space text-sm flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Add Student Coordinator
+              </button>
+            </div>
 
-          <div className="flex gap-4 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 disabled:opacity-50"
-            >
-              {loading ? "Adding..." : "Add Event"}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-background-soft border border-border text-white px-6 py-2 rounded-lg font-audiowide hover:bg-background transition-colors duration-300"
-            >
-              Cancel
-            </button>
-          </div>
+            <div>
+              <label className="block text-sm font-audiowide text-muted-text mb-2">
+                Faculty Coordinators
+              </label>
+              {formData.facultyCoordinators.map((coordinator, index) => (
+                <div key={index} className="mb-4 p-4 bg-background-soft rounded-lg border border-border">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+                    <input
+                      type="text"
+                      value={coordinator.name}
+                      onChange={(e) => updateFacultyCoordinator(index, "name", e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                      placeholder="Name"
+                    />
+                    <input
+                      type="tel"
+                      value={coordinator.phone}
+                      onChange={(e) => updateFacultyCoordinator(index, "phone", e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                      placeholder="Phone"
+                    />
+                    <input
+                      type="email"
+                      value={coordinator.email}
+                      onChange={(e) => updateFacultyCoordinator(index, "email", e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+                      placeholder="Email"
+                    />
+                  </div>
+                  {formData.facultyCoordinators.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeFacultyCoordinator(index)}
+                      className="text-red-400 hover:text-red-300 transition-colors font-space text-sm flex items-center gap-1"
+                    >
+                      <Minus size={16} />
+                      Remove Coordinator
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addFacultyCoordinator}
+                className="text-primary hover:text-primary-dark transition-colors font-space text-sm flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Add Faculty Coordinator
+              </button>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-lg font-audiowide hover:from-hover-primary hover:to-primary transition-all duration-300 disabled:opacity-50"
+              >
+                {loading ? "Adding..." : "Add Event"}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="bg-background-soft border border-border text-white px-6 py-2 rounded-lg font-audiowide hover:bg-background transition-colors duration-300"
+              >
+                Cancel
+              </button>
+            </div>
         </form>
       </div>
     </div>

@@ -399,6 +399,23 @@ export default function EditEventModal({ event, onClose, onEventUpdated }) {
                 className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-audiowide text-muted-text mb-2">
+                Registration Expiry
+              </label>
+              <input
+                type="date"
+                value={formData.expiryDate}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    expiryDate: e.target.value,
+                  }))
+                }
+                className="w-full bg-background-soft border border-border rounded-lg px-3 py-2 text-white font-space focus:border-primary focus:outline-none"
+              />
+            </div>
           </div>
 
           <div>

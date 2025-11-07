@@ -10,14 +10,31 @@ const EventBox = React.memo(({ img, title, description, link, id, event }) => {
   const router = useRouter();
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const isExpired = (() => {
-    const raw = event?.expiryDate;
-    if (!raw) return false;
-    const d = new Date(raw);
-    if (isNaN(d.getTime())) return false;
-    const end = new Date(d);
-    if (String(raw).length <= 10 && /\d{4}-\d{2}-\d{2}/.test(String(raw)))
-      end.setHours(23, 59, 59, 999);
-    return new Date() > end;
+    // First check expiryDate if it exists
+    if (event?.expiryDate) {
+      const expiry = new Date(event.expiryDate);
+      if (!isNaN(expiry.getTime())) {
+        const expiryEnd = new Date(expiry);
+        if (String(event.expiryDate).length <= 10) {
+          expiryEnd.setHours(23, 59, 59, 999);
+        }
+        if (new Date() > expiryEnd) return true;
+      }
+    }
+    
+    // If no expiry date or not expired yet, check event date
+    if (event?.date) {
+      const eventDate = new Date(event.date);
+      if (!isNaN(eventDate.getTime())) {
+        const eventEnd = new Date(eventDate);
+        if (String(event.date).length <= 10) {
+          eventEnd.setHours(23, 59, 59, 999);
+        }
+        return new Date() > eventEnd;
+      }
+    }
+    
+    return false;
   })();
 
   if (isExpired) {
