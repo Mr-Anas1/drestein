@@ -396,7 +396,7 @@ const AdminSpecialEventsPage = () => {
                               <Eye className="w-5 h-5" />
                             </button>
                           )}
-                          {/* Only super admins can edit/delete special events */}
+                          {/* Only super admins can edit/delete special  */}
                           {isSuperAdmin && (
                             <>
                               <button

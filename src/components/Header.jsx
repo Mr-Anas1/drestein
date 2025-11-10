@@ -78,8 +78,8 @@ const Header = () => {
             loading="lazy" decoding="async"
           />
         </div>
-        {/* 
-        <h2 className="text-white font-azonix text-2xl hidden md:block">DRESTEIN</h2> */}
+
+        <h2 className="text-white font-azonix text-xl hidden md:block">DRESTEIN</h2>
 
       </div>
 

@@ -5,7 +5,7 @@ import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { DEPARTMENTS, getDepartmentName } from '@/constants/departments'
 import CustomDropdown from '@/components/CustomDropdown'
-import { Plus, LogOut, Users, Ticket, Search, Download } from 'lucide-react'
+import { Plus, LogOut, Users, Ticket, Search, Download, BarChart3 } from 'lucide-react'
 import { exportEventsToCSV } from '@/lib/csvExport'
 import { RefreshCw } from 'lucide-react'
 // Note: Avoid cached hooks on admin to always reflect latest writes
@@ -226,6 +226,16 @@ const AdminDashboard = () => {
                             >
                                 <Plus size={20} />
                                 Add New Event
+                            </button>
+                        )}
+
+                        {isSuperAdmin && (
+                            <button
+                                onClick={() => router.push('/admin/analytics')}
+                                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-3 rounded-lg font-audiowide hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <BarChart3 size={20} />
+                                Analytics
                             </button>
                         )}
 
