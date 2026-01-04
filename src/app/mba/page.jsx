@@ -123,7 +123,6 @@ export default function MbaPage({ searchParams }) {
                     </ul>
                 </div>
             </div>
-            <Footer />
         </div>
     );
 }
