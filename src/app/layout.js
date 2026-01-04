@@ -7,6 +7,7 @@ import CursorEffect from "@/components/CursorEffect";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProfileGuard from "@/components/ProfileGuard";
 import PageLoader from "@/components/PageLoader";
+import MbaModeGuard from "@/components/MbaModeGuard";
 import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Analytics />
           <ProfileGuard>
+            <MbaModeGuard>
             <Suspense fallback={null}>
               <PageLoader />
             </Suspense>
@@ -60,6 +62,7 @@ export default function RootLayout({ children }) {
             {/* <CursorEffect /> */}
             {children}
             <Analytics /> 
+            </MbaModeGuard>
           </ProfileGuard>
         </AuthProvider>
       </body>
