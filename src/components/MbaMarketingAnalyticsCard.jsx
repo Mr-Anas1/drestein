@@ -18,11 +18,34 @@ export default function MbaMarketingAnalyticsCard({ paymentStatus = "", orderId 
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data?.error || "Failed to initiate payment");
-            if (data.directUrl) {
-                window.location.href = data.directUrl;
-                return;
+
+            const actionUrl = String(data?.actionUrl || "");
+            const encRequest = String(data?.encRequest || "");
+            const accessCode = String(data?.accessCode || "");
+
+            if (!actionUrl || !encRequest || !accessCode) {
+                throw new Error("Missing payment parameters from gateway");
             }
-            throw new Error("Missing payment redirect URL");
+
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = actionUrl;
+            form.style.display = "none";
+
+            const inputEnc = document.createElement("input");
+            inputEnc.type = "hidden";
+            inputEnc.name = "encRequest";
+            inputEnc.value = encRequest;
+            form.appendChild(inputEnc);
+
+            const inputAccess = document.createElement("input");
+            inputAccess.type = "hidden";
+            inputAccess.name = "access_code";
+            inputAccess.value = accessCode;
+            form.appendChild(inputAccess);
+
+            document.body.appendChild(form);
+            form.submit();
         } catch (e) {
             setPayError(e?.message || "Failed to start payment");
         } finally {

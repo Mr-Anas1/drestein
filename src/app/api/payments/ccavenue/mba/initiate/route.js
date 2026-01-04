@@ -4,8 +4,14 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 
 function encryptCCAvenue(plainText, workingKey) {
-  const key = crypto.createHash("md5").update(workingKey, "utf8").digest();
-  const iv = Buffer.alloc(16, 0);
+  const md5Key = crypto.createHash("md5").update(workingKey).digest();
+  const key = Buffer.from(md5Key);
+  const iv = Buffer.from([
+    0x00, 0x01, 0x02, 0x03,
+    0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0a, 0x0b,
+    0x0c, 0x0d, 0x0e, 0x0f,
+  ]);
   const cipher = crypto.createCipheriv("aes-128-cbc", key, iv);
   let encrypted = cipher.update(plainText, "utf8", "hex");
   encrypted += cipher.final("hex");
@@ -17,7 +23,19 @@ export async function POST(request) {
     const MERCHANT_ID = process.env.CCAVENUE_MERCHANT_ID;
     const ACCESS_CODE = process.env.CCAVENUE_ACCESS_CODE;
     const WORKING_KEY = process.env.CCAVENUE_WORKING_KEY;
+    const REDIRECT_URL_ENV = process.env.CCAVENUE_REDIRECT_URL;
+    const CANCEL_URL_ENV = process.env.CCAVENUE_CANCEL_URL;
     const BASE_URL = process.env.CCAVENUE_BASE_URL || "https://test.ccavenue.com";
+
+    // Safeguard: Only allow LIVE payments from drestein.in host
+    const requestHost = new URL(request.url).host;
+    const isLive = BASE_URL.includes("secure.ccavenue.com");
+    if (isLive && !requestHost.endsWith("drestein.in")) {
+      return NextResponse.json(
+        { error: "Live payments must be initiated from drestein.in", host: requestHost },
+        { status: 400 }
+      );
+    }
 
     const missing = [];
     if (!MERCHANT_ID) missing.push("CCAVENUE_MERCHANT_ID");
@@ -30,26 +48,26 @@ export async function POST(request) {
     const AMOUNT = Number.isFinite(normalized) ? normalized.toFixed(2) : "500.00";
 
     const origin = new URL(request.url).origin;
-    const redirectUrl = `${origin}/api/payments/ccavenue/mba/callback`;
-    const cancelUrl = `${origin}/api/payments/ccavenue/mba/callback`;
+    const redirectUrl = REDIRECT_URL_ENV || `${origin}/api/payments/ccavenue/mba/callback`;
+    const cancelUrl = CANCEL_URL_ENV || `${origin}/api/payments/ccavenue/mba/callback`;
 
     const orderId = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
-    const params = new URLSearchParams();
-    params.append("merchant_id", MERCHANT_ID);
-    params.append("order_id", orderId);
-    params.append("currency", "INR");
-    params.append("amount", AMOUNT);
-    params.append("redirect_url", redirectUrl);
-    params.append("cancel_url", cancelUrl);
-    params.append("language", "EN");
-    params.append("merchant_param1", "mba_marketing_analytics");
+    const plainText =
+      `merchant_id=${MERCHANT_ID}` +
+      `&order_id=${orderId}` +
+      `&currency=INR` +
+      `&amount=${AMOUNT}` +
+      `&redirect_url=${redirectUrl}` +
+      `&cancel_url=${cancelUrl}` +
+      `&language=EN` +
+      `&merchant_param1=${orderId}` +
+      `&merchant_param2=mba_marketing_analytics`;
 
-    const encRequest = encryptCCAvenue(params.toString(), WORKING_KEY);
+    const encRequest = encryptCCAvenue(plainText, WORKING_KEY);
     const actionUrl = `${BASE_URL}/transaction/transaction.do?command=initiateTransaction`;
-    const directUrl = `${actionUrl}&access_code=${ACCESS_CODE}&encRequest=${encRequest}`;
 
-    return NextResponse.json({ actionUrl, encRequest, accessCode: ACCESS_CODE, orderId, merchantId: MERCHANT_ID, directUrl });
+    return NextResponse.json({ actionUrl, encRequest, accessCode: ACCESS_CODE, orderId, merchantId: MERCHANT_ID });
   } catch (e) {
     console.error("[MBA CCA INIT] Error", e);
     return NextResponse.json({ error: e?.message || "Failed to initiate payment" }, { status: 500 });
