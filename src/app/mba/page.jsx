@@ -54,7 +54,7 @@ export default function MbaPage({ searchParams }) {
                 </div>
                 <div className="space-y-4 mt-8">
                     <h3 className="font-audiowide text-xl text-white">
-                        Workshop Objectives:
+                        Faculty Development Program Objectives:
                     </h3>
                     <ul className="list-disc list-inside text-muted-text">
                         <li>
