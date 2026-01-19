@@ -58,7 +58,7 @@ export default function MbaMarketingAnalyticsCard({ paymentStatus = "", orderId 
             <div className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2 text-muted-text font-space">
                     <Calendar className="w-5 h-5 text-secondary" />
-                    <span>19th - 23rd Jan 2026</span>
+                    <span>2nd - 6th Feb 2026</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-text font-space">
                     <Clock className="w-5 h-5 text-secondary" />

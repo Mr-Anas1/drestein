@@ -41,7 +41,7 @@ export default function MbaPage({ searchParams }) {
                     <div className="bg-background-soft border border-border rounded-2xl p-4">
                         <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden">
                             <Image
-                                src="/mba/mba-marketing-analytics-image.jpeg"
+                                src="/mba/new-poster.jpeg"
                                 alt="Marketing Analytics poster"
                                 fill
                                 className="object-cover"
@@ -101,7 +101,7 @@ export default function MbaPage({ searchParams }) {
 
                     <h3 className="font-audiowide text-xl text-white">Date & Registration</h3>
                     <div className="space-y-2 text-muted-text font-space">
-                        <p>Date: 19ᵗʰ – 23ʳᵈ Jan 2026</p>
+                        <p>Date: 2ⁿᵈ – 6ᵗʰ Feb 2026</p>
                         <p>Time: 6.00 PM to 8.00 PM</p>
                         <p>Registration Fees: Rs. 500/- (inclusive of GST)</p>
                         <p>To register: (QR Code)</p>

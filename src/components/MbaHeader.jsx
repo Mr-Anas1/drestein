@@ -6,9 +6,8 @@ export default function MbaHeader() {
     const router = useRouter();
 
     return (
-        <div className="flex justify-between items-center px-4 md:px-6 h-16 border-b border-gray-600">
-
-            <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+        <div className="flex  justify-between items-center px-4 md:px-6 h-16 border-b border-gray-600">
+            <div className="flex-1">
                 <button
                     type="button"
                     onClick={() => router.push("/mba")}
@@ -17,6 +16,9 @@ export default function MbaHeader() {
                 >
                     <img src="/logo.png" alt="saveetha-logo" loading="lazy" decoding="async" />
                 </button>
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+
 
                 <div className="w-[40px] sm:w-[50px] md:w-[60px] flex-shrink-0">
                     <img
