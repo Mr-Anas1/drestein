@@ -35,6 +35,7 @@ body {
   --font-space: "Space Grotesk";
   --font-audiowide: "Audiowide";
   --font-azonix: "Azonix";
+  --font-poppins: var(--font-poppins);
 }
 
 

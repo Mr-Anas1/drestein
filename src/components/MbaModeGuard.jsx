@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ONLY_MBA } from "@/lib/flags";
 
 const DEFAULT_ALLOWED_PREFIXES = [
-    "/mba",
+    "/ascend",
     "/my-passes",
     "/my-ticket",
     "/view-ticket",
@@ -23,7 +23,7 @@ export default function MbaModeGuard({ children, allowedPrefixes = DEFAULT_ALLOW
 
         const isAllowed = allowedPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
         if (!isAllowed) {
-            router.replace("/mba");
+            router.replace("/ascend");
         }
     }, [pathname, router, allowedPrefixes]);
 

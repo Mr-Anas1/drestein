@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Audiowide, Space_Grotesk } from "next/font/google";
+import { Audiowide, Space_Grotesk, Poppins } from "next/font/google";
 import SmoothFollower from "@/components/CursorEffect";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import FloatingShapes from "@/components/FloatingShapes";
@@ -24,6 +24,12 @@ const spaceGrotesk = Space_Grotesk({
   variable: "--font-body",
 });
 
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-poppins",
+});
+
 export const metadata = {
   title: "DRESTEIN",
   description: "DRESTEIN",
@@ -31,7 +37,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${audiowide.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en" className={`${audiowide.variable} ${spaceGrotesk.variable} ${poppins.variable}`}>
       <head>
       <Script
           async
