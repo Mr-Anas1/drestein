@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import AscendHeader from "@/components/AscendHeader";
+import TestimonialSlider from "@/components/TestimonialSlider";
 import Image from "next/image";
 
 export default function AscendPage({ searchParams }) {
@@ -396,42 +397,7 @@ export default function AscendPage({ searchParams }) {
 
                 {/* Testimonial Section */}
                 <div className="mb-16">
-                    <div className="bg-gradient-to-br from-[#232F3E] to-[#1a2332] rounded-2xl p-10 md:p-14 shadow-2xl relative overflow-hidden border border-[#C5934C]/20">
-                        {/* Decorative Quote Mark */}
-                        <div className="absolute top-0 left-4 text-[#C5934C]/10 font-serif text-[12rem] leading-none select-none">
-                            “
-                        </div>
-
-                        <div className="relative z-10 max-w-4xl mx-auto text-center">
-                            <div className="text-white/90 font-sans text-xl md:text-2xl space-y-8 italic leading-relaxed">
-                                <p>
-                                    "AI Ascend is our flagship initiative in partnership with Amazon Web Services and Kyndryl to bring Generative and Agentic AI to students across Tamil Nadu."
-                                </p>
-                                <p>
-                                    "AI is no longer optional it is essential. Through hands-on hackathons, real-world challenges, and industry mentorship, we are empowering students to move from learning AI to building with it."
-                                </p>
-                                <p className="font-semibold text-[#C5934C]">
-                                    "AI Ascend is where innovation begins and future-ready talent is shaped."
-                                </p>
-                            </div>
-
-                            <div className="mt-12 flex flex-col items-center justify-center">
-                                <div className="relative w-24 h-24 rounded-full overflow-hidden">
-                                    <Image
-                                        src="/ascend/mohansir.jpeg"
-                                        alt="Dr. Raj C. Mohan"
-                                        fill
-                                        className="object-contain p-2 rounded-full"
-                                    />
-                                </div>
-
-                                <h4 className="font-poppins text-2xl text-white mb-1">
-                                    Dr. Raj C. Mohan
-                                </h4>
-
-                            </div>
-                        </div>
-                    </div>
+                    <TestimonialSlider />
                 </div>
 
                 {/* Contact & Registration */}
