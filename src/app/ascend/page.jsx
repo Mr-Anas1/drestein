@@ -407,17 +407,19 @@ export default function AscendPage({ searchParams }) {
                     </h3>
 
                     <div className="grid md:grid-cols-2 gap-10 mb-10">
-                        <div className="bg-white/10 backdrop-blur rounded-xl p-8">
-                            <h4 className="font-poppins text-xl mb-4 text-white">Mr. Joel John</h4>
-                            <p className="font-sans text-lg text-white/80">AP / CSE</p>
-                            <p className="font-sans text-lg text-white/80">Saveetha Engineering College</p>
-                            <p className="font-sans text-lg text-white/90 mt-3">Ph: 98941 28078</p>
-                        </div>
+
                         <div className="bg-white/10 backdrop-blur rounded-xl p-8">
                             <h4 className="font-poppins text-xl mb-4 text-white">Dr. S. Kalpana</h4>
                             <p className="font-sans text-lg text-white/80">Professor</p>
                             <p className="font-sans text-lg text-white/80">Saveetha Engineering College</p>
                             <p className="font-sans text-lg text-white/90 mt-3">Ph: 90804 95844</p>
+                        </div>
+
+                        <div className="bg-white/10 backdrop-blur rounded-xl p-8">
+                            <h4 className="font-poppins text-xl mb-4 text-white">Dr Suresh Kumar K </h4>
+                            <p className="font-sans text-lg text-white/80">Associate Dean, (Scoft)</p>
+                            <p className="font-sans text-lg text-white/80">Saveetha Engineering College</p>
+                            <p className="font-sans text-lg text-white/90 mt-3">Ph: 99942 16334</p>
                         </div>
                     </div>
 
