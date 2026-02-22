@@ -4,7 +4,8 @@ import TestimonialSlider from "@/components/TestimonialSlider";
 import Image from "next/image";
 
 export default function AscendPage({ searchParams }) {
-    const registrationUrl = "https://www.awseducate.com/registration/s/registration-detail?language=en_US&promocode=FBKNDRL";
+    // const registrationUrl = "https://www.awseducate.com/registration/s/registration-detail?language=en_US&promocode=FBKNDRL";
+    const registrationUrl = "https://forms.gle/PGox4VynBpzeTL5Q8";
 
     return (
         <div className="min-h-screen bg-white">
