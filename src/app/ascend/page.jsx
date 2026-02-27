@@ -153,6 +153,8 @@ export default function AscendPage({ searchParams }) {
                     </div>
                 </div>
 
+
+
                 {/* Why Join AI Ascend 2026? */}
                 <div className="mb-12">
                     <h3 className="font-poppins text-4xl text-[#232F3E] mb-8 border-l-4 border-[#FF9900] pl-6">
@@ -400,6 +402,27 @@ export default function AscendPage({ searchParams }) {
                 <div className="mb-16">
                     <TestimonialSlider />
                 </div>
+
+                {/* Video Section */}
+                <div className="mb-12">
+                    <h3 className="font-poppins text-4xl text-[#232F3E] mb-8 border-l-4 border-[#005696] pl-6">
+                        Watch the Video
+                    </h3>
+                    <div className="bg-white border border-[#005696]/20 rounded-2xl p-6 md:p-8 shadow-sm">
+                        <div className="w-full aspect-video rounded-xl overflow-hidden bg-black">
+                            <iframe
+                                className="w-full h-full"
+                                src="https://www.youtube.com/embed/mzkHGEyAPEw"
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                            />
+                        </div>
+                    </div>
+                </div>
+
 
                 {/* Contact & Registration */}
                 <div className="bg-[#DDBF74] rounded-2xl p-10 md:p-14 shadow-2xl text-white">
