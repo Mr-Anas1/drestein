@@ -17,36 +17,192 @@ function parseStartAt(startAt) {
   return null;
 }
 
+function safeJsonParse(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function getStorageState(storageKey) {
+  if (!storageKey) return null;
+  if (typeof window === "undefined") return null;
+  return safeJsonParse(window.localStorage.getItem(storageKey));
+}
+
+function getDerivedStateFromStorage(storageKey, durationMs) {
+  const raw = getStorageState(storageKey);
+  const status = raw?.status;
+
+  if (status === "running" && typeof raw?.startAtMs === "number") {
+    return { status: "running", startAtMs: raw.startAtMs, pausedRemainingMs: null };
+  }
+
+  if (
+    status === "stopped" &&
+    typeof raw?.pausedRemainingMs === "number" &&
+    raw.pausedRemainingMs >= 0
+  ) {
+    return {
+      status: "stopped",
+      startAtMs: null,
+      pausedRemainingMs: Math.min(durationMs, raw.pausedRemainingMs),
+    };
+  }
+
+  return { status: "idle", startAtMs: null, pausedRemainingMs: null };
+}
+
 export default function AscendCountdown24h({
   enabled = false,
   startAt = null,
   durationHours = 24,
+  storageKey = null,
+  apiEndpoint = null,
 }) {
   const durationMs = durationHours * 60 * 60 * 1000;
 
   const startDate = useMemo(() => parseStartAt(startAt), [startAt]);
+  const [storageVersion, setStorageVersion] = useState(0);
+  const [apiState, setApiState] = useState(null);
+
+  useEffect(() => {
+    if (!storageKey) return;
+
+    const onLocalUpdate = () => {
+      setStorageVersion((v) => v + 1);
+    };
+
+    const onStorage = (e) => {
+      if (e.key === storageKey) setStorageVersion((v) => v + 1);
+    };
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("aiascend-countdown:update", onLocalUpdate);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("aiascend-countdown:update", onLocalUpdate);
+    };
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!apiEndpoint) return;
+
+    let isMounted = true;
+
+    const fetchState = async () => {
+      try {
+        const res = await fetch(apiEndpoint, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!isMounted) return;
+        setApiState(data);
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchState();
+    const id = setInterval(fetchState, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(id);
+    };
+  }, [apiEndpoint]);
+
+  const derivedStorageState = useMemo(() => {
+    if (!storageKey) return null;
+    return getDerivedStateFromStorage(storageKey, durationMs);
+  }, [storageKey, durationMs, storageVersion]);
+
+  const derivedApiState = useMemo(() => {
+    if (!apiEndpoint) return null;
+    const status = apiState?.status;
+
+    if (status === "running" && typeof apiState?.startAtMs === "number") {
+      return { status: "running", startAtMs: apiState.startAtMs, pausedRemainingMs: null };
+    }
+
+    if (status === "stopped" && typeof apiState?.pausedRemainingMs === "number") {
+      return {
+        status: "stopped",
+        startAtMs: null,
+        pausedRemainingMs: Math.min(durationMs, Math.max(0, apiState.pausedRemainingMs)),
+      };
+    }
+
+    return { status: "idle", startAtMs: null, pausedRemainingMs: null };
+  }, [apiEndpoint, apiState, durationMs]);
+
   const endTimeMs = useMemo(() => {
+    if (apiEndpoint) {
+      if (!derivedApiState || derivedApiState.status !== "running") return null;
+      return derivedApiState.startAtMs + durationMs;
+    }
+
+    if (storageKey) {
+      if (!derivedStorageState || derivedStorageState.status !== "running") return null;
+      return derivedStorageState.startAtMs + durationMs;
+    }
+
     if (!enabled) return null;
     const base = (startDate ?? new Date()).getTime();
     return base + durationMs;
-  }, [enabled, startDate, durationMs]);
+  }, [apiEndpoint, derivedApiState, storageKey, derivedStorageState, durationMs, enabled, startDate]);
 
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
-    if (!enabled) return;
+    const shouldTick = apiEndpoint
+      ? derivedApiState?.status === "running"
+      : storageKey
+        ? derivedStorageState?.status === "running"
+        : enabled;
+
+    if (!shouldTick) return;
 
     const id = setInterval(() => {
       setNowMs(Date.now());
     }, 250);
 
     return () => clearInterval(id);
-  }, [enabled]);
+  }, [enabled, storageKey, derivedStorageState?.status, apiEndpoint, derivedApiState?.status]);
 
   const remainingMs = useMemo(() => {
+    if (apiEndpoint) {
+      if (!derivedApiState) return durationMs;
+
+      if (derivedApiState.status === "stopped") {
+        if (typeof derivedApiState.pausedRemainingMs === "number") {
+          return Math.max(0, derivedApiState.pausedRemainingMs);
+        }
+        return durationMs;
+      }
+
+      if (derivedApiState.status !== "running" || !endTimeMs) return durationMs;
+      return Math.max(0, endTimeMs - nowMs);
+    }
+
+    if (storageKey) {
+      if (!derivedStorageState) return durationMs;
+
+      if (derivedStorageState.status === "stopped") {
+        if (typeof derivedStorageState.pausedRemainingMs === "number") {
+          return Math.max(0, derivedStorageState.pausedRemainingMs);
+        }
+        return durationMs;
+      }
+
+      if (derivedStorageState.status !== "running" || !endTimeMs) return durationMs;
+      return Math.max(0, endTimeMs - nowMs);
+    }
+
     if (!enabled || !endTimeMs) return durationMs;
     return Math.max(0, endTimeMs - nowMs);
-  }, [enabled, endTimeMs, nowMs, durationMs]);
+  }, [apiEndpoint, derivedApiState, storageKey, derivedStorageState, endTimeMs, nowMs, durationMs, enabled]);
 
   const totalSeconds = Math.floor(remainingMs / 1000);
   const hours = Math.floor(totalSeconds / 3600);

@@ -6,10 +6,12 @@ import { ONLY_MBA } from "@/lib/flags";
 
 const DEFAULT_ALLOWED_PREFIXES = [
     "/ascend",
+    "/aiascendAdmin",
     "/my-passes",
     "/my-ticket",
     "/view-ticket",
     "/api/payments/ccavenue/mba",
+    "/api/ascend-countdown",
     "/admin",
 ];
 

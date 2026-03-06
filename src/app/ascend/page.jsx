@@ -18,7 +18,7 @@ export default function AscendPage({ searchParams }) {
 
             {/* 24 Hour Timer */}
             <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 pb-6 pt-6">
-                <AscendCountdown24h enabled={false} />
+                <AscendCountdown24h apiEndpoint="/api/ascend-countdown" />
             </div>
             {/* Hero Banner */}
             {/* Hero Banner with Background Image */}
