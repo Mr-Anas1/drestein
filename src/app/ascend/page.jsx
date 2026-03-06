@@ -1,6 +1,7 @@
 import Footer from "@/components/Footer";
 import AscendHeader from "@/components/AscendHeader";
 import TestimonialSlider from "@/components/TestimonialSlider";
+import AscendCountdown24h from "@/components/AscendCountdown24h";
 import Image from "next/image";
 
 export default function AscendPage({ searchParams }) {
@@ -13,9 +14,17 @@ export default function AscendPage({ searchParams }) {
             <div className="bg-[#1a2332]">
                 <AscendHeader />
             </div>
+
+
+            {/* 24 Hour Timer */}
+            <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 pb-6 pt-6">
+                <AscendCountdown24h enabled={false} />
+            </div>
             {/* Hero Banner */}
             {/* Hero Banner with Background Image */}
             {/* Banner Container */}
+
+
             <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
                 <div className="relative w-full aspect-[3/4] sm:aspect-[16/10] md:aspect-[21/9] lg:aspect-[2.5/1] rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col justify-center items-center text-center p-6 md:p-8 border border-gray-100">
                     {/* Background Image */}
@@ -55,6 +64,8 @@ export default function AscendPage({ searchParams }) {
                     </div>
                 </div>
             </div>
+
+
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-6 py-12">
