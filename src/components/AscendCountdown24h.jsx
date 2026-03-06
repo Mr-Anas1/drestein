@@ -54,21 +54,21 @@ export default function AscendCountdown24h({
   const seconds = totalSeconds % 60;
 
   return (
-    <div className="bg-white border border-[#005696]/20 rounded-2xl p-6 md:p-8 shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <p className="text-[#232F3E]/60 text-sm uppercase tracking-wider font-sans mb-1">
-            Countdown
-          </p>
-          <h3 className="font-poppins text-2xl md:text-3xl text-[#232F3E]">
-            Time Reamaining
-          </h3>
-        </div>
+    <div className="rounded-3xl p-[2px] bg-gradient-to-r from-[#C5934C] via-[#FF9900] to-[#005696] shadow-2xl">
+      <div className="bg-[#1a2332] rounded-3xl px-6 py-10 md:px-12 md:py-14 text-center">
+        <p className="text-white/70 text-sm md:text-base uppercase tracking-[0.25em] font-sans mb-3">
+          Countdown
+        </p>
+        <h3 className="font-poppins text-3xl md:text-5xl text-white mb-6">
+          Time Remaining
+        </h3>
 
-        <div className="bg-[#C5934C] text-white rounded-xl px-6 py-4 flex items-baseline justify-center gap-2 shadow-lg w-full md:w-auto">
-          <span className="font-poppins text-4xl md:text-5xl tracking-wider">
-            {pad2(hours)}:{pad2(minutes)}:{pad2(seconds)}
-          </span>
+        <div className="flex items-center justify-center">
+          <div className="bg-[#C5934C] text-white rounded-2xl px-6 py-5 md:px-10 md:py-7 shadow-xl">
+            <span className="font-poppins text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-widest tabular-nums">
+              {pad2(hours)}:{pad2(minutes)}:{pad2(seconds)}
+            </span>
+          </div>
         </div>
       </div>
     </div>
